@@ -26,8 +26,8 @@ export default function ResultsPage() {
         // Flatten the match score onto the fixture object so MatchCard can read it
         const formattedData = data.map((f: any) => ({
           ...f,
-          home_score: f.matches?.[0]?.home_score ?? 0,
-          away_score: f.matches?.[0]?.away_score ?? 0,
+          home_score: f.home_score ?? 0,
+          away_score: f.away_score ?? 0,
         }));
         setResults(formattedData);
       }
