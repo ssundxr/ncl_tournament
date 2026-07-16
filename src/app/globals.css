@@ -1,0 +1,118 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-heading);
+  
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;      /* 16px */
+  --radius-xl: 1.25rem;   /* 20px */
+}
+
+:root, .dark {
+  /* Official F1 Dark Theme */
+  --background: #15151e;
+  --foreground: #ffffff;
+  
+  --card: #1e1e27;
+  --card-foreground: #ffffff;
+  
+  --popover: #15151e;
+  --popover-foreground: #ffffff;
+  
+  /* Primary Accent: F1 Red */
+  --primary: #e10600;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary: Darker Panel */
+  --secondary: #111118;
+  --secondary-foreground: #ffffff;
+  
+  /* Muted */
+  --muted: #38384f;
+  --muted-foreground: #999999;
+  
+  /* Accent: Hover states */
+  --accent: #2d2d39;
+  --accent-foreground: #ffffff;
+  
+  /* Status */
+  --destructive: #e10600;
+  --success: #00A19B; /* Teal */
+  
+  /* Borders & Inputs */
+  --border: #2d2d39;
+  --input: #2d2d39;
+  --ring: #e10600;
+  
+  --radius: 0.5rem; /* Clean F1 rounded corners */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+  }
+  html {
+    color-scheme: light dark;
+  }
+  .container {
+    @apply mx-auto max-w-7xl w-full;
+  }
+}
+
+/* Custom Glassmorphism Utility */
+@layer utilities {
+  .glass {
+    @apply bg-card/60 backdrop-blur-md border border-border;
+  }
+  .glass-elevated {
+    @apply bg-card/80 backdrop-blur-xl border border-secondary shadow-lg dark:border-secondary;
+  }
+  .f1-slant {
+    clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  }
+  .f1-slant-reverse {
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+  }
+  .f1-slant-right {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  }
+  .f1-gradient-teal {
+    background: linear-gradient(135deg, #00A19B 0%, #004D4A 100%);
+  }
+  .f1-gradient-red {
+    background: linear-gradient(135deg, #E10600 0%, #8A0400 100%);
+  }
+}
