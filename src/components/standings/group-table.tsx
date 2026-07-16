@@ -23,7 +23,7 @@ export function GroupTable({ groupName, standings }: GroupTableProps) {
 
   // Convert StandingsRow to the format expected by ShareStandings
   const shareData = standings.map(s => ({
-    player: { name: s.player.name, photo_url: s.player.photo_url },
+    player: { name: s.player.name, photo_url: s.player.photo_url || undefined },
     played: s.played,
     wins: s.wins,
     draws: s.draws,

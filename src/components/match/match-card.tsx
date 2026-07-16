@@ -48,8 +48,8 @@ export function MatchCard({ fixture }: MatchCardProps) {
           awayName={fixture.away_player.name}
           homeScore={fixture.home_score || 0}
           awayScore={fixture.away_score || 0}
-          homePhoto={fixture.home_player.photo_url}
-          awayPhoto={fixture.away_player.photo_url}
+          homePhoto={fixture.home_player.photo_url || undefined}
+          awayPhoto={fixture.away_player.photo_url || undefined}
         />
       )}
       
@@ -58,8 +58,8 @@ export function MatchCard({ fixture }: MatchCardProps) {
           ref={shareUpcomingRef}
           homeName={fixture.home_player.name}
           awayName={fixture.away_player.name}
-          homePhoto={fixture.home_player.photo_url}
-          awayPhoto={fixture.away_player.photo_url}
+          homePhoto={fixture.home_player.photo_url || undefined}
+          awayPhoto={fixture.away_player.photo_url || undefined}
           matchday={fixture.matchday}
         />
       )}
