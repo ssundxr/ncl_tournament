@@ -17,7 +17,14 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      
+      const allowedEmails = ["ashwinfejl357@gmail.com", "shyamsundxr@gmail.com"];
+      if (result.user.email && !allowedEmails.includes(result.user.email)) {
+        await auth.signOut();
+        throw new Error("Access Denied: Portal is under management control only.");
+      }
+      
       router.push("/admin");
     } catch (err: any) {
       console.error("Login failed:", err);

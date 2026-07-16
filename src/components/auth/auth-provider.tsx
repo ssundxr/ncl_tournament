@@ -16,8 +16,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const allowedEmails = ["ashwinfejl357@gmail.com", "shyamsundxr@gmail.com"];
+        if (user.email && !allowedEmails.includes(user.email)) {
+          await auth.signOut();
+          setUser(null);
+        } else {
+          setUser(user);
+        }
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
