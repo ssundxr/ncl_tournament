@@ -96,15 +96,27 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
   };
 
   const handleSaveResult = async () => {
-    if (!matchData) return;
     setSaving(true);
     try {
       // 1. Save match score
-      await supabase.from('matches').update({
-        home_score: homeScore,
-        away_score: awayScore,
-        ended_at: new Date().toISOString()
-      }).eq('id', matchData.id);
+      let matchId = matchData?.id;
+      if (!matchData) {
+        const { data: newMatch } = await supabase.from('matches').insert({
+          fixture_id: fixture.id,
+          home_score: homeScore,
+          away_score: awayScore,
+          started_at: new Date().toISOString(),
+          ended_at: new Date().toISOString(),
+          status: 'completed'
+        }).select().single();
+        if (newMatch) matchId = newMatch.id;
+      } else {
+        await supabase.from('matches').update({
+          home_score: homeScore,
+          away_score: awayScore,
+          ended_at: new Date().toISOString()
+        }).eq('id', matchData.id);
+      }
       
       // 2. Mark fixture as completed
       await supabase.from('fixtures').update({ status: 'completed' }).eq('id', fixture.id);

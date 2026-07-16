@@ -1,6 +1,10 @@
 import { StandingsRow } from "@/types";
-import { Shield, Trophy, User } from "lucide-react";
+import { Shield, Trophy, User, Share2 } from "lucide-react";
 import Link from "next/link";
+import { useRef, useState } from "react";
+import { ShareStandings } from "@/components/share/ShareStandings";
+import { exportAsImage } from "@/lib/exportImage";
+import { Button } from "@/components/ui/button";
 
 interface GroupTableProps {
   groupName: string;
@@ -8,14 +12,49 @@ interface GroupTableProps {
 }
 
 export function GroupTable({ groupName, standings }: GroupTableProps) {
+  const shareRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleShare = async () => {
+    setIsExporting(true);
+    await exportAsImage(shareRef, `${groupName.replace(/\s+/g, '-').toLowerCase()}-standings`);
+    setIsExporting(false);
+  };
+
+  // Convert StandingsRow to the format expected by ShareStandings
+  const shareData = standings.map(s => ({
+    player: { name: s.player.name, photo_url: s.player.photo_url },
+    played: s.played,
+    wins: s.wins,
+    draws: s.draws,
+    losses: s.losses,
+    goals_for: s.goalsFor,
+    goals_against: s.goalsAgainst,
+    points: s.points,
+  }));
+
   return (
     <div className="w-full">
+      <ShareStandings ref={shareRef} groupName={groupName} standings={shareData} />
+      
       {/* Group Title Block */}
-      <div className="flex items-center gap-4 mb-4">
-        <h3 className="font-heading font-black text-2xl md:text-3xl text-white uppercase tracking-tight">
-          {groupName}
-        </h3>
-        <div className="flex-1 h-px bg-border mt-1" />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4 flex-1">
+          <h3 className="font-heading font-black text-2xl md:text-3xl text-white uppercase tracking-tight">
+            {groupName}
+          </h3>
+          <div className="flex-1 h-px bg-border mt-1 hidden sm:block" />
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="ml-4 font-bold tracking-widest uppercase border-primary/50 text-primary hover:bg-primary hover:text-white"
+          onClick={handleShare}
+          disabled={isExporting}
+        >
+          <Share2 className="w-4 h-4 mr-2" />
+          {isExporting ? 'Generating...' : 'Share IG Story'}
+        </Button>
       </div>
       
       {/* Table Container */}
