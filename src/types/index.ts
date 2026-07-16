@@ -67,3 +67,25 @@ export type MatchStats = {
   home_red_cards: number;
   away_red_cards: number;
 };
+
+export type Tournament = {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  description: string | null;
+  status: 'draft' | 'active' | 'completed';
+  created_at: string;
+};
+
+export type Season = {
+  id: string;
+  tournament_id: string;
+  name: string;
+  number: number;
+  status: 'upcoming' | 'active' | 'in_progress' | 'completed';
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+  tournament?: Tournament;
+};
