@@ -21,11 +21,12 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: "/favicon.ico",
+    apple: "/logo_removed.png",
   },
 };
 
 export const viewport = {
-  themeColor: "#FFFFFF",
+  themeColor: "#0F0F0F",
 };
 
 export default function RootLayout({
