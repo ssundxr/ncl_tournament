@@ -44,16 +44,38 @@ function HomeContent() {
       setActiveSeason(currentSeason);
 
       if (currentSeason) {
-        // Fetch top players by overall rating enrolled in this season
+        // Fetch all season enrollments
         const { data: enrollData } = await supabase
           .from('season_enrollments')
           .select('player:players(*)')
           .eq('season_id', currentSeason.id);
 
-        let enrolledPlayers = enrollData ? enrollData.map((e: any) => e.player).filter(Boolean) : [];
-        enrolledPlayers.sort((a: any, b: any) => (b.overall_rating || 0) - (a.overall_rating || 0));
+        // Fetch all-time leaderboard points
+        const { data: allLeaderboards } = await supabase
+          .from('leaderboards')
+          .select('player_id, points');
+
+        const playerPointsMap: Record<string, number> = {};
+        if (allLeaderboards) {
+          allLeaderboards.forEach((l: any) => {
+            if (l.player_id) {
+              playerPointsMap[l.player_id] = (playerPointsMap[l.player_id] || 0) + (l.points || 0);
+            }
+          });
+        }
+
+        let enrolledPlayers = enrollData ? enrollData.map((e: any) => {
+          if (!e.player) return null;
+          return {
+            ...e.player,
+            allTimePoints: playerPointsMap[e.player.id] || 0
+          };
+        }).filter(Boolean) : [];
+
+        // Sort by allTimePoints descending
+        enrolledPlayers.sort((a: any, b: any) => b.allTimePoints - a.allTimePoints);
         
-        setTopPlayers(enrolledPlayers.slice(0, 3) as Player[]);
+        setTopPlayers(enrolledPlayers.slice(0, 3) as any);
 
         // Fetch standings for this season
         const { data: lData } = await supabase
@@ -92,9 +114,27 @@ function HomeContent() {
   }, [seasonParam]);
 
   const top3 = [
-    { rank: '1ST', bg: 'bg-gradient-to-br from-teal-500/20 to-teal-500/5 border-teal-500/30', player: topPlayers[0] },
-    { rank: '2ND', bg: 'bg-gradient-to-br from-teal-500/20 to-teal-500/5 border-teal-500/30', player: topPlayers[1] },
-    { rank: '3RD', bg: 'bg-gradient-to-br from-red-500/20 to-red-500/5 border-red-500/30', player: topPlayers[2] },
+    {
+      rank: '1ST PLACE',
+      bg: 'bg-gradient-to-br from-yellow-500/10 via-[#15151e] to-[#15151e] border-yellow-500/20 hover:border-yellow-500/50',
+      rankBadge: 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5',
+      glow: 'shadow-[inset_0_0_20px_rgba(234,179,8,0.05)]',
+      player: topPlayers[0] as any
+    },
+    {
+      rank: '2ND PLACE',
+      bg: 'bg-gradient-to-br from-slate-400/10 via-[#15151e] to-[#15151e] border-slate-400/20 hover:border-slate-400/50',
+      rankBadge: 'border-slate-400/30 text-slate-400 bg-slate-400/5',
+      glow: 'shadow-[inset_0_0_20px_rgba(148,163,184,0.05)]',
+      player: topPlayers[1] as any
+    },
+    {
+      rank: '3RD PLACE',
+      bg: 'bg-gradient-to-br from-amber-600/10 via-[#15151e] to-[#15151e] border-amber-600/20 hover:border-amber-600/50',
+      rankBadge: 'border-amber-600/30 text-amber-600 bg-amber-600/5',
+      glow: 'shadow-[inset_0_0_20px_rgba(180,83,9,0.05)]',
+      player: topPlayers[2] as any
+    },
   ];
 
   const getLinkWithSeason = (href: string) => {
@@ -168,26 +208,35 @@ function HomeContent() {
           {topPlayers.length > 0 && (
             <section className="w-full px-4 md:px-12 lg:px-24 xl:px-32 mb-16">
               <div className="flex gap-6 mb-6">
-                <h3 className="text-sm font-bold uppercase tracking-widest border-b-2 border-primary pb-2 text-white">Top Enrolled Players</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest border-b-2 border-primary pb-2 text-white">Top Competitors (All-Time Pts)</h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {top3.map((item, idx) => (
                   item.player ? (
-                    <div key={idx} className={`bg-card rounded-xl overflow-hidden flex flex-col h-[280px] relative group cursor-pointer border hover:border-muted-foreground transition-colors ${item.bg}`}>
+                    <div key={idx} className={`bg-card rounded-xl overflow-hidden flex flex-col h-[200px] relative group cursor-pointer border transition-all duration-300 ${item.bg} ${item.glow}`}>
                       <div className="relative z-10 p-6 flex flex-col h-full justify-between">
                         <div>
-                          <span className="text-white font-bold text-xl">{item.rank}</span>
-                          <h4 className="text-white font-black text-2xl uppercase mt-2 tracking-tight">{item.player.name}</h4>
-                          <p className="text-white/80 text-sm mt-1 uppercase font-bold tracking-wider">{item.player.favorite_team}</p>
+                          <span className={`inline-block font-bold text-[10px] uppercase tracking-widest px-2.5 py-0.5 rounded-sm border mb-3 ${item.rankBadge}`}>
+                            {item.rank}
+                          </span>
+                          <h4 className="text-white font-black text-2xl uppercase tracking-tight">{item.player.name}</h4>
+                          <p className="text-white/60 text-xs mt-1 uppercase font-bold tracking-wider">{item.player.favorite_team || "Free Agent"}</p>
                         </div>
                         <div className="flex justify-between items-end">
-                          <span className="text-white font-black text-4xl">{item.player.overall_rating || 0} <span className="text-sm font-bold align-middle">RATING</span></span>
+                          <div className="flex flex-col">
+                            <span className="text-white font-black text-4xl leading-none">
+                              {item.player.allTimePoints || 0}
+                            </span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                              ALL-TIME POINTS
+                            </span>
+                          </div>
                         </div>
                       </div>
                       {item.player.photo_url && (
-                        <div className="absolute bottom-0 right-4 w-32 h-48 z-10 pointer-events-none flex items-end justify-center">
-                          <img src={item.player.photo_url} alt={item.player.name} className="max-w-full max-h-full object-contain drop-shadow-2xl" />
+                        <div className="absolute top-6 right-6 w-24 h-24 rounded-full border-2 border-white/10 overflow-hidden shadow-lg group-hover:scale-105 transition-transform duration-300">
+                          <img src={item.player.photo_url} alt={item.player.name} className="w-full h-full object-cover" />
                         </div>
                       )}
                     </div>
