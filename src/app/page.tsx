@@ -563,7 +563,8 @@ function HomeContent() {
             No competitors have earned points yet.
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <>
+            <div className="flex flex-col gap-6">
             {topPlayers.map((player, idx) => {
               const isFirst = idx === 0;
               const toppedSeasons = (player as any).toppedSeasons || [];
@@ -713,6 +714,8 @@ function HomeContent() {
               </div>
             </div>
           </div>
+        )}
+          </>
         )}
       </section>
 
