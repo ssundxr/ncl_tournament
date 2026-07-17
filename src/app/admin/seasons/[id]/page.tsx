@@ -43,7 +43,7 @@ export default function SeasonControlPanel() {
       // 3. Fetch Existing Groups
       const { data: gData } = await supabase
         .from("groups")
-        .select("*, group_players(player:players(*))")
+        .select("*, leaderboards(player:players(*))")
         .eq("season_id", seasonId)
         .order("sort_order");
         
@@ -183,9 +183,12 @@ export default function SeasonControlPanel() {
         return;
       }
 
-      // Group A = sort_order 0, Group B = sort_order 1
-      const groupA = boards.filter(b => b.group.sort_order === 0).slice(0, 2);
-      const groupB = boards.filter(b => b.group.sort_order === 1).slice(0, 2);
+      const uniqueGroups = Array.from(new Set(boards.map(b => b.group.id)))
+        .map(id => boards.find(b => b.group.id === id)!.group)
+        .sort((a, b) => a.sort_order - b.sort_order);
+
+      const groupA = boards.filter(b => b.group.id === uniqueGroups[0]?.id).slice(0, 2);
+      const groupB = boards.filter(b => b.group.id === uniqueGroups[1]?.id).slice(0, 2);
 
       if (groupA.length < 2 || groupB.length < 2) {
         alert("Not enough players in Group A or Group B to form semi-finals.");
@@ -333,12 +336,12 @@ export default function SeasonControlPanel() {
             </div>
             <div className="p-4">
               <ul className="space-y-2">
-                {g.group_players?.map((gp: any) => (
-                  <li key={gp.player.id} className="flex items-center gap-3 text-sm font-medium">
+                {g.leaderboards?.map((lb: any) => (
+                  <li key={lb.player.id} className="flex items-center gap-3 text-sm font-medium">
                     <div className="w-6 h-6 rounded-full bg-background border border-border flex items-center justify-center overflow-hidden">
-                      {gp.player.photo_url ? <img src={gp.player.photo_url} className="w-full h-full object-cover" /> : <User className="w-3 h-3 text-muted-foreground" />}
+                      {lb.player.photo_url ? <img src={lb.player.photo_url} className="w-full h-full object-cover" /> : <User className="w-3 h-3 text-muted-foreground" />}
                     </div>
-                    {gp.player.name}
+                    {lb.player.name}
                   </li>
                 ))}
               </ul>
