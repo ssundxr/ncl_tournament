@@ -156,7 +156,8 @@ function HomeContent() {
   // Competitors Section States
   // const [competitorsSeasonId, setCompetitorsSeasonId] = useState<string | null>(null); // Removed: Global now
   const competitorsRef = useRef<HTMLDivElement>(null);
-  const [sharingCompetitors, setSharingCompetitors] = useState(false);
+  const [sharingPlayerId, setSharingPlayerId] = useState<string | null>(null);
+  const [selectedPlayerForCard, setSelectedPlayerForCard] = useState<any>(null);
   const [topPlayers, setTopPlayers] = useState<Player[]>([]);
   const [competitorsLoading, setCompetitorsLoading] = useState(false);
 
@@ -201,39 +202,35 @@ function HomeContent() {
     return () => clearInterval(interval);
   }, [seasonsList]);
 
-  const handleShareCompetitors = async () => {
-    if (!competitorsRef.current) return;
-    setSharingCompetitors(true);
-    try {
-      const dataUrl = await htmlToImage.toJpeg(competitorsRef.current, { 
-        quality: 0.95,
-        backgroundColor: '#ffffff',
-        style: { display: 'block' } // Ensure it's visible during render
-      });
-      
-      // If Web Share API is available (usually mobile)
-      if (navigator.share) {
-        try {
-          const blob = await (await fetch(dataUrl)).blob();
-          const file = new File([blob], 'nfl-top-competitors.jpg', { type: 'image/jpeg' });
-          await navigator.share({
-            title: 'NFL Global Top Competitors',
-            files: [file]
-          });
-        } catch (shareErr) {
-          console.warn('Share API failed or cancelled, falling back to download', shareErr);
-          triggerDownload(dataUrl, 'nfl-top-competitors.jpg');
-        }
-      } else {
-        // Fallback for desktop
-        triggerDownload(dataUrl, 'nfl-top-competitors.jpg');
+  const handleDownloadCard = async (player: any) => {
+    setSelectedPlayerForCard(player);
+    setSharingPlayerId(player.id);
+    
+    // Wait for state to apply and DOM to render the hidden card with new data
+    setTimeout(async () => {
+      if (!competitorsRef.current) {
+        setSharingPlayerId(null);
+        return;
       }
-    } catch (err) {
-      console.error("Error generating image:", err);
-      alert("Could not generate image for sharing.");
-    } finally {
-      setSharingCompetitors(false);
-    }
+      
+      try {
+        const dataUrl = await htmlToImage.toJpeg(competitorsRef.current, { 
+          quality: 1.0, // Maximum quality
+          canvasWidth: 2160,
+          canvasHeight: 3840,
+          pixelRatio: 1,
+          style: { display: 'block' }
+        });
+        
+        triggerDownload(dataUrl, \`\${player.name.replace(/\\s+/g, '-').toLowerCase()}-nfl-4k-card.jpg\`);
+      } catch (err) {
+        console.error("Error generating image:", err);
+        alert("Could not generate 4K image for downloading.");
+      } finally {
+        setSharingPlayerId(null);
+        setSelectedPlayerForCard(null);
+      }
+    }, 500);
   };
 
   const triggerDownload = (dataUrl: string, filename: string) => {
