@@ -144,13 +144,24 @@ function HomeContent() {
 
   const [activeSeason, setActiveSeason] = useState<any>(null);
   const [topPlayers, setTopPlayers] = useState<Player[]>([]);
-  const [standings, setStandings] = useState<StandingsRow[]>([]);
+  const [seasonsList, setSeasonsList] = useState<any[]>([]);
+  const [standingsSeasonId, setStandingsSeasonId] = useState<string | null>(null);
+  const [homeGroups, setHomeGroups] = useState<any[]>([]);
+  const [homeLeaderboards, setHomeLeaderboards] = useState<any[]>([]);
+  const [standingsLoading, setStandingsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       
+      // Fetch all seasons list for the local selector
+      const { data: allSeasons } = await supabase
+        .from('seasons')
+        .select('*')
+        .order('created_at', { ascending: false });
+      setSeasonsList(allSeasons || []);
+
       let currentSeason = null;
       if (seasonParam) {
         const { data: s } = await supabase
@@ -172,6 +183,9 @@ function HomeContent() {
       setActiveSeason(currentSeason);
 
       if (currentSeason) {
+        // Default local standings selection
+        setStandingsSeasonId(currentSeason.id);
+
         // Fetch all season enrollments
         const { data: enrollData } = await supabase
           .from('season_enrollments')
@@ -204,42 +218,41 @@ function HomeContent() {
         enrolledPlayers.sort((a: any, b: any) => b.allTimePoints - a.allTimePoints);
         
         setTopPlayers(enrolledPlayers.slice(0, 3) as any);
-
-        // Fetch standings for this season
-        const { data: lData } = await supabase
-          .from('leaderboards')
-          .select('*, player:players(*)')
-          .eq('season_id', currentSeason.id)
-          .order('points', { ascending: false })
-          .order('goal_difference', { ascending: false })
-          .order('goals_for', { ascending: false });
-
-        if (lData) {
-          const generatedStandings: StandingsRow[] = lData.map(l => ({
-            player: l.player as Player,
-            played: l.played,
-            wins: l.wins,
-            draws: l.draws,
-            losses: l.losses,
-            goalsFor: l.goals_for,
-            goalsAgainst: l.goals_against,
-            goalDifference: l.goal_difference,
-            points: l.points,
-            form: l.form || []
-          }));
-          setStandings(generatedStandings);
-        } else {
-          setStandings([]);
-        }
       } else {
         setTopPlayers([]);
-        setStandings([]);
       }
 
       setLoading(false);
     }
     loadData();
   }, [seasonParam]);
+
+  // Separate effect to load group standings when the local dropdown is toggled
+  useEffect(() => {
+    async function loadStandings() {
+      if (!standingsSeasonId) return;
+      setStandingsLoading(true);
+
+      const { data: gData } = await supabase
+        .from('groups')
+        .select('*')
+        .eq('season_id', standingsSeasonId)
+        .order('sort_order');
+      setHomeGroups(gData || []);
+
+      const { data: lData } = await supabase
+        .from('leaderboards')
+        .select('*, player:players(*)')
+        .eq('season_id', standingsSeasonId)
+        .order('points', { ascending: false })
+        .order('goal_difference', { ascending: false })
+        .order('goals_for', { ascending: false });
+      setHomeLeaderboards(lData || []);
+
+      setStandingsLoading(false);
+    }
+    loadStandings();
+  }, [standingsSeasonId]);
 
   const top3 = [
     {
@@ -407,31 +420,70 @@ function HomeContent() {
           <section className="w-full px-4 md:px-12 lg:px-24 xl:px-32 mb-24 relative z-30 flex flex-col gap-6">
             <div className="w-full h-2 bg-primary f1-slant-right mb-2" />
             
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-4">
-              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight font-heading text-white">Standings</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4 mb-4">
+              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight font-heading text-white">
+                Standings
+              </h2>
+              
+              {/* Local Season Selector */}
+              {seasonsList.length > 0 && (
+                <div className="flex items-center gap-2 bg-[#1a1a24] border border-border rounded-md px-3 py-1.5 self-start sm:self-auto">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Season:</span>
+                  <select
+                    value={standingsSeasonId || ""}
+                    onChange={(e) => setStandingsSeasonId(e.target.value)}
+                    className="bg-transparent text-white text-xs font-black uppercase tracking-widest outline-none border-0 cursor-pointer pr-4"
+                  >
+                    {seasonsList.map((s) => (
+                      <option key={s.id} value={s.id} className="bg-[#15151e] text-white">
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             
-            <div className="relative min-h-[400px]">
-              {standings.length === 0 ? (
+            <div className="relative min-h-[250px]">
+              {standingsLoading ? (
+                <div className="flex justify-center items-center py-20">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : homeGroups.length === 0 ? (
                 <div className="text-center py-20 border border-dashed border-border rounded-xl">
-                  <p className="text-muted-foreground font-bold uppercase tracking-wider">No standings generated for this season yet.</p>
+                  <p className="text-muted-foreground font-bold uppercase tracking-wider">No groups or standings configured for this season yet.</p>
                 </div>
               ) : (
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key="standings"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="w-full"
-                  >
-                    <GroupTable 
-                      groupName={`${activeSeason?.name || ""} standings`}
-                      standings={standings} 
-                    />
-                  </motion.div>
-                </AnimatePresence>
+                <div className="flex flex-col gap-12">
+                  {homeGroups.map((group) => {
+                    const groupBoards = homeLeaderboards.filter(l => l.group_id === group.id);
+                    const groupStandings: StandingsRow[] = groupBoards.map(l => ({
+                      player: l.player as Player,
+                      played: l.played,
+                      wins: l.wins,
+                      draws: l.draws,
+                      losses: l.losses,
+                      goalsFor: l.goals_for,
+                      goalsAgainst: l.goals_against,
+                      goalDifference: l.goal_difference,
+                      points: l.points,
+                      form: l.form || []
+                    }));
+
+                    return (
+                      <div key={group.id} className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-1.5 h-6 bg-primary" />
+                          <h3 className="text-xl font-black uppercase tracking-tight text-white">{group.name}</h3>
+                        </div>
+                        <GroupTable 
+                          groupName={group.name}
+                          standings={groupStandings} 
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </section>
