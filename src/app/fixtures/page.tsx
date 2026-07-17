@@ -32,33 +32,24 @@ function FixturesPageContent() {
   const handleShareFixtures = async () => {
     if (!fixturesRef.current) return;
     setSharingFixtures(true);
-    try {
-      const dataUrl = await htmlToImage.toJpeg(fixturesRef.current, { 
-        quality: 0.95,
-        backgroundColor: '#0a0a0a',
-        style: { display: 'block' }
-      });
-      
-      if (navigator.share) {
-        try {
-          const blob = await (await fetch(dataUrl)).blob();
-          const file = new File([blob], 'nfl-fixtures.jpg', { type: 'image/jpeg' });
-          await navigator.share({
-            title: 'NFL Fixtures',
-            files: [file]
-          });
-        } catch (shareErr) {
-          triggerDownload(dataUrl, 'nfl-fixtures.jpg');
-        }
-      } else {
-        triggerDownload(dataUrl, 'nfl-fixtures.jpg');
+    // Wait slightly to ensure styles are applied
+    setTimeout(async () => {
+      try {
+        const dataUrl = await htmlToImage.toJpeg(fixturesRef.current!, { 
+          quality: 1.0,
+          pixelRatio: 2, // 2x resolution for very high quality
+          backgroundColor: '#0a0a0a',
+          style: { display: 'block' }
+        });
+        
+        triggerDownload(dataUrl, 'ncl-fixtures-4k.jpg');
+      } catch (err) {
+        console.error("Error generating image:", err);
+        alert("Could not generate 4K image for downloading.");
+      } finally {
+        setSharingFixtures(false);
       }
-    } catch (err) {
-      console.error("Error generating image:", err);
-      alert("Could not generate image for sharing.");
-    } finally {
-      setSharingFixtures(false);
-    }
+    }, 500);
   };
 
   const triggerDownload = (dataUrl: string, filename: string) => {
@@ -153,11 +144,11 @@ function FixturesPageContent() {
               onClick={handleShareFixtures}
               disabled={sharingFixtures || fixtures.length === 0}
               size="sm"
-              className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-black uppercase tracking-widest text-[10px] h-8 rounded-sm shadow-[0_0_15px_rgba(225,6,0,0.4)] border border-red-500/50 skew-x-[-10deg] sm:ml-4"
+              className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-sm shadow-[0_0_15px_rgba(225,6,0,0.4)] border border-red-500/50 skew-x-[-10deg] sm:ml-4"
             >
               <div className="flex items-center skew-x-[10deg]">
-                {sharingFixtures ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : <Share2 className="w-3.5 h-3.5 mr-2" />}
-                Share F1 Card
+                {sharingFixtures ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                Download 4K Card
               </div>
             </Button>
           </div>
@@ -253,7 +244,7 @@ function FixturesPageContent() {
       )}
       
       {/* Hidden F1 Style Card for Image Generation */}
-      <div className="absolute -left-[9999px] top-0">
+      <div className="fixed -left-[5000px] top-0 opacity-0 pointer-events-none z-[-100]">
         <div ref={fixturesRef} className="w-[1080px] h-[1920px] bg-[#0a0a0a] relative overflow-hidden flex flex-col p-16 font-sans">
           {/* Background Texture & Effects */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,#330000_0%,#0a0a0a_70%)] opacity-80" />
@@ -262,7 +253,7 @@ function FixturesPageContent() {
           <div className="absolute -left-64 bottom-32 w-[800px] h-[200px] bg-red-600/20 blur-[120px] rounded-full -rotate-45" />
           
           {/* Header */}
-          <div className="relative z-10 border-l-[12px] border-red-600 pl-8 mb-24 mt-12 flex justify-between items-end">
+          <div className="relative z-10 border-l-[12px] border-red-600 pl-8 mb-16 mt-12 flex justify-between items-end">
             <div>
               <h1 className="text-white text-8xl font-black uppercase italic tracking-tighter leading-none m-0">
                 MATCH<br/>DAY
@@ -277,49 +268,64 @@ function FixturesPageContent() {
           </div>
 
           {/* Fixtures List */}
-          <div className="relative z-10 flex-1 flex flex-col gap-10 mt-8">
-            {fixtures.slice(0, 4).map((fixture, idx) => {
+          <div className="relative z-10 flex-1 flex flex-col gap-12 mt-8">
+            {fixtures.slice(0, 5).map((fixture, idx) => {
               const home = fixture.home_player;
               const away = fixture.away_player;
               
               if (!home || !away) return null;
               
+              // Stage naming
+              let stageName = "GROUP STAGE";
+              if (fixture.stage === 'semi_final') stageName = "SEMI FINAL";
+              if (fixture.stage === 'final') stageName = "GRAND FINAL";
+              
               return (
-                <div key={fixture.id} className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-transparent skew-x-[-15deg] transform -translate-x-4 opacity-50" />
-                  <div className="relative flex items-center bg-[#151515] border border-white/10 skew-x-[-15deg] overflow-hidden p-1">
+                <div key={fixture.id} className="relative group flex flex-col items-center">
+                  <div className="absolute -top-6 bg-red-600 px-6 py-1 z-20 shadow-[0_0_15px_rgba(225,6,0,0.5)] skew-x-[-10deg]">
+                    <span className="text-white text-sm font-black uppercase tracking-[0.3em] skew-x-[10deg] block">{stageName}</span>
+                  </div>
+                  
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-transparent skew-x-[-15deg] transform -translate-x-4 opacity-50" />
+                  <div className="relative flex w-full items-center bg-[#151515] border border-white/20 skew-x-[-15deg] overflow-hidden p-1 shadow-2xl">
                     
                     {/* Home Player */}
-                    <div className="flex-1 px-8 flex justify-end items-center bg-[#111] h-36">
-                      <div className="skew-x-[15deg] flex items-center gap-6">
+                    <div className="flex-1 px-8 flex justify-end items-center bg-[#0a0a0a] h-40 relative overflow-hidden">
+                       <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-10 -mt-10" />
+                       <div className="skew-x-[15deg] flex items-center gap-6 relative z-10">
                          <div className="text-right">
-                           <p className="text-white/50 text-xl font-bold uppercase tracking-widest">{home.favorite_team || 'IND'}</p>
-                           <h2 className="text-white text-4xl font-black uppercase italic tracking-tight">{home.name}</h2>
+                           <p className="text-red-500/80 text-xl font-bold uppercase tracking-[0.3em] mb-1">{home.favorite_team || 'IND'}</p>
+                           <h2 className="text-white text-5xl font-black uppercase italic tracking-tight drop-shadow-lg">{home.name}</h2>
                          </div>
-                         {home.photo_url && (
-                           <img src={home.photo_url} className="w-20 h-20 rounded-full border-2 border-white/20 object-cover grayscale contrast-125" />
+                         {home.photo_url ? (
+                           <img src={home.photo_url} crossOrigin="anonymous" className="w-24 h-24 rounded-full border-[3px] border-white/20 object-cover grayscale contrast-125 shadow-[0_0_20px_rgba(0,0,0,0.8)]" />
+                         ) : (
+                           <div className="w-24 h-24 rounded-full bg-white/5 border-[3px] border-white/20" />
                          )}
-                      </div>
+                       </div>
                     </div>
                     
                     {/* VS Box */}
-                    <div className="w-24 h-36 bg-red-600 flex items-center justify-center border-x-4 border-black shrink-0">
+                    <div className="w-32 h-40 bg-gradient-to-br from-red-500 to-red-800 flex flex-col items-center justify-center border-x-[6px] border-black shrink-0 relative z-10 shadow-[0_0_30px_rgba(225,6,0,0.4)]">
                       <div className="skew-x-[15deg]">
-                        <span className="text-4xl font-black italic text-white leading-none">VS</span>
+                        <span className="text-5xl font-black italic text-white leading-none drop-shadow-md">VS</span>
                       </div>
                     </div>
 
                     {/* Away Player */}
-                    <div className="flex-1 px-8 flex justify-start items-center bg-[#111] h-36">
-                      <div className="skew-x-[15deg] flex items-center gap-6">
-                         {away.photo_url && (
-                           <img src={away.photo_url} className="w-20 h-20 rounded-full border-2 border-white/20 object-cover grayscale contrast-125" />
+                    <div className="flex-1 px-8 flex justify-start items-center bg-[#0a0a0a] h-40 relative overflow-hidden">
+                       <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -ml-10 -mb-10" />
+                       <div className="skew-x-[15deg] flex items-center gap-6 relative z-10">
+                         {away.photo_url ? (
+                           <img src={away.photo_url} crossOrigin="anonymous" className="w-24 h-24 rounded-full border-[3px] border-white/20 object-cover grayscale contrast-125 shadow-[0_0_20px_rgba(0,0,0,0.8)]" />
+                         ) : (
+                           <div className="w-24 h-24 rounded-full bg-white/5 border-[3px] border-white/20" />
                          )}
                          <div className="text-left">
-                           <p className="text-white/50 text-xl font-bold uppercase tracking-widest">{away.favorite_team || 'IND'}</p>
-                           <h2 className="text-white text-4xl font-black uppercase italic tracking-tight">{away.name}</h2>
+                           <p className="text-blue-500/80 text-xl font-bold uppercase tracking-[0.3em] mb-1">{away.favorite_team || 'IND'}</p>
+                           <h2 className="text-white text-5xl font-black uppercase italic tracking-tight drop-shadow-lg">{away.name}</h2>
                          </div>
-                      </div>
+                       </div>
                     </div>
                   </div>
                 </div>
@@ -328,12 +334,12 @@ function FixturesPageContent() {
           </div>
 
           {/* Footer */}
-          <div className="relative z-10 mt-auto border-t border-white/10 pt-12 flex justify-between items-end pb-8">
+          <div className="relative z-10 mt-auto border-t-[3px] border-white/10 pt-10 flex justify-between items-end pb-8">
             <div>
-              <p className="text-white/50 text-xl font-bold tracking-widest uppercase">Official Matchday Fixtures</p>
-              <p className="text-white text-2xl font-black italic tracking-tighter">NAMMAFOOTBALL.COM</p>
+              <p className="text-white/40 text-xl font-bold tracking-[0.3em] uppercase mb-2">Official Matchday Fixtures</p>
+              <p className="text-white text-4xl font-black italic tracking-tighter drop-shadow-md">NCL.SUNDXR.DEV</p>
             </div>
-            <img src="/logo_nfl.png" className="h-24 opacity-80 grayscale contrast-200" />
+            <img src="/logo_nfl.png" crossOrigin="anonymous" className="h-48 drop-shadow-[0_0_20px_rgba(225,6,0,0.3)]" />
           </div>
         </div>
       </div>
