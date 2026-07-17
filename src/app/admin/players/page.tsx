@@ -10,6 +10,7 @@ import { Player } from "@/types";
 export default function AdminPlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchPlayers() {
@@ -27,6 +28,35 @@ export default function AdminPlayersPage() {
     }
     fetchPlayers();
   }, []);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete player "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      const { error } = await supabase
+        .from('players')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        if (error.code === '23503') { // Postgres foreign key violation
+          alert(`Cannot delete player "${name}" because they are currently part of one or more matches, fixtures, or seasonal records.\n\nPlease delete their matches/fixtures first.`);
+        } else {
+          alert(`Failed to delete player: ${error.message}`);
+        }
+      } else {
+        setPlayers(prev => prev.filter(p => p.id !== id));
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert("An unexpected error occurred while deleting the player.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -95,10 +125,18 @@ export default function AdminPlayersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                        <Link href={`/admin/players/${player.id}/edit`}>
+                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </Link>
+                        <Button
+                          onClick={() => handleDelete(player.id, player.name)}
+                          disabled={deletingId === player.id}
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
