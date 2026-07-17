@@ -278,7 +278,24 @@ export default function SeasonControlPanel() {
             </Button>
           )}
 
-          {season.status === 'active' && groups.length === 0 && (
+          {season.status === 'active' && (
+            <Button 
+              onClick={async () => {
+                if (confirm("Close enrollment for this season? Players will no longer be able to register.")) {
+                  await supabase.from("seasons").update({ status: "completed" }).eq("id", seasonId);
+                  alert("Enrollment is now closed.");
+                  window.location.reload();
+                }
+              }}
+              size="lg"
+              variant="outline"
+              className="border-destructive text-destructive hover:bg-destructive/10 font-bold uppercase tracking-wider"
+            >
+              <Users className="w-5 h-5 mr-2" /> Close Enrollment
+            </Button>
+          )}
+
+          {(season.status === 'active' || season.status === 'completed') && groups.length === 0 && (
             <Button 
               onClick={generateGroupsAndFixtures} 
               disabled={generating || enrolledPlayers.length < 2}
@@ -286,7 +303,7 @@ export default function SeasonControlPanel() {
               className="bg-success hover:bg-success/90 text-white font-bold uppercase tracking-wider"
             >
               {generating ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Shuffle className="w-5 h-5 mr-2" />}
-              Close Registration & Generate Groups
+              Generate Groups & Fixtures
             </Button>
           )}
 

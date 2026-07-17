@@ -254,6 +254,29 @@ function EnrollForm() {
     );
   }
 
+  // Enrollment closed
+  if (season.status !== 'active') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 space-y-6">
+        <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center">
+          <Lock className="w-10 h-10 text-destructive" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-black uppercase text-white tracking-tight mb-2">Enrollment Closed</h2>
+          <p className="text-muted-foreground max-w-sm mx-auto">
+            Registration for <strong>{season.tournament?.name || "NFL"}: {season.name}</strong> is currently closed. 
+            Stay tuned for the next season!
+          </p>
+        </div>
+        <Link href="/">
+          <Button size="lg" variant="outline" className="font-bold uppercase tracking-widest border-border text-muted-foreground hover:text-white">
+            Return Home
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
   // Step 3: Success Layout with receipt & WhatsApp trigger
   if (success) {
     return (
