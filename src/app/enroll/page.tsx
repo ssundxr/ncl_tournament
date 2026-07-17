@@ -4,14 +4,17 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, UserPlus, CheckCircle2, ShieldAlert, CreditCard, QrCode, Lock, MessageSquare } from "lucide-react";
+import { Loader2, UserPlus, CheckCircle2, ShieldAlert, Lock, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { Season } from "@/types";
+import { load } from '@cashfreepayments/cashfree-js';
 
 function EnrollForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const seasonId = searchParams.get("season");
+  const paymentStatusParam = searchParams.get("payment");
+  const orderIdParam = searchParams.get("order_id");
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -19,22 +22,9 @@ function EnrollForm() {
   const [season, setSeason] = useState<Season | null>(null);
   const [error, setError] = useState("");
   
-  // Steps: 1 = Details Form, 2 = Payment Gateway
-  const [step, setStep] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card'>('upi');
-  const [upiRef, setUpiRef] = useState("");
-  
-  const [cardData, setCardData] = useState({
-    number: "",
-    expiry: "",
-    cvv: "",
-    name: ""
-  });
-  
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [processingText, setProcessingText] = useState("");
   const [generatedRefNo, setGeneratedRefNo] = useState("");
-  const [qrError, setQrError] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -71,14 +61,20 @@ function EnrollForm() {
     fetchSeason();
   }, [seasonId]);
 
+  // Handle successful payment redirect
+  useEffect(() => {
+    if (paymentStatusParam === 'success' && orderIdParam && season) {
+      setGeneratedRefNo(orderIdParam);
+      setSuccess(true);
+      // We could also fetch the player details here based on orderId to populate the receipt,
+      // but for simplicity we rely on the state if they didn't refresh, 
+      // or just show the reference ID.
+    }
+  }, [paymentStatusParam, orderIdParam, season]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setCardData(prev => ({ ...prev, [name]: value }));
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,53 +89,16 @@ function EnrollForm() {
     }
   };
 
-  // Step 1 Submission: advance to payment gateway
-  const handleProceedToPayment = (e: React.FormEvent) => {
+  const handleProceedToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.favorite_team || !formData.phone) {
       setError("Please fill in all required fields.");
       return;
     }
     setError("");
-    setStep(2);
-  };
-
-  // Step 2 Submission: process payment and save to DB
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (paymentMethod === 'upi' && !upiRef) {
-      setError("Please enter your UPI transaction reference number.");
-      return;
-    }
-    if (paymentMethod === 'card' && (!cardData.number || !cardData.expiry || !cardData.cvv || !cardData.name)) {
-      setError("Please fill in all credit card details.");
-      return;
-    }
-
-    setError("");
-    setPaymentProcessing(true);
-
-    // Card transaction transition loading simulation
-    if (paymentMethod === 'card') {
-      const messages = [
-        "Connecting to secure payment gateway...",
-        "Authorizing card transaction...",
-        "Verifying transaction with issuing bank...",
-        "Payment authorized securely!"
-      ];
-      for (const msg of messages) {
-        setProcessingText(msg);
-        await new Promise(resolve => setTimeout(resolve, 800));
-      }
-    } else {
-      setProcessingText("Verifying UPI transaction Reference ID...");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-
     setSaving(true);
-    const finalRef = paymentMethod === 'upi' ? upiRef : `TXN-${Date.now().toString().slice(-8)}`;
-    setGeneratedRefNo(finalRef);
+    setPaymentProcessing(true);
+    setProcessingText("Initializing secure checkout...");
 
     try {
       let finalPhotoUrl = "";
@@ -181,7 +140,7 @@ function EnrollForm() {
           favorite_team: formData.favorite_team,
           bio: formData.bio,
           photo_url: finalPhotoUrl,
-          phone: formData.phone, // Save mobile number
+          phone: formData.phone,
           overall_rating: 70
         })
         .select()
@@ -189,29 +148,56 @@ function EnrollForm() {
 
       if (playerError) throw playerError;
 
-      // 2. Enroll player and store payment verification
+      // 2. Call backend to create Cashfree order
+      const returnUrl = `${window.location.origin}/enroll?season=${season?.id}&payment=success&order_id={order_id}`;
+      
+      const response = await fetch('/api/cashfree/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_id: newPlayer.id,
+          phone: formData.phone,
+          name: formData.name,
+          season_id: season?.id,
+          return_url: returnUrl
+        })
+      });
+
+      const orderData = await response.json();
+      if (!response.ok) {
+        throw new Error(orderData.error || 'Failed to initialize payment');
+      }
+
+      // 3. Store pending enrollment
       if (season) {
-        const { error: enrollError } = await supabase
+        await supabase
           .from("season_enrollments")
           .insert({
             season_id: season.id,
             player_id: newPlayer.id,
-            payment_status: 'paid', // Update payment status to paid
-            amount_paid: 25,        // Update registration fee
-            payment_ref: finalRef   // Store payment transaction reference
+            payment_status: 'pending', 
+            amount_paid: 25,        
+            payment_ref: orderData.order_id 
           });
-          
-        if (enrollError) throw enrollError;
       }
 
-      setSuccess(true);
+      setGeneratedRefNo(orderData.order_id);
+      setProcessingText("Redirecting to Cashfree Payment Gateway...");
+
+      // 4. Open Cashfree Checkout
+      const cashfree = await load({ mode: "sandbox" });
+      
+      cashfree.checkout({
+        paymentSessionId: orderData.payment_session_id,
+        redirectTarget: "_self", // Or _modal if you prefer, but redirect is more robust for UPI apps
+      });
+      
     } catch (err: any) {
       console.error(err);
       setError(err.message || "An error occurred during enrollment.");
-      setStep(1); // Return to form on database write failure
+      setPaymentProcessing(false);
     } finally {
       setSaving(false);
-      setPaymentProcessing(false);
     }
   };
 
@@ -221,11 +207,8 @@ function EnrollForm() {
       `----------------------------------\n` +
       `*Tournament:* ${season?.tournament?.name || "NFL Championship"}\n` +
       `*Season:* ${season?.name || ""}\n` +
-      `*Player Name:* ${formData.name}\n` +
-      `*Club/Team:* ${formData.favorite_team}\n` +
-      `*Mobile:* ${formData.phone}\n` +
+      `*Player Name:* ${formData.name || "Newly Registered Player"}\n` +
       `*Registration Fee:* ₹25.00 (Paid)\n` +
-      `*Payment Method:* ${paymentMethod.toUpperCase()}\n` +
       `*Reference ID:* ${generatedRefNo}\n` +
       `----------------------------------\n` +
       `Please verify and approve my enrollment. See you on the pitch!`;
@@ -255,7 +238,7 @@ function EnrollForm() {
   }
 
   // Enrollment closed
-  if (season.status !== 'active') {
+  if (season.status !== 'active' && !success) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 space-y-6">
         <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center">
@@ -277,7 +260,7 @@ function EnrollForm() {
     );
   }
 
-  // Step 3: Success Layout with receipt & WhatsApp trigger
+  // Success Layout with receipt & WhatsApp trigger
   if (success) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] py-12 px-4 max-w-lg mx-auto">
@@ -294,14 +277,19 @@ function EnrollForm() {
           <div className="absolute inset-0 bg-[radial-gradient(#ffffff02_1px,transparent_1px)] [background-size:10px_10px] pointer-events-none rounded-xl" />
           <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b border-border pb-2">NFL Official Receipt</h3>
           <div className="grid grid-cols-2 gap-y-2.5 text-xs">
-            <span className="text-muted-foreground uppercase font-bold">Player Name:</span>
-            <span className="text-white text-right font-bold truncate">{formData.name}</span>
+            {formData.name && (
+              <>
+                <span className="text-muted-foreground uppercase font-bold">Player Name:</span>
+                <span className="text-white text-right font-bold truncate">{formData.name}</span>
+              </>
+            )}
             
-            <span className="text-muted-foreground uppercase font-bold">Mobile Number:</span>
-            <span className="text-white text-right font-bold">{formData.phone}</span>
-
-            <span className="text-muted-foreground uppercase font-bold">Favorite Club:</span>
-            <span className="text-white text-right font-bold truncate">{formData.favorite_team}</span>
+            {formData.phone && (
+              <>
+                <span className="text-muted-foreground uppercase font-bold">Mobile Number:</span>
+                <span className="text-white text-right font-bold">{formData.phone}</span>
+              </>
+            )}
 
             <span className="text-muted-foreground uppercase font-bold">Amount Paid:</span>
             <span className="text-white text-right font-black text-sm text-green-400">₹25.00</span>
@@ -331,181 +319,18 @@ function EnrollForm() {
     );
   }
 
-  // Step 2: Payment Gateway Options (UPI & Card Details)
-  if (step === 2) {
-    const upiMerchantId = "shyamsundxr@ybl";
-    const upiUri = `upi://pay?pa=${upiMerchantId}&pn=NammaFootballLeague&am=25.00&cu=INR&tn=NFL%20Registration%20${encodeURIComponent(formData.name)}`;
-    const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=15151e&data=${encodeURIComponent(upiUri)}`;
-    const qrCodeImage = qrError ? dynamicQrUrl : "/pay_qr.jpeg";
-
+  // Payment Processing Loading State
+  if (paymentProcessing) {
     return (
       <div className="max-w-md mx-auto py-12 px-4">
-        {paymentProcessing ? (
-          <div className="bg-card border border-border rounded-xl p-8 flex flex-col items-center justify-center min-h-[400px] text-center space-y-6">
-            <Loader2 className="w-12 h-12 animate-spin text-primary" />
-            <h3 className="text-xl font-bold uppercase tracking-tight text-white">Processing Secure Payment</h3>
-            <p className="text-muted-foreground text-sm max-w-xs">{processingText}</p>
+        <div className="bg-card border border-border rounded-xl p-8 flex flex-col items-center justify-center min-h-[400px] text-center space-y-6 shadow-2xl">
+          <Loader2 className="w-12 h-12 animate-spin text-primary" />
+          <h3 className="text-xl font-bold uppercase tracking-tight text-white">Processing Secure Payment</h3>
+          <p className="text-muted-foreground text-sm max-w-xs">{processingText}</p>
+          <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-bold uppercase tracking-wider justify-center mt-4">
+            <ShieldAlert className="w-3.5 h-3.5 text-primary" /> Encrypted 256-bit Secure Gateway
           </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight flex items-center justify-center gap-2">
-                <Lock className="w-5 h-5 text-primary" /> Secure Checkout
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                NFL Season Enrollment Gateway • Fee ₹25.00
-              </p>
-            </div>
-
-            {error && (
-              <div className="bg-destructive/20 border border-destructive/50 text-destructive px-4 py-3 rounded-lg text-sm font-bold">
-                {error}
-              </div>
-            )}
-
-            <div className="bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
-              {/* Checkout billing summary */}
-              <div className="p-5 bg-[#15151e] border-b border-border flex justify-between items-center">
-                <div>
-                  <h3 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Order Item</h3>
-                  <p className="text-sm font-black uppercase text-white">Tournament Registration</p>
-                </div>
-                <div className="text-right">
-                  <h3 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Total Fee</h3>
-                  <p className="text-lg font-black text-primary">₹25.00</p>
-                </div>
-              </div>
-
-              {/* Tabs */}
-              <div className="grid grid-cols-2 border-b border-border bg-[#191922]">
-                <button
-                  onClick={() => setPaymentMethod('upi')}
-                  className={`py-3.5 font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 border-b-2 transition-all ${paymentMethod === 'upi' ? 'border-primary text-white bg-background/30' : 'border-transparent text-muted-foreground hover:text-white'}`}
-                >
-                  <QrCode className="w-4 h-4" /> UPI QR Code
-                </button>
-                <button
-                  onClick={() => setPaymentMethod('card')}
-                  className={`py-3.5 font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 border-b-2 transition-all ${paymentMethod === 'card' ? 'border-primary text-white bg-background/30' : 'border-transparent text-muted-foreground hover:text-white'}`}
-                >
-                  <CreditCard className="w-4 h-4" /> Credit Card
-                </button>
-              </div>
-
-              <div className="p-6">
-                <form onSubmit={handlePaymentSubmit} className="space-y-6">
-                  {paymentMethod === 'upi' ? (
-                    <div className="flex flex-col items-center text-center space-y-4">
-                      <p className="text-xs text-muted-foreground max-w-xs font-medium leading-relaxed">
-                        Scan this QR code using GPay, PhonePe, Paytm, or BHIM to send ₹25 directly.
-                      </p>
-                      
-                      <div className="bg-white p-4 rounded-2xl border border-border shadow-md">
-                        <img 
-                          src={qrCodeImage} 
-                          alt="Payment QR Code" 
-                          className="w-[180px] h-[180px] object-contain" 
-                          onError={() => setQrError(true)}
-                        />
-                      </div>
-                      
-                      <div className="w-full text-left pt-2">
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-                          UPI Ref No / Transaction ID *
-                        </label>
-                        <input
-                          required
-                          type="text"
-                          value={upiRef}
-                          onChange={(e) => setUpiRef(e.target.value)}
-                          className="w-full bg-background border border-border rounded-md px-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-primary"
-                          placeholder="e.g. 12-digit number"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Cardholder Name *</label>
-                        <input
-                          required
-                          type="text"
-                          name="name"
-                          value={cardData.name}
-                          onChange={handleCardChange}
-                          className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary text-sm font-medium"
-                          placeholder="Name on card"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Card Number *</label>
-                        <input
-                          required
-                          type="text"
-                          name="number"
-                          maxLength={19}
-                          value={cardData.number}
-                          onChange={handleCardChange}
-                          className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary text-sm font-mono"
-                          placeholder="1234 5678 1234 5678"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Expiry *</label>
-                          <input
-                            required
-                            type="text"
-                            name="expiry"
-                            maxLength={5}
-                            value={cardData.expiry}
-                            onChange={handleCardChange}
-                            className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary text-sm font-mono"
-                            placeholder="MM/YY"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">CVV *</label>
-                          <input
-                            required
-                            type="password"
-                            name="cvv"
-                            maxLength={3}
-                            value={cardData.cvv}
-                            onChange={handleCardChange}
-                            className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary text-sm font-mono"
-                            placeholder="•••"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-bold uppercase tracking-wider justify-center">
-                    <ShieldAlert className="w-3.5 h-3.5 text-primary" /> Encrypted 256-bit Secure Gateway
-                  </div>
-
-                  <div className="pt-2 flex gap-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => { setError(""); setStep(1); }}
-                      className="w-1/3 border-border font-bold uppercase tracking-wider text-xs h-12"
-                    >
-                      Back
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="w-2/3 bg-primary hover:bg-primary/95 text-white font-bold uppercase tracking-wider text-xs h-12"
-                    >
-                      Pay ₹25.00 Securely
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -603,10 +428,11 @@ function EnrollForm() {
           <div className="pt-4">
             <Button 
               type="submit" 
+              disabled={saving}
               size="lg"
               className="w-full bg-primary text-white hover:bg-primary/90 font-bold uppercase tracking-widest h-14 text-xs"
             >
-              Proceed to Payment
+              {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Proceed to Payment"}
             </Button>
           </div>
         </form>
