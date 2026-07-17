@@ -1,40 +1,77 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { MatchCard } from "@/components/match/match-card";
-import { Fixture } from "@/types";
 import { supabase } from "@/lib/supabase/client";
+import { useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
-export default function ResultsPage() {
+function ResultsPageContent() {
+  const searchParams = useSearchParams();
+  const seasonParam = searchParams.get("season");
+
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadResults() {
-      const { data } = await supabase
-        .from('fixtures')
-        .select(`
-          *,
-          home_player:players!home_player_id(*),
-          away_player:players!away_player_id(*),
-          matches(*)
-        `)
-        .eq('status', 'completed')
-        .order('matchday', { ascending: false });
-        
-      if (data) {
-        // Flatten the match score onto the fixture object so MatchCard can read it
-        const formattedData = data.map((f: any) => ({
-          ...f,
-          home_score: f.home_score ?? 0,
-          away_score: f.away_score ?? 0,
-        }));
-        setResults(formattedData);
+      setLoading(true);
+
+      let targetSeasonId = seasonParam;
+      if (!targetSeasonId) {
+        // Fallback: active season
+        const { data: activeSeasons } = await supabase
+          .from('seasons')
+          .select('id')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (activeSeasons && activeSeasons.length > 0) {
+          targetSeasonId = activeSeasons[0].id;
+        } else {
+          // Fallback 2: first available season
+          const { data: firstSeasons } = await supabase
+            .from('seasons')
+            .select('id')
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (firstSeasons && firstSeasons.length > 0) {
+            targetSeasonId = firstSeasons[0].id;
+          }
+        }
+      }
+
+      if (targetSeasonId) {
+        const { data } = await supabase
+          .from('fixtures')
+          .select(`
+            *,
+            home_player:players!home_player_id(*),
+            away_player:players!away_player_id(*),
+            matches(*)
+          `)
+          .eq('season_id', targetSeasonId)
+          .eq('status', 'completed')
+          .order('matchday', { ascending: false });
+          
+        if (data) {
+          // Flatten the match score onto the fixture object so MatchCard can read it
+          const formattedData = data.map((f: any) => ({
+            ...f,
+            home_score: f.home_score ?? 0,
+            away_score: f.away_score ?? 0,
+          }));
+          setResults(formattedData);
+        } else {
+          setResults([]);
+        }
+      } else {
+        setResults([]);
       }
       setLoading(false);
     }
     loadResults();
-  }, []);
+  }, [seasonParam]);
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 min-h-screen">
@@ -49,11 +86,11 @@ export default function ResultsPage() {
 
       {loading ? (
         <div className="flex justify-center items-center py-24">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
         </div>
       ) : results.length === 0 ? (
         <div className="text-center text-muted-foreground py-24 font-bold uppercase tracking-wider">
-          No results available yet.
+          No results available yet for this season.
         </div>
       ) : (
         <div className="flex flex-col gap-6 max-w-4xl mx-auto">
@@ -63,5 +100,17 @@ export default function ResultsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ResultsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    }>
+      <ResultsPageContent />
+    </Suspense>
   );
 }

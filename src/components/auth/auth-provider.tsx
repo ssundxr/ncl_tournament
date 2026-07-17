@@ -16,19 +16,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
         const allowedEmails = ["ashwinfejl357@gmail.com", "shyamsundxr@gmail.com"];
-        if (user.email && !allowedEmails.includes(user.email)) {
-          await auth.signOut();
+        if (firebaseUser.email && !allowedEmails.includes(firebaseUser.email)) {
+          // Instantly lock them out in UI state without waiting for network signout
           setUser(null);
+          setLoading(false);
+          await auth.signOut();
         } else {
-          setUser(user);
+          setUser(firebaseUser);
+          setLoading(false);
         }
       } else {
         setUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();

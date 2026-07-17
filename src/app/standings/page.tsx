@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { GroupTable } from "@/components/standings/group-table";
 import { StandingsRow, Player } from "@/types";
 import { supabase } from "@/lib/supabase/client";
 import { Trophy, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
-export default function StandingsPage() {
+function StandingsPageContent() {
+  const searchParams = useSearchParams();
+  const seasonParam = searchParams.get("season");
+
   const [loading, setLoading] = useState(true);
   const [season, setSeason] = useState<any>(null);
   const [groups, setGroups] = useState<any[]>([]);
@@ -15,14 +19,26 @@ export default function StandingsPage() {
 
   useEffect(() => {
     async function loadData() {
-      // Fetch active season
-      const { data: sData } = await supabase
-        .from('seasons')
-        .select('*, tournament:tournaments(*)')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      setLoading(true);
+      
+      let sData = null;
+      if (seasonParam) {
+        const { data } = await supabase
+          .from('seasons')
+          .select('*, tournament:tournaments(*)')
+          .eq('id', seasonParam)
+          .single();
+        sData = data;
+      } else {
+        const { data } = await supabase
+          .from('seasons')
+          .select('*, tournament:tournaments(*)')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        sData = data;
+      }
 
       if (sData) {
         setSeason(sData);
@@ -53,11 +69,16 @@ export default function StandingsPage() {
           .in('stage', ['semi_final', 'final'])
           .order('created_at');
         setKnockouts(kData || []);
+      } else {
+        setSeason(null);
+        setGroups([]);
+        setLeaderboards([]);
+        setKnockouts([]);
       }
       setLoading(false);
     }
     loadData();
-  }, []);
+  }, [seasonParam]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>;
@@ -67,8 +88,8 @@ export default function StandingsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center flex-col text-center space-y-4">
         <Trophy className="w-16 h-16 text-muted-foreground" />
-        <h2 className="text-3xl font-black uppercase text-white">No Active Season</h2>
-        <p className="text-muted-foreground">There is no active season right now. Check back later!</p>
+        <h2 className="text-3xl font-black uppercase text-white">No Season Found</h2>
+        <p className="text-muted-foreground">Select a different season or contact administration.</p>
       </div>
     );
   }
@@ -106,7 +127,7 @@ export default function StandingsPage() {
 
       {groups.length === 0 ? (
         <div className="text-center py-20 bg-card border border-border rounded-xl">
-          <p className="text-muted-foreground font-bold uppercase tracking-widest">Groups have not been generated yet.</p>
+          <p className="text-muted-foreground font-bold uppercase tracking-widest">Groups have not been generated yet for this season.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-16 max-w-5xl mx-auto">
@@ -129,7 +150,7 @@ export default function StandingsPage() {
                 <div className="space-y-6">
                   <h3 className="text-xl font-bold uppercase text-primary tracking-widest text-center mb-6">Semi-Finals</h3>
                   {semis.map((match, idx) => {
-                    const m = match.matches?.[0]; // Relation returns array, but it's 1-to-1 essentially
+                    const m = match.matches?.[0];
                     return (
                       <div key={match.id} className="bg-card border border-border rounded-xl overflow-hidden relative">
                         <div className="absolute top-0 left-0 h-full w-1 bg-primary" />
@@ -191,5 +212,17 @@ export default function StandingsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function StandingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    }>
+      <StandingsPageContent />
+    </Suspense>
   );
 }
