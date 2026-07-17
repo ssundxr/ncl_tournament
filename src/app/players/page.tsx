@@ -11,78 +11,96 @@ function PlayersPageContent() {
   const searchParams = useSearchParams();
   const seasonParam = searchParams.get("season");
 
+  const [seasons, setSeasons] = useState<any[]>([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
+
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
 
+  // 1. Initial Load: fetch all seasons and set default selection
   useEffect(() => {
-    async function loadPlayers() {
+    async function loadSeasons() {
       setLoading(true);
+      const { data } = await supabase
+        .from('seasons')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      let targetSeasonId = seasonParam;
-      if (!targetSeasonId) {
-        // Fallback: active season
-        const { data: activeSeasons } = await supabase
-          .from('seasons')
-          .select('id')
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(1);
-        if (activeSeasons && activeSeasons.length > 0) {
-          targetSeasonId = activeSeasons[0].id;
-        } else {
-          // Fallback 2: first available season
-          const { data: firstSeasons } = await supabase
-            .from('seasons')
-            .select('id')
-            .order('created_at', { ascending: false })
-            .limit(1);
-          if (firstSeasons && firstSeasons.length > 0) {
-            targetSeasonId = firstSeasons[0].id;
-          }
-        }
-      }
-
-      if (targetSeasonId) {
-        // Fetch only players enrolled in this season
-        const { data, error } = await supabase
-          .from('season_enrollments')
-          .select('player:players(*)')
-          .eq('season_id', targetSeasonId);
-
-        if (error) {
-          console.error("Error fetching enrolled players:", error);
-          setPlayers([]);
-        } else if (data) {
-          const playersList = data.map((e: any) => e.player).filter(Boolean) as Player[];
-          // Sort players by name
-          playersList.sort((a, b) => a.name.localeCompare(b.name));
-          setPlayers(playersList);
-        }
-      } else {
-        setPlayers([]);
+      if (data && data.length > 0) {
+        setSeasons(data);
+        const defaultSeason = data.find((s: any) => s.id === seasonParam) || 
+                              data.find((s: any) => s.status === 'active') || 
+                              data[0];
+        setSelectedSeasonId(defaultSeason.id);
       }
       setLoading(false);
     }
-    loadPlayers();
+    loadSeasons();
   }, [seasonParam]);
+
+  // 2. Fetch enrolled players when selected local season changes
+  useEffect(() => {
+    async function loadPlayers() {
+      if (!selectedSeasonId) return;
+      setDataLoading(true);
+
+      const { data, error } = await supabase
+        .from('season_enrollments')
+        .select('player:players(*)')
+        .eq('season_id', selectedSeasonId);
+
+      if (error) {
+        console.error("Error fetching enrolled players:", error);
+        setPlayers([]);
+      } else if (data) {
+        const playersList = data.map((e: any) => e.player).filter(Boolean) as Player[];
+        // Sort players alphabetically by name
+        playersList.sort((a, b) => a.name.localeCompare(b.name));
+        setPlayers(playersList);
+      }
+      setDataLoading(false);
+    }
+    loadPlayers();
+  }, [selectedSeasonId]);
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 min-h-screen">
-      <div className="flex flex-col mb-12 text-center md:text-left">
-        <h1 className="text-4xl md:text-6xl font-bold font-heading mb-4 text-foreground tracking-tighter drop-shadow-lg">
-          PLAYER <span className="text-primary">DIRECTORY</span>
-        </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl">
-          Browse the elite competitors of the Namma Champions League.
-        </p>
+      {/* Page Header with local selector */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-l-8 border-primary pl-6">
+        <div>
+          <h1 className="text-5xl md:text-7xl font-black font-heading mb-4 text-foreground uppercase tracking-tighter skew-x-[-10deg]">
+            <span className="skew-x-[10deg] block md:inline">PLAYER</span> <span className="text-primary skew-x-[10deg] block md:inline">DIRECTORY</span>
+          </h1>
+          <p className="text-muted-foreground text-lg max-w-2xl font-bold uppercase tracking-widest">
+            Browse the elite competitors of the Namma Champions League.
+          </p>
+        </div>
+
+        {!loading && seasons.length > 0 && (
+          <div className="flex items-center gap-2 bg-[#1a1a24] border border-border rounded-md px-4 py-2 self-start md:self-auto select-none">
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Season:</span>
+            <select
+              value={selectedSeasonId || ""}
+              onChange={(e) => setSelectedSeasonId(e.target.value)}
+              className="bg-transparent text-white text-xs font-black uppercase tracking-widest outline-none border-0 cursor-pointer pr-4"
+            >
+              {seasons.map((s) => (
+                <option key={s.id} value={s.id} className="bg-[#15151e] text-white">
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
-      {loading ? (
+      {loading || dataLoading ? (
         <div className="flex justify-center items-center py-24">
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
         </div>
       ) : players.length === 0 ? (
-        <div className="text-center text-muted-foreground py-24">
+        <div className="text-center text-muted-foreground py-24 font-bold uppercase tracking-wider">
           No players registered for this season yet.
         </div>
       ) : (

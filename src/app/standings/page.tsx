@@ -11,43 +11,53 @@ function StandingsPageContent() {
   const searchParams = useSearchParams();
   const seasonParam = searchParams.get("season");
 
+  const [seasons, setSeasons] = useState<any[]>([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
+  
   const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
+  
   const [season, setSeason] = useState<any>(null);
   const [groups, setGroups] = useState<any[]>([]);
   const [leaderboards, setLeaderboards] = useState<any[]>([]);
   const [knockouts, setKnockouts] = useState<any[]>([]);
 
+  // 1. Initial Load: fetch all seasons and set default selection
+  useEffect(() => {
+    async function loadSeasons() {
+      setLoading(true);
+      const { data } = await supabase
+        .from('seasons')
+        .select('*, tournament:tournaments(*)')
+        .order('created_at', { ascending: false });
+
+      if (data && data.length > 0) {
+        setSeasons(data);
+        const defaultSeason = data.find((s: any) => s.id === seasonParam) || 
+                              data.find((s: any) => s.status === 'active') || 
+                              data[0];
+        setSelectedSeasonId(defaultSeason.id);
+      }
+      setLoading(false);
+    }
+    loadSeasons();
+  }, [seasonParam]);
+
+  // 2. Fetch specific standings/knockout data when local selection changes
   useEffect(() => {
     async function loadData() {
-      setLoading(true);
-      
-      let sData = null;
-      if (seasonParam) {
-        const { data } = await supabase
-          .from('seasons')
-          .select('*, tournament:tournaments(*)')
-          .eq('id', seasonParam)
-          .single();
-        sData = data;
-      } else {
-        const { data } = await supabase
-          .from('seasons')
-          .select('*, tournament:tournaments(*)')
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-        sData = data;
-      }
+      if (!selectedSeasonId) return;
+      setDataLoading(true);
 
-      if (sData) {
-        setSeason(sData);
+      const activeSeason = seasons.find(s => s.id === selectedSeasonId);
+      if (activeSeason) {
+        setSeason(activeSeason);
 
         // Fetch groups
         const { data: gData } = await supabase
           .from('groups')
           .select('*')
-          .eq('season_id', sData.id)
+          .eq('season_id', selectedSeasonId)
           .order('sort_order');
         setGroups(gData || []);
 
@@ -55,7 +65,7 @@ function StandingsPageContent() {
         const { data: lData } = await supabase
           .from('leaderboards')
           .select('*, player:players(*)')
-          .eq('season_id', sData.id)
+          .eq('season_id', selectedSeasonId)
           .order('points', { ascending: false })
           .order('goal_difference', { ascending: false })
           .order('goals_for', { ascending: false });
@@ -65,23 +75,22 @@ function StandingsPageContent() {
         const { data: kData } = await supabase
           .from('fixtures')
           .select('*, matches(*), home:players!home_player_id(*), away:players!away_player_id(*)')
-          .eq('season_id', sData.id)
+          .eq('season_id', selectedSeasonId)
           .in('stage', ['semi_final', 'final'])
           .order('created_at');
         setKnockouts(kData || []);
-      } else {
-        setSeason(null);
-        setGroups([]);
-        setLeaderboards([]);
-        setKnockouts([]);
       }
-      setLoading(false);
+      setDataLoading(false);
     }
     loadData();
-  }, [seasonParam]);
+  }, [selectedSeasonId, seasons]);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (!season) {
@@ -116,16 +125,40 @@ function StandingsPageContent() {
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 min-h-screen">
-      <div className="flex flex-col mb-12 text-center md:text-left border-l-8 border-primary pl-6">
-        <h1 className="text-5xl md:text-7xl font-black font-heading mb-4 text-foreground uppercase tracking-tighter skew-x-[-10deg]">
-          <span className="skew-x-[10deg] block md:inline">{season.tournament?.name}</span> <span className="text-primary skew-x-[10deg] block md:inline">STANDINGS</span>
-        </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl font-bold uppercase tracking-widest">
-          {season.name} • Official Rankings & Knockouts
-        </p>
+      {/* Standings Header with local selector */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-l-8 border-primary pl-6">
+        <div>
+          <h1 className="text-5xl md:text-7xl font-black font-heading mb-2 text-foreground uppercase tracking-tighter skew-x-[-10deg]">
+            <span className="skew-x-[10deg] block md:inline">{season.tournament?.name || "NCL"}</span> <span className="text-primary skew-x-[10deg] block md:inline">STANDINGS</span>
+          </h1>
+          <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest">
+            {season.name} • Official Rankings & Knockouts
+          </p>
+        </div>
+
+        {seasons.length > 0 && (
+          <div className="flex items-center gap-2 bg-[#1a1a24] border border-border rounded-md px-4 py-2 self-start md:self-auto select-none">
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Season:</span>
+            <select
+              value={selectedSeasonId || ""}
+              onChange={(e) => setSelectedSeasonId(e.target.value)}
+              className="bg-transparent text-white text-xs font-black uppercase tracking-widest outline-none border-0 cursor-pointer pr-4"
+            >
+              {seasons.map((s) => (
+                <option key={s.id} value={s.id} className="bg-[#15151e] text-white">
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
-      {groups.length === 0 ? (
+      {dataLoading ? (
+        <div className="flex justify-center items-center py-24">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        </div>
+      ) : groups.length === 0 ? (
         <div className="text-center py-20 bg-card border border-border rounded-xl">
           <p className="text-muted-foreground font-bold uppercase tracking-widest">Groups have not been generated yet for this season.</p>
         </div>
