@@ -1,0 +1,9 @@
+- [ ] Implement `SeasonSelector` component in `src/components/layout/season-selector.tsx`
+- [ ] Embed the `SeasonSelector` component in the `Header` (`src/components/layout/header.tsx`) wrapped in `<Suspense>`
+- [ ] Update Home page (`src/app/page.tsx`) to filter by selected season
+- [ ] Update Standings page (`src/app/standings/page.tsx`) to filter by selected season
+- [ ] Update Fixtures page (`src/app/fixtures/page.tsx`) to filter by selected season
+- [ ] Update Results page (`src/app/results/page.tsx`) to filter by selected season
+- [ ] Update Players page (`src/app/players/page.tsx`) to filter by selected season
+- [ ] Optimize loading UX and route guard logic in `src/components/auth/auth-provider.tsx` and `src/app/admin/layout.tsx`
+- [ ] Run production build and verify all page features

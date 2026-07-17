@@ -75,6 +75,11 @@ export default function AdminTournamentsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right flex justify-end gap-2">
+                      <Link href={`/admin/tournaments/${t.id}`}>
+                        <Button variant="ghost" size="icon" className="text-primary hover:text-primary hover:bg-primary/10">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </Link>
                       <Button 
                         variant="ghost" 
                         size="icon" 
