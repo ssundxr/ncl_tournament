@@ -121,56 +121,110 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
       // 2. Mark fixture as completed
       await supabase.from('fixtures').update({ status: 'completed' }).eq('id', fixture.id);
       
-      // 3. Auto-update standings if it's a group stage match
-      if (fixture.stage === 'group' && fixture.group_id) {
-        // Fetch leaderboards for both players
-        const { data: boards } = await supabase
+      // 3. Auto-recalculate standings for the entire season from scratch (group stage)
+      if (fixture.stage === 'group') {
+        const { data: leaderboards } = await supabase
           .from('leaderboards')
           .select('*')
-          .eq('season_id', fixture.season_id)
-          .eq('group_id', fixture.group_id)
-          .in('player_id', [fixture.home_player_id, fixture.away_player_id]);
+          .eq('season_id', fixture.season_id);
 
-        if (boards && boards.length === 2) {
-          const hBoard = boards.find(b => b.player_id === fixture.home_player_id)!;
-          const aBoard = boards.find(b => b.player_id === fixture.away_player_id)!;
+        if (leaderboards && leaderboards.length > 0) {
+          const boardMap: Record<string, any> = {};
+          leaderboards.forEach(b => {
+            boardMap[`${b.player_id}_${b.group_id}`] = {
+              id: b.id,
+              played: 0,
+              wins: 0,
+              draws: 0,
+              losses: 0,
+              goals_for: 0,
+              goals_against: 0,
+              points: 0,
+              form: []
+            };
+          });
 
-          let hPts = 0, aPts = 0;
-          let hW = 0, hD = 0, hL = 0;
-          let aW = 0, aD = 0, aL = 0;
+          // Fetch all completed group stage fixtures for this season
+          const { data: fixturesList } = await supabase
+            .from('fixtures')
+            .select('*')
+            .eq('season_id', fixture.season_id)
+            .eq('status', 'completed')
+            .eq('stage', 'group');
 
-          if (homeScore > awayScore) {
-            hW = 1; hPts = 3;
-            aL = 1; aPts = 0;
-          } else if (awayScore > homeScore) {
-            aW = 1; aPts = 3;
-            hL = 1; hPts = 0;
-          } else {
-            hD = 1; hPts = 1;
-            aD = 1; aPts = 1;
+          // Fetch all match scores
+          const { data: matchesList } = await supabase
+            .from('matches')
+            .select('*');
+
+          if (fixturesList && matchesList) {
+            const matchMap: Record<string, any> = {};
+            matchesList.forEach(m => {
+              matchMap[m.fixture_id] = m;
+            });
+
+            fixturesList.forEach(f => {
+              const match = matchMap[f.id];
+              if (!match) return;
+
+              const homeBoard = boardMap[`${f.home_player_id}_${f.group_id}`];
+              const awayBoard = boardMap[`${f.away_player_id}_${f.group_id}`];
+
+              if (homeBoard && awayBoard) {
+                const hs = match.home_score ?? 0;
+                const as = match.away_score ?? 0;
+
+                homeBoard.played++;
+                awayBoard.played++;
+                homeBoard.goals_for += hs;
+                homeBoard.goals_against += as;
+                awayBoard.goals_for += as;
+                awayBoard.goals_against += hs;
+
+                if (hs > as) {
+                  homeBoard.wins++;
+                  homeBoard.points += 3;
+                  homeBoard.form.push('W');
+
+                  awayBoard.losses++;
+                  awayBoard.form.push('L');
+                } else if (as > hs) {
+                  awayBoard.wins++;
+                  awayBoard.points += 3;
+                  awayBoard.form.push('W');
+
+                  homeBoard.losses++;
+                  homeBoard.form.push('L');
+                } else {
+                  homeBoard.draws++;
+                  homeBoard.points += 1;
+                  homeBoard.form.push('D');
+
+                  awayBoard.draws++;
+                  awayBoard.points += 1;
+                  awayBoard.form.push('D');
+                }
+              }
+            });
+
+            // Write updates back to Supabase
+            for (const key of Object.keys(boardMap)) {
+              const b = boardMap[key];
+              await supabase
+                .from('leaderboards')
+                .update({
+                  played: b.played,
+                  wins: b.wins,
+                  draws: b.draws,
+                  losses: b.losses,
+                  goals_for: b.goals_for,
+                  goals_against: b.goals_against,
+                  points: b.points,
+                  form: b.form.slice(-5)
+                })
+                .eq('id', b.id);
+            }
           }
-
-          // Update home player
-          await supabase.from('leaderboards').update({
-            played: (hBoard.played || 0) + 1,
-            wins: (hBoard.wins || 0) + hW,
-            draws: (hBoard.draws || 0) + hD,
-            losses: (hBoard.losses || 0) + hL,
-            goals_for: (hBoard.goals_for || 0) + homeScore,
-            goals_against: (hBoard.goals_against || 0) + awayScore,
-            points: (hBoard.points || 0) + hPts
-          }).eq('id', hBoard.id);
-
-          // Update away player
-          await supabase.from('leaderboards').update({
-            played: (aBoard.played || 0) + 1,
-            wins: (aBoard.wins || 0) + aW,
-            draws: (aBoard.draws || 0) + aD,
-            losses: (aBoard.losses || 0) + aL,
-            goals_for: (aBoard.goals_for || 0) + awayScore,
-            goals_against: (aBoard.goals_against || 0) + homeScore,
-            points: (aBoard.points || 0) + aPts
-          }).eq('id', aBoard.id);
         }
       }
 

@@ -53,14 +53,16 @@ function ResultsPageContent() {
           .eq('season_id', targetSeasonId)
           .eq('status', 'completed')
           .order('matchday', { ascending: false });
-          
         if (data) {
           // Flatten the match score onto the fixture object so MatchCard can read it
-          const formattedData = data.map((f: any) => ({
-            ...f,
-            home_score: f.home_score ?? 0,
-            away_score: f.away_score ?? 0,
-          }));
+          const formattedData = data.map((f: any) => {
+            const match = f.matches?.[0];
+            return {
+              ...f,
+              home_score: match ? (match.home_score ?? 0) : 0,
+              away_score: match ? (match.away_score ?? 0) : 0,
+            };
+          });
           setResults(formattedData);
         } else {
           setResults([]);
