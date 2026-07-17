@@ -222,7 +222,7 @@ function HomeContent() {
           style: { display: 'block' }
         });
         
-        triggerDownload(dataUrl, \`\${player.name.replace(/\\s+/g, '-').toLowerCase()}-nfl-4k-card.jpg\`);
+        triggerDownload(dataUrl, `${player.name.replace(/\\s+/g, '-').toLowerCase()}-nfl-4k-card.jpg`);
       } catch (err) {
         console.error("Error generating image:", err);
         alert("Could not generate 4K image for downloading.");
