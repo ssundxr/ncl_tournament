@@ -562,7 +562,15 @@ function HomeContent() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-            {topPlayers.map((player, idx) => {
+            {(() => {
+            const rankedPlayers = topPlayers.map((player, idx) => ({ player, rank: idx + 1 }));
+            let displayPlayers = [...rankedPlayers];
+            if (rankedPlayers.length === 3) {
+              displayPlayers = [rankedPlayers[1], rankedPlayers[0], rankedPlayers[2]];
+            } else if (rankedPlayers.length === 2) {
+              displayPlayers = [rankedPlayers[0], rankedPlayers[1]];
+            }
+            return displayPlayers.map(({ player, rank }, idx) => {
               const nameParts = player.name.split(" ");
               const firstName = nameParts[0] || "";
               const lastName = nameParts.slice(1).join(" ") || "";
@@ -578,7 +586,7 @@ function HomeContent() {
                     <div className="absolute top-0 right-0 w-[75%] h-full z-0 overflow-hidden" 
                          style={{ clipPath: 'polygon(30% 0, 100% 0, 100% 100%, 0% 100%)' }}>
                       <div className="absolute inset-0 bg-gradient-to-r from-[#13131a] via-[#13131a]/50 to-transparent z-10" />
-                      <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover object-top opacity-50 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700 grayscale group-hover:grayscale-0" />
+                      <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover object-top opacity-50 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700 grayscale-0" />
                     </div>
                   ) : (
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32 group-hover:bg-primary/20 transition-colors z-0" />
@@ -588,7 +596,7 @@ function HomeContent() {
                     <div className="flex flex-col">
                       <span className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-1">{player.favorite_team || 'IND'}</span>
                       <span className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Rank</span>
-                      <span className="text-white text-5xl font-black tabular-nums tracking-tighter leading-none">{idx + 1}</span>
+                      <span className="text-white text-5xl font-black tabular-nums tracking-tighter leading-none">{rank}</span>
                     </div>
                   </div>
 
@@ -615,36 +623,37 @@ function HomeContent() {
                   </div>
                 </div>
               );
-            })}
+            })
+          })()}
           </div>
 
         {/* Hidden Unity 4K Aesthetic Card for Image Generation */}
         {selectedPlayerForCard && (
           <div className="fixed -left-[5000px] top-0 opacity-0 pointer-events-none z-[-100]">
-            <div ref={competitorsRef} className="w-[1080px] h-[1920px] bg-black relative flex flex-col font-sans tracking-tight">
+            <div ref={competitorsRef} className="w-[1080px] h-[1920px] bg-[#050508] relative flex flex-col font-sans tracking-tight overflow-hidden">
               
-              {/* Unity Cinematic Lighting & Textures */}
-              <div className="absolute inset-0 bg-[#050508] z-0" />
-              {/* Massive glowing orb behind player */}
-              <div className="absolute -right-[200px] top-[100px] w-[900px] h-[900px] bg-red-600/40 rounded-full blur-[100px] z-0 mix-blend-screen" />
-              <div className="absolute -left-[100px] bottom-[200px] w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[100px] z-0 mix-blend-screen" />
-              <div className="absolute inset-0 bg-[url('/noise.png')] opacity-30 mix-blend-overlay z-0" />
-              <div className="absolute inset-0 border-[20px] border-white/5 z-20 pointer-events-none mix-blend-overlay" />
-              
-              {/* Massive Player Portrait */}
-              <div className="absolute top-0 right-0 w-[900px] h-[1100px] z-10 pointer-events-none" style={{ maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)' }}>
+              {/* Massive Player Portrait Background */}
+              <div className="absolute inset-0 z-0">
                 {selectedPlayerForCard.photo_url ? (
-                  <img src={selectedPlayerForCard.photo_url} className="w-full h-full object-cover object-top opacity-90 contrast-125 saturate-50 drop-shadow-[0_0_50px_rgba(225,6,0,0.8)]" crossOrigin="anonymous" />
+                  <img src={selectedPlayerForCard.photo_url} className="w-full h-full object-cover object-top opacity-90 contrast-125 saturate-50" crossOrigin="anonymous" />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-bl from-gray-800 to-black" />
                 )}
+                {/* Fade out top and bottom */}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#050508]/80 via-transparent to-[#050508]" />
               </div>
 
               {/* Grid / Tech Overlays */}
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_2px,transparent_2px),linear-gradient(90deg,rgba(255,255,255,0.02)_2px,transparent_2px)] bg-[size:50px_50px] z-0" />
+              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_2px,transparent_2px),linear-gradient(90deg,rgba(255,255,255,0.02)_2px,transparent_2px)] bg-[size:50px_50px] z-10 pointer-events-none" />
+              <div className="absolute inset-0 bg-[url('/noise.png')] opacity-30 mix-blend-overlay z-10 pointer-events-none" />
+              <div className="absolute inset-0 border-[20px] border-white/5 z-20 pointer-events-none mix-blend-overlay" />
 
+              {/* Glowing Orbs */}
+              <div className="absolute -right-[200px] top-[100px] w-[900px] h-[900px] bg-red-600/40 rounded-full blur-[100px] z-10 mix-blend-screen pointer-events-none" />
+              <div className="absolute -left-[100px] bottom-[200px] w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[100px] z-10 mix-blend-screen pointer-events-none" />
+              
               {/* Official Seal Watermark */}
-              <div className="absolute top-16 left-16 z-20 flex flex-col items-center">
+              <div className="absolute top-16 left-16 z-30 flex flex-col items-center">
                 <div className="w-40 h-40 rounded-full border-[6px] border-red-600/80 flex flex-col items-center justify-center bg-black/50 backdrop-blur-xl p-2 text-center shadow-[0_0_40px_rgba(225,6,0,0.4)]">
                   <div className="absolute inset-2 border-[2px] border-dashed border-white/30 rounded-full animate-[spin_20s_linear_infinite]" />
                   <img src="/logo_nfl.png" className="w-16 h-16 object-contain mb-1 opacity-100" crossOrigin="anonymous" />
@@ -655,29 +664,32 @@ function HomeContent() {
               </div>
 
               {/* Center Tech HUD Content */}
-              <div className="relative z-20 mt-auto px-16 pb-[300px] flex flex-col">
-                <p className="text-red-500 text-3xl font-black uppercase tracking-[0.5em] mb-2 drop-shadow-[0_0_10px_rgba(225,6,0,0.8)]">
+              <div className="absolute bottom-[250px] left-16 right-16 z-30 flex flex-col">
+                <p className="text-red-500 text-3xl font-black uppercase tracking-[0.5em] mb-2 drop-shadow-[0_0_10px_rgba(225,6,0,1)]">
                   {selectedPlayerForCard.favorite_team || 'IND'}
                 </p>
-                <h1 className="text-white text-[120px] font-black uppercase tracking-tighter leading-[0.85] mb-6 drop-shadow-2xl mix-blend-overlay opacity-90 break-words">
-                  {selectedPlayerForCard.name}
-                </h1>
-                <h1 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 text-[120px] font-black uppercase tracking-tighter leading-[0.85] absolute top-[-5px] left-16 pointer-events-none break-words">
-                  {selectedPlayerForCard.name}
-                </h1>
+                
+                <div className="relative">
+                  <h1 className="text-white text-[120px] font-black uppercase tracking-tighter leading-[0.85] mb-6 drop-shadow-2xl mix-blend-overlay opacity-90 break-words">
+                    {selectedPlayerForCard.name}
+                  </h1>
+                  <h1 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 text-[120px] font-black uppercase tracking-tighter leading-[0.85] absolute top-[-5px] left-0 pointer-events-none break-words">
+                    {selectedPlayerForCard.name}
+                  </h1>
+                </div>
                 
                 {/* HUD Stats Row */}
-                <div className="flex gap-12 mt-16 border-t-[2px] border-white/10 pt-8">
+                <div className="flex gap-12 mt-12 border-t-[4px] border-white/20 pt-8 bg-black/30 backdrop-blur-sm p-8 rounded-2xl w-max border border-white/10">
                   <div className="flex flex-col">
-                    <p className="text-white/50 text-2xl font-bold uppercase tracking-widest mb-2">Total Points</p>
-                    <p className="text-white text-[75px] font-black leading-none drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                    <p className="text-white/70 text-2xl font-bold uppercase tracking-widest mb-2">Total Points</p>
+                    <p className="text-white text-[85px] font-black leading-none drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">
                       {(selectedPlayerForCard as any).allTimePoints}
                     </p>
                   </div>
-                  <div className="w-[2px] bg-white/10" />
+                  <div className="w-[4px] bg-white/20 rounded-full" />
                   <div className="flex flex-col">
-                    <p className="text-white/50 text-2xl font-bold uppercase tracking-widest mb-2">Total Goals</p>
-                    <p className="text-white text-[75px] font-black leading-none drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                    <p className="text-white/70 text-2xl font-bold uppercase tracking-widest mb-2">Total Goals</p>
+                    <p className="text-white text-[85px] font-black leading-none drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">
                       {(selectedPlayerForCard as any).allTimeGoals}
                     </p>
                   </div>
@@ -685,18 +697,18 @@ function HomeContent() {
               </div>
 
               {/* Footer / Quote */}
-              <div className="absolute bottom-0 left-0 w-full h-[250px] bg-gradient-to-t from-red-950 via-black to-transparent z-10 flex items-end justify-between px-16 pb-16">
+              <div className="absolute bottom-0 left-0 w-full h-[250px] bg-gradient-to-t from-red-950 via-black to-black z-30 flex items-end justify-between px-16 pb-16">
                 <div className="max-w-[600px]">
-                  <p className="text-white/40 text-2xl font-medium italic tracking-wide leading-relaxed font-serif">
+                  <p className="text-white/60 text-2xl font-medium italic tracking-wide leading-relaxed font-serif">
                     "Legends are forged in the shadows,<br/>but crowned in the lights."
                   </p>
-                  <p className="text-red-500 text-xl font-black uppercase tracking-[0.3em] mt-4">
-                    NAMMAFOOTBALL.COM
+                  <p className="text-red-500 text-xl font-black uppercase tracking-[0.3em] mt-6">
+                    NCL.SUNDXR.DEV
                   </p>
                 </div>
                 <div className="flex flex-col items-end">
                   {selectedPlayerForCard.toppedSeasons?.length > 0 && (
-                    <div className="flex gap-2 mb-4">
+                    <div className="flex gap-2 mb-6">
                       {selectedPlayerForCard.toppedSeasons.map((s: string, i: number) => (
                         <div key={i} className="bg-red-600 border border-red-400 px-4 py-2 rounded-md shadow-[0_0_15px_rgba(225,6,0,0.5)]">
                           <p className="text-white text-xl font-black uppercase tracking-widest">{s}</p>
@@ -704,7 +716,7 @@ function HomeContent() {
                       ))}
                     </div>
                   )}
-                  <img src="/logo_nfl.png" className="h-20 opacity-50 grayscale contrast-200" crossOrigin="anonymous" />
+                  <img src="/logo_nfl.png" className="h-28 opacity-80" crossOrigin="anonymous" />
                 </div>
               </div>
             </div>
@@ -713,7 +725,6 @@ function HomeContent() {
           </>
         )}
       </section>
-
 
       {/* Standings */}
       <section className="w-full px-4 md:px-12 lg:px-24 xl:px-32 mb-24 relative z-30 flex flex-col gap-6">
