@@ -207,7 +207,7 @@ function HomeContent() {
     try {
       const dataUrl = await htmlToImage.toJpeg(competitorsRef.current, { 
         quality: 0.95,
-        backgroundColor: '#0a0a0a',
+        backgroundColor: '#ffffff',
         style: { display: 'block' } // Ensure it's visible during render
       });
       
@@ -254,21 +254,34 @@ function HomeContent() {
 
       const { data: allLeaderboards } = await supabase
         .from('leaderboards')
-        .select('player_id, points');
+        .select('player_id, points, season_id, season:seasons(name)');
 
       const playerPointsMap: Record<string, number> = {};
+      const seasonMaxPoints: Record<string, { player_id: string, points: number, season_name: string }> = {};
+
       if (allLeaderboards) {
         allLeaderboards.forEach((l: any) => {
           if (l.player_id) {
             playerPointsMap[l.player_id] = (playerPointsMap[l.player_id] || 0) + (l.points || 0);
           }
+          
+          if (!seasonMaxPoints[l.season_id] || (l.points > seasonMaxPoints[l.season_id].points)) {
+            seasonMaxPoints[l.season_id] = { player_id: l.player_id, points: l.points, season_name: l.season?.name || 'Season' };
+          }
         });
       }
+
+      const playerTopsMap: Record<string, string[]> = {};
+      Object.values(seasonMaxPoints).forEach(top => {
+        if (!playerTopsMap[top.player_id]) playerTopsMap[top.player_id] = [];
+        playerTopsMap[top.player_id].push(top.season_name);
+      });
 
       let playersWithPoints = allPlayers ? allPlayers.map((p: any) => {
         return {
           ...p,
-          allTimePoints: playerPointsMap[p.id] || 0
+          allTimePoints: playerPointsMap[p.id] || 0,
+          toppedSeasons: playerTopsMap[p.id] || []
         };
       }).filter((p: any) => p.allTimePoints > 0) : [];
 
@@ -449,53 +462,69 @@ function HomeContent() {
 
         {/* Hidden F1 Style Card for Image Generation */}
         <div className="absolute -left-[9999px] top-0">
-          <div ref={competitorsRef} className="w-[1080px] h-[1920px] bg-[#0a0a0a] relative overflow-hidden flex flex-col p-16 font-sans">
-            {/* Background Texture & Effects */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,#330000_0%,#0a0a0a_70%)] opacity-80" />
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay" />
-            <div className="absolute -right-64 top-32 w-[800px] h-[200px] bg-red-600/30 blur-[120px] rounded-full rotate-45" />
-            <div className="absolute -left-64 bottom-32 w-[800px] h-[200px] bg-red-600/20 blur-[120px] rounded-full -rotate-45" />
+          <div ref={competitorsRef} className="w-[1080px] h-[1920px] bg-white relative overflow-hidden flex flex-col p-20 font-sans tracking-tight">
+            {/* Minimalist Background Effects */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,#f8f8f8_0%,#ffffff_100%)] opacity-100" />
+            <div className="absolute -right-32 top-32 w-[600px] h-[600px] bg-gray-50 rounded-full blur-[80px]" />
+            <div className="absolute top-0 right-0 w-1/3 h-full border-l border-gray-100" />
             
-            {/* Header */}
-            <div className="relative z-10 border-l-[12px] border-red-600 pl-8 mb-24 mt-12">
-              <h1 className="text-white text-8xl font-black uppercase italic tracking-tighter leading-none m-0">
-                GLOBAL<br/>STANDINGS
-              </h1>
-              <p className="text-red-500 text-3xl font-bold uppercase tracking-[0.2em] mt-4">Namma Football League</p>
+            {/* Header & Seal */}
+            <div className="relative z-10 flex justify-between items-start mb-24 mt-12">
+              <div>
+                <h1 className="text-black text-7xl font-black uppercase tracking-tighter leading-none m-0">
+                  NFL LEAGUE
+                </h1>
+                <p className="text-gray-500 text-3xl font-medium tracking-[0.3em] mt-6">GLOBAL COMPETITORS</p>
+              </div>
+              
+              {/* NFL Official Seal */}
+              <div className="w-48 h-48 rounded-full border-[6px] border-black flex flex-col items-center justify-center bg-white p-2 text-center rotate-[-15deg] shadow-2xl relative">
+                <div className="absolute inset-2 border-[2px] border-dashed border-black rounded-full" />
+                <img src="/logo_nfl.png" className="w-16 h-16 object-contain mb-1 opacity-90 grayscale contrast-125" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-black leading-tight mt-2 w-32">
+                  Top 1 Player<br/>NFL League
+                </p>
+                <div className="w-12 h-1 bg-black mt-2 rounded-full" />
+              </div>
             </div>
 
-            {/* Drivers / Players List */}
-            <div className="relative z-10 flex-1 flex flex-col gap-12">
+            {/* Players List Minimalist */}
+            <div className="relative z-10 flex-1 flex flex-col gap-16 mt-12">
               {topPlayers.map((player, idx) => {
                 const isFirst = idx === 0;
+                const toppedSeasons = (player as any).toppedSeasons || [];
                 return (
-                  <div key={player.id} className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-transparent skew-x-[-15deg] transform -translate-x-4 opacity-50" />
-                    <div className="relative flex items-center bg-[#151515] border border-white/10 skew-x-[-15deg] overflow-hidden p-1">
-                      
-                      {/* Position / Rank */}
-                      <div className={`w-32 h-32 flex items-center justify-center ${isFirst ? 'bg-red-600 text-white' : 'bg-white/5 text-white/50'}`}>
-                        <div className="skew-x-[15deg]">
-                          <span className="text-6xl font-black italic">{(idx + 1).toString().padStart(2, '0')}</span>
-                        </div>
-                      </div>
+                  <div key={player.id} className="relative flex items-center bg-white border border-gray-200 shadow-sm overflow-hidden p-6 hover:shadow-xl transition-shadow rounded-2xl">
+                    
+                    {/* Position / Rank */}
+                    <div className={`w-24 h-24 rounded-full flex items-center justify-center shrink-0 ${isFirst ? 'bg-black text-white' : 'bg-gray-100 text-black'}`}>
+                      <span className="text-5xl font-black">{idx + 1}</span>
+                    </div>
 
-                      {/* Player Info */}
-                      <div className="flex-1 px-12 flex justify-between items-center bg-[#111] h-32 border-l-4 border-black">
-                        <div className="skew-x-[15deg] flex items-center gap-8">
-                           {player.photo_url && (
-                             <img src={player.photo_url} className="w-20 h-20 rounded-full border-2 border-white/20 object-cover grayscale contrast-125" />
-                           )}
-                           <div>
-                             <p className="text-white/50 text-2xl font-bold uppercase tracking-widest">{player.favorite_team || 'IND'}</p>
-                             <h2 className="text-white text-5xl font-black uppercase italic tracking-tight">{player.name}</h2>
-                           </div>
+                    {/* Player Info */}
+                    <div className="flex-1 px-10 flex flex-col justify-center">
+                      <p className="text-gray-400 text-lg font-bold uppercase tracking-widest mb-1">{player.favorite_team || 'IND'}</p>
+                      <h2 className="text-black text-5xl font-black uppercase tracking-tight">{player.name}</h2>
+                      
+                      {/* Seasons Topped */}
+                      {toppedSeasons.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          <span className="bg-gray-100 text-gray-500 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                            Winner
+                          </span>
+                          {toppedSeasons.map((sName: string, sIdx: number) => (
+                            <span key={sIdx} className="bg-black text-white text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                              {sName}
+                            </span>
+                          ))}
                         </div>
-                        <div className="skew-x-[15deg] text-right">
-                          <p className="text-red-500 text-6xl font-black italic">{(player as any).allTimePoints}</p>
-                          <p className="text-white/40 text-xl font-bold uppercase tracking-widest">PTS</p>
-                        </div>
-                      </div>
+                      )}
+                    </div>
+
+                    {/* Points */}
+                    <div className="text-right shrink-0 border-l border-gray-100 pl-10 pr-6">
+                      <p className="text-black text-7xl font-black tracking-tighter">{(player as any).allTimePoints}</p>
+                      <p className="text-gray-400 text-lg font-bold uppercase tracking-widest mt-1">Total PTS</p>
                     </div>
                   </div>
                 );
@@ -503,12 +532,14 @@ function HomeContent() {
             </div>
 
             {/* Footer */}
-            <div className="relative z-10 mt-auto border-t border-white/10 pt-12 flex justify-between items-end pb-8">
+            <div className="relative z-10 mt-auto border-t-[3px] border-black pt-12 flex justify-between items-end">
               <div>
-                <p className="text-white/50 text-xl font-bold tracking-widest uppercase">Official Leaderboard</p>
-                <p className="text-white text-2xl font-black italic tracking-tighter">NAMMAFOOTBALL.COM</p>
+                <p className="text-gray-500 text-lg font-bold tracking-widest uppercase mb-2">Cumulative Seasons Leaderboard</p>
+                <p className="text-black text-3xl font-black tracking-tight">nfl.sundxr.dev</p>
               </div>
-              <img src="/logo_nfl.png" className="h-24 opacity-80 grayscale contrast-200" />
+              <div className="w-24 h-24 rounded-lg bg-gray-100 flex items-center justify-center p-4">
+                 <img src="/logo_nfl.png" className="w-full h-full object-contain grayscale opacity-60" />
+              </div>
             </div>
           </div>
         </div>
