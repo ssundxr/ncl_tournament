@@ -36,7 +36,7 @@ export default function AdminDashboardPage() {
           Dashboard
         </h1>
         <p className="text-muted-foreground mt-2">
-          Overview of the Namma Champions League operations.
+          Overview of the Namma Football League operations.
         </p>
       </div>
 

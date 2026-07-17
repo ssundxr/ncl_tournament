@@ -10,6 +10,13 @@ import { StandingsRow, Player } from "@/types";
 import { supabase } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 
+function cleanBranding(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/Namma Champions League/gi, "Namma Football League")
+    .replace(/NCL/gi, "NFL");
+}
+
 function getTeamConfig(teamName: string, rank: string) {
   const name = (teamName || "").toLowerCase().trim();
   
@@ -330,7 +337,7 @@ function HomeContent() {
                   </div>
                   
                   <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-4 text-white leading-tight uppercase font-heading">
-                    {currentSlideSeason.tournament?.name || "NCL"}: {currentSlideSeason.name}
+                    {cleanBranding(currentSlideSeason.tournament?.name || "NFL")}: {cleanBranding(currentSlideSeason.name)}
                   </h1>
                   
                   <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-2xl">
@@ -359,7 +366,7 @@ function HomeContent() {
                 </div>
 
                 <div className="hidden md:flex flex-shrink-0 items-center justify-center opacity-80 drop-shadow-[0_0_30px_rgba(225,6,0,0.25)] pointer-events-none">
-                  <img src="/logo_removed.png" alt="NCL Logo" className="w-[380px] lg:w-[480px] h-auto object-contain" />
+                  <img src="/logo_nfl.png" alt="NFL Logo" className="w-[380px] lg:w-[480px] h-auto object-contain" />
                 </div>
               </motion.div>
             )}
@@ -414,7 +421,7 @@ function HomeContent() {
               >
                 {seasonsList.map((s) => (
                   <option key={s.id} value={s.id} className="bg-[#15151e] text-white">
-                    {s.name}
+                    {cleanBranding(s.name)}
                   </option>
                 ))}
               </select>
@@ -515,7 +522,7 @@ function HomeContent() {
               >
                 {seasonsList.map((s) => (
                   <option key={s.id} value={s.id} className="bg-[#15151e] text-white">
-                    {s.name}
+                    {cleanBranding(s.name)}
                   </option>
                 ))}
               </select>
@@ -570,7 +577,7 @@ function HomeContent() {
       {/* Explore Grid */}
       <section className="w-full px-4 md:px-12 lg:px-24 xl:px-32 mb-24 relative z-30">
         <div className="w-full h-2 bg-primary f1-slant-right mb-8" />
-        <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-8 font-heading text-white">Explore NCL</h2>
+        <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-8 font-heading text-white">Explore NFL</h2>
         
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
           <Link href="/fixtures" className="group">

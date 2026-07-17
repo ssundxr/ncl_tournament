@@ -38,7 +38,7 @@ export const ShareStandings = forwardRef<HTMLDivElement, ShareStandingsProps>(
           
           {/* Header */}
           <div className="flex flex-col items-center justify-center pt-32 pb-16 z-10">
-            <h2 className="text-red-500 font-bold tracking-[0.3em] text-3xl uppercase mb-6">Namma Champions League</h2>
+            <h2 className="text-red-500 font-bold tracking-[0.3em] text-3xl uppercase mb-6">Namma Football League</h2>
             <h1 className="text-white font-black text-8xl uppercase tracking-tighter italic">
               {groupName} <span className="text-red-600">STANDINGS</span>
             </h1>
@@ -95,7 +95,7 @@ export const ShareStandings = forwardRef<HTMLDivElement, ShareStandingsProps>(
 
           {/* Footer */}
           <div className="py-24 text-center z-10">
-            <p className="text-white/40 text-3xl font-bold tracking-widest">NCL.SUNDXR.DEV</p>
+            <p className="text-white/40 text-3xl font-bold tracking-widest">NFL.SUNDXR.DEV</p>
           </div>
         </div>
       </div>

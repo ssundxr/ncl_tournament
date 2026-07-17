@@ -6,7 +6,7 @@ export function Footer() {
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <h3 className="text-xl font-bold font-heading text-primary">NCL Hub</h3>
+            <h3 className="text-xl font-bold font-heading text-primary">NFL Hub</h3>
             <p className="text-sm text-muted-foreground">
               The premium tournament ecosystem for eFootball Mobile competitions.
               Experience broadcast-quality tournaments.
@@ -36,7 +36,7 @@ export function Footer() {
           <div>
             <h4 className="font-heading font-semibold mb-4 text-foreground">About</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/about" className="hover:text-primary">About NCL</Link></li>
+              <li><Link href="/about" className="hover:text-primary">About NFL</Link></li>
               <li><Link href="/rules" className="hover:text-primary">Tournament Rules</Link></li>
               <li><Link href="/contact" className="hover:text-primary">Contact Organizers</Link></li>
             </ul>
@@ -45,7 +45,7 @@ export function Footer() {
         
         <div className="mt-8 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} Namma Champions League. All rights reserved.
+            &copy; {new Date().getFullYear()} Namma Football League. All rights reserved.
           </p>
           <div className="flex space-x-4 text-xs text-muted-foreground">
             <Link href="/privacy" className="hover:text-primary">Privacy Policy</Link>

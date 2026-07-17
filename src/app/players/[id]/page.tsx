@@ -36,7 +36,7 @@ export default function PlayerProfilePage() {
           
           <div className="flex-1 text-center md:text-left">
             <div className="inline-flex items-center px-3 py-1 rounded-full border border-primary/30 bg-primary/10 mb-4">
-              <span className="text-primary text-xs font-bold tracking-widest uppercase">NCL Competitor</span>
+              <span className="text-primary text-xs font-bold tracking-widest uppercase">NFL Competitor</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-heading font-black text-foreground mb-2">{MOCK_PLAYER.name}</h1>
             <p className="text-lg md:text-xl text-primary font-medium">{MOCK_PLAYER.favorite_team}</p>

@@ -16,12 +16,12 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "Namma Champions League",
+  title: "Namma Football League",
   description: "The premium tournament ecosystem for eFootball Mobile competitions.",
   manifest: "/manifest.json",
   icons: {
     icon: "/favicon.ico",
-    apple: "/logo_removed.png",
+    apple: "/logo_nfl.png",
   },
 };
 

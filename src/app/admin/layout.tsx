@@ -39,7 +39,7 @@ function AdminSidebar() {
     <div className="w-64 h-screen bg-[#15151e] border-r border-border flex flex-col fixed left-0 top-0">
       <div className="h-16 border-b border-border flex items-center px-6">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl font-black font-heading text-primary uppercase tracking-widest">NCL</span>
+          <span className="text-2xl font-black font-heading text-primary uppercase tracking-widest">NFL</span>
           <span className="font-bold text-white uppercase text-sm tracking-wider">Admin</span>
         </Link>
       </div>

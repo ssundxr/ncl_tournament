@@ -6,6 +6,13 @@ import { supabase } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
+function cleanBranding(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/Namma Champions League/gi, "Namma Football League")
+    .replace(/NCL/gi, "NFL");
+}
+
 function ResultsPageContent() {
   const searchParams = useSearchParams();
   const seasonParam = searchParams.get("season");
@@ -113,7 +120,7 @@ function ResultsPageContent() {
             >
               {seasons.map((s) => (
                 <option key={s.id} value={s.id} className="bg-[#15151e] text-white">
-                  {s.name}
+                  {cleanBranding(s.name)}
                 </option>
               ))}
             </select>

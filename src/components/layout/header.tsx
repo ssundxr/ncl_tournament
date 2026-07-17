@@ -29,8 +29,9 @@ export function Header() {
           </SheetTrigger>
           <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-[#15151e] text-white border-r border-border">
             <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
-              <Link href="/" className="flex items-center gap-2 text-2xl font-black uppercase tracking-widest">
-                <span className="text-primary font-heading">NCL</span> Hub
+              <Link href="/" className="flex items-center gap-2">
+                <img src="/logo_nfl.png" alt="NFL Logo" className="h-8 w-auto object-contain" />
+                <span className="font-heading font-black text-xl uppercase tracking-wider text-white">Hub</span>
               </Link>
               {links.map((link) => (
                 <Link
@@ -46,7 +47,7 @@ export function Header() {
         </Sheet>
 
         <Link href="/" className="flex items-center gap-2 mr-8">
-          <span className="text-3xl font-black font-heading text-primary tracking-tighter uppercase">NCL</span>
+          <img src="/logo_nfl.png" alt="NFL Logo" className="h-8 w-auto object-contain hover:scale-105 transition-transform" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium h-full">

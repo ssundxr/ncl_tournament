@@ -31,7 +31,7 @@ export const ShareUpcomingMatch = forwardRef<HTMLDivElement, ShareUpcomingMatchP
           
           {/* Header */}
           <div className="flex flex-col items-center justify-center pt-24 pb-8 z-10">
-            <h2 className="text-red-500 font-bold tracking-[0.4em] text-2xl uppercase mb-4">Namma Champions League</h2>
+            <h2 className="text-red-500 font-bold tracking-[0.4em] text-2xl uppercase mb-4">Namma Football League</h2>
             <h1 className="text-white font-black text-6xl uppercase tracking-tighter italic text-center leading-tight">
               MATCH ABOUT TO <span className="text-red-600">START</span>
             </h1>
@@ -91,7 +91,7 @@ export const ShareUpcomingMatch = forwardRef<HTMLDivElement, ShareUpcomingMatchP
 
           {/* Footer */}
           <div className="py-20 text-center z-10">
-            <p className="text-white/40 text-2xl font-bold tracking-widest">NCL.SUNDXR.DEV</p>
+            <p className="text-white/40 text-2xl font-bold tracking-widest">NFL.SUNDXR.DEV</p>
           </div>
         </div>
       </div>

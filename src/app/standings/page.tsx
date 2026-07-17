@@ -7,6 +7,13 @@ import { supabase } from "@/lib/supabase/client";
 import { Trophy, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
+function cleanBranding(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/Namma Champions League/gi, "Namma Football League")
+    .replace(/NCL/gi, "NFL");
+}
+
 function StandingsPageContent() {
   const searchParams = useSearchParams();
   const seasonParam = searchParams.get("season");
@@ -129,10 +136,10 @@ function StandingsPageContent() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-l-8 border-primary pl-6">
         <div>
           <h1 className="text-5xl md:text-7xl font-black font-heading mb-2 text-foreground uppercase tracking-tighter skew-x-[-10deg]">
-            <span className="skew-x-[10deg] block md:inline">{season.tournament?.name || "NCL"}</span> <span className="text-primary skew-x-[10deg] block md:inline">STANDINGS</span>
+            <span className="skew-x-[10deg] block md:inline">{cleanBranding(season.tournament?.name || "NFL")}</span> <span className="text-primary skew-x-[10deg] block md:inline">STANDINGS</span>
           </h1>
           <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest">
-            {season.name} • Official Rankings & Knockouts
+            {cleanBranding(season.name)} • Official Rankings & Knockouts
           </p>
         </div>
 
@@ -146,7 +153,7 @@ function StandingsPageContent() {
             >
               {seasons.map((s) => (
                 <option key={s.id} value={s.id} className="bg-[#15151e] text-white">
-                  {s.name}
+                  {cleanBranding(s.name)}
                 </option>
               ))}
             </select>

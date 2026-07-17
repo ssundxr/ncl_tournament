@@ -7,6 +7,13 @@ import { supabase } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
+function cleanBranding(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/Namma Champions League/gi, "Namma Football League")
+    .replace(/NCL/gi, "NFL");
+}
+
 function PlayersPageContent() {
   const searchParams = useSearchParams();
   const seasonParam = searchParams.get("season");
@@ -73,7 +80,7 @@ function PlayersPageContent() {
             <span className="skew-x-[10deg] block md:inline">PLAYER</span> <span className="text-primary skew-x-[10deg] block md:inline">DIRECTORY</span>
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl font-bold uppercase tracking-widest">
-            Browse the elite competitors of the Namma Champions League.
+            Browse the elite competitors of the Namma Football League.
           </p>
         </div>
 
@@ -87,7 +94,7 @@ function PlayersPageContent() {
             >
               {seasons.map((s) => (
                 <option key={s.id} value={s.id} className="bg-[#15151e] text-white">
-                  {s.name}
+                  {cleanBranding(s.name)}
                 </option>
               ))}
             </select>
