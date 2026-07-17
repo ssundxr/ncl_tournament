@@ -571,39 +571,42 @@ function HomeContent() {
               return (
                 <div 
                   key={player.id}
-                  className="bg-[#13131a] border border-border rounded-lg p-6 relative overflow-hidden group hover:border-primary/50 transition-colors"
+                  className="bg-[#13131a] border border-border rounded-lg p-6 relative overflow-hidden group hover:border-primary/50 transition-colors h-[280px] flex flex-col justify-between"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/20 transition-colors" />
-                  <div className="flex items-start justify-between mb-8 relative z-10">
+                  {/* Big Cross-Cut Background Image */}
+                  {player.photo_url ? (
+                    <div className="absolute top-0 right-0 w-[75%] h-full z-0 overflow-hidden" 
+                         style={{ clipPath: 'polygon(30% 0, 100% 0, 100% 100%, 0% 100%)' }}>
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#13131a] via-[#13131a]/50 to-transparent z-10" />
+                      <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover object-top opacity-50 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700 grayscale group-hover:grayscale-0" />
+                    </div>
+                  ) : (
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32 group-hover:bg-primary/20 transition-colors z-0" />
+                  )}
+
+                  <div className="flex items-start justify-between relative z-10">
                     <div className="flex flex-col">
                       <span className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-1">{player.favorite_team || 'IND'}</span>
                       <span className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Rank</span>
                       <span className="text-white text-5xl font-black tabular-nums tracking-tighter leading-none">{idx + 1}</span>
                     </div>
-                    {player.photo_url ? (
-                      <img src={player.photo_url} alt={player.name} className="w-16 h-16 rounded-full object-cover border-2 border-border/50 shadow-lg grayscale group-hover:grayscale-0 transition-all" />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-border/30 flex items-center justify-center border-2 border-border/50 shadow-lg">
-                        <User className="w-6 h-6 text-muted-foreground" />
-                      </div>
-                    )}
                   </div>
 
-                  <div className="relative z-10">
-                    <h3 className="text-xl font-bold text-white uppercase tracking-tight leading-none mb-1">{firstName}</h3>
-                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter leading-none mb-4">{lastName}</h3>
+                  <div className="relative z-10 mt-auto">
+                    <h3 className="text-xl font-bold text-white uppercase tracking-tight leading-none mb-1 drop-shadow-md">{firstName}</h3>
+                    <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-4 drop-shadow-md">{lastName}</h3>
                     
-                    <div className="flex items-end justify-between border-t border-white/5 pt-4">
+                    <div className="flex items-end justify-between border-t border-white/10 pt-4">
                       <div className="flex flex-col">
-                        <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-1">Total PTS</span>
-                        <span className="text-white text-3xl font-black tracking-tighter leading-none">{(player as any).allTimePoints}</span>
+                        <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-1 drop-shadow-md">Total PTS</span>
+                        <span className="text-white text-3xl font-black tracking-tighter leading-none drop-shadow-md">{(player as any).allTimePoints}</span>
                       </div>
                       
                       <Button 
                         onClick={() => handleDownloadCard(player)}
                         disabled={isGenerating}
                         size="sm"
-                        className="bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-widest text-[10px] h-8 rounded-sm"
+                        className="bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-widest text-[10px] h-8 rounded-sm backdrop-blur-md border border-white/10"
                       >
                         {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />}
                         4K Card
