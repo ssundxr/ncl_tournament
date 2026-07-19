@@ -1,18 +1,26 @@
 import type { Metadata } from "next";
-import { Inter, Sora } from "next/font/google";
+import { Barlow, Barlow_Condensed, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { MobileNav } from "@/components/layout/mobile-nav";
 
-const inter = Inter({
+const barlow = Barlow({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const sora = Sora({
+const barlowCondensed = Barlow_Condensed({
   variable: "--font-heading",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+const bebasNeue = Bebas_Neue({
+  variable: "--font-fifa",
+  subsets: ["latin"],
+  weight: ["400"],
 });
 
 export const metadata: Metadata = {
@@ -37,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${sora.variable} h-full antialiased`}
+      className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col selection:bg-primary/30 selection:text-primary">
         <Header />

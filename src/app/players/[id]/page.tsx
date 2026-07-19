@@ -18,33 +18,33 @@ export default function PlayerProfilePage() {
     <div className="container mx-auto px-4 py-8 md:py-12 min-h-screen space-y-8">
       
       {/* Profile Header */}
-      <div className="relative rounded-3xl overflow-hidden glass-elevated border-primary/20">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-black/20 z-10" />
+      <div className="relative rounded-3xl overflow-hidden bg-card border border-border shadow-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
         {/* Placeholder banner image */}
-        <div className="absolute inset-0 bg-[#1a1a1a] z-0" />
+        <div className="absolute inset-0 bg-muted z-0" />
         
         <div className="relative z-20 p-8 md:p-12 flex flex-col md:flex-row items-center md:items-end gap-8">
-          <div className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-black/60 border-4 border-primary overflow-hidden shrink-0 shadow-[0_0_40px_rgba(212,175,55,0.3)]">
+          <div className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-secondary border-4 border-background overflow-hidden shrink-0 shadow-lg">
             {MOCK_PLAYER.photo_url ? (
                <img src={MOCK_PLAYER.photo_url} alt={MOCK_PLAYER.name} className="w-full h-full object-cover" />
             ) : (
-               <div className="w-full h-full flex items-center justify-center">
-                 <Shield className="w-20 h-20 text-primary/40" />
+               <div className="w-full h-full flex items-center justify-center bg-muted">
+                 <Shield className="w-20 h-20 text-muted-foreground" />
                </div>
             )}
           </div>
           
           <div className="flex-1 text-center md:text-left">
-            <div className="inline-flex items-center px-3 py-1 rounded-full border border-primary/30 bg-primary/10 mb-4">
-              <span className="text-primary text-xs font-bold tracking-widest uppercase">NFL Competitor</span>
+            <div className="inline-flex items-center px-3 py-1 rounded-full border border-primary/20 bg-primary/10 shadow-sm mb-4">
+              <span className="text-primary text-[10px] font-semibold tracking-wider uppercase">NFL Competitor</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-heading font-black text-foreground mb-2">{MOCK_PLAYER.name}</h1>
-            <p className="text-lg md:text-xl text-primary font-medium">{MOCK_PLAYER.favorite_team}</p>
+            <h1 className="text-4xl md:text-6xl font-heading font-bold tracking-tight text-foreground mb-2">{MOCK_PLAYER.name}</h1>
+            <p className="text-lg md:text-xl text-muted-foreground font-semibold uppercase tracking-wider text-sm">{MOCK_PLAYER.favorite_team}</p>
           </div>
 
-          <div className="flex flex-col items-center bg-black/60 backdrop-blur-md rounded-2xl p-6 border border-white/10 shrink-0">
-             <span className="text-5xl font-heading font-black text-primary leading-none mb-2">{MOCK_PLAYER.overall_rating}</span>
-             <span className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Overall Rating</span>
+          <div className="flex flex-col items-center bg-background/50 backdrop-blur-md rounded-2xl p-6 border border-border shadow-sm shrink-0">
+             <span className="text-5xl font-heading font-bold tracking-tight text-primary leading-none mb-2">{MOCK_PLAYER.overall_rating}</span>
+             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Overall Rating</span>
           </div>
         </div>
       </div>
@@ -53,46 +53,46 @@ export default function PlayerProfilePage() {
         
         {/* Left Col: Info & Stats */}
         <div className="space-y-8 lg:col-span-1">
-          <Card className="glass border-border">
-            <CardHeader className="border-b border-white/5 pb-4">
-              <CardTitle className="text-lg">About</CardTitle>
+          <Card className="bg-card border-border shadow-sm">
+            <CardHeader className="border-b border-border pb-4">
+              <CardTitle className="text-lg tracking-tight font-semibold">About</CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
-              <p className="text-muted-foreground text-sm leading-relaxed">
+              <p className="text-muted-foreground text-sm font-medium leading-relaxed">
                 {MOCK_PLAYER.bio}
               </p>
             </CardContent>
           </Card>
 
           <div className="grid grid-cols-2 gap-4">
-            <Card className="glass border-border text-center p-6 flex flex-col justify-center items-center">
-              <Trophy className="w-6 h-6 text-primary mb-2" />
+            <Card className="bg-card border-border shadow-sm text-center p-6 flex flex-col justify-center items-center hover:border-primary/50 transition-colors">
+              <Trophy className="w-6 h-6 text-primary mb-3" />
               <span className="text-3xl font-heading font-bold text-foreground">4</span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Wins</span>
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mt-1">Wins</span>
             </Card>
-            <Card className="glass border-border text-center p-6 flex flex-col justify-center items-center">
-              <Target className="w-6 h-6 text-primary mb-2" />
+            <Card className="bg-card border-border shadow-sm text-center p-6 flex flex-col justify-center items-center hover:border-primary/50 transition-colors">
+              <Target className="w-6 h-6 text-primary mb-3" />
               <span className="text-3xl font-heading font-bold text-foreground">12</span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Goals</span>
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mt-1">Goals</span>
             </Card>
-            <Card className="glass border-border text-center p-6 flex flex-col justify-center items-center">
-              <Activity className="w-6 h-6 text-primary mb-2" />
+            <Card className="bg-card border-border shadow-sm text-center p-6 flex flex-col justify-center items-center hover:border-primary/50 transition-colors">
+              <Activity className="w-6 h-6 text-primary mb-3" />
               <span className="text-3xl font-heading font-bold text-foreground">58%</span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Avg Poss</span>
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mt-1">Avg Poss</span>
             </Card>
-            <Card className="glass border-border text-center p-6 flex flex-col justify-center items-center">
-              <Shield className="w-6 h-6 text-primary mb-2" />
+            <Card className="bg-card border-border shadow-sm text-center p-6 flex flex-col justify-center items-center hover:border-primary/50 transition-colors">
+              <Shield className="w-6 h-6 text-primary mb-3" />
               <span className="text-3xl font-heading font-bold text-foreground">3</span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Clean Sheets</span>
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mt-1">Clean Sheets</span>
             </Card>
           </div>
         </div>
 
         {/* Right Col: Match History */}
         <div className="lg:col-span-2 space-y-8">
-          <Card className="glass border-border h-full">
-            <CardHeader className="border-b border-white/5 pb-4">
-              <CardTitle className="text-lg">Recent Matches</CardTitle>
+          <Card className="bg-card border-border shadow-sm h-full">
+            <CardHeader className="border-b border-border pb-4">
+              <CardTitle className="text-lg tracking-tight font-semibold">Recent Matches</CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
               {/* Reuse MatchCard component with mock data */}

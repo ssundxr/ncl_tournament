@@ -74,26 +74,26 @@ function PlayersPageContent() {
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 min-h-screen">
       {/* Page Header with local selector */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-l-8 border-primary pl-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-border pb-6">
         <div>
-          <h1 className="text-5xl md:text-7xl font-black font-heading mb-4 text-foreground uppercase tracking-tighter skew-x-[-10deg]">
-            <span className="skew-x-[10deg] block md:inline">PLAYER</span> <span className="text-primary skew-x-[10deg] block md:inline">DIRECTORY</span>
+          <h1 className="text-4xl md:text-5xl font-bold font-heading mb-3 text-foreground tracking-tight">
+            Player Directory
           </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl font-bold uppercase tracking-widest">
+          <p className="text-muted-foreground text-base md:text-lg max-w-2xl font-medium">
             Browse the elite competitors of the Namma Football League.
           </p>
         </div>
 
         {!loading && seasons.length > 0 && (
-          <div className="flex items-center gap-2 bg-[#1a1a24] border border-border rounded-md px-4 py-2 self-start md:self-auto select-none">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Season:</span>
+          <div className="flex items-center gap-3 bg-card border border-border shadow-sm rounded-lg px-4 py-2.5 self-start md:self-auto select-none">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Season</span>
             <select
               value={selectedSeasonId || ""}
               onChange={(e) => setSelectedSeasonId(e.target.value)}
-              className="bg-transparent text-white text-xs font-black uppercase tracking-widest outline-none border-0 cursor-pointer pr-4"
+              className="bg-transparent text-foreground text-sm font-semibold outline-none border-0 cursor-pointer pr-2"
             >
               {seasons.map((s) => (
-                <option key={s.id} value={s.id} className="bg-[#15151e] text-white">
+                <option key={s.id} value={s.id} className="bg-background text-foreground">
                   {cleanBranding(s.name)}
                 </option>
               ))}

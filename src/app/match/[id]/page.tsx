@@ -41,12 +41,12 @@ export default function MatchCenterPage() {
       
       {/* Header Actions */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold font-heading text-primary">Match Center</h1>
+        <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground">Match Center</h1>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="glass hover:bg-white/10 hidden md:flex">
+          <Button variant="outline" size="sm" className="hidden md:flex rounded-full shadow-sm bg-background/50 backdrop-blur-md">
             <Download className="w-4 h-4 mr-2" /> Match Graphic
           </Button>
-          <Button variant="outline" size="sm" className="glass hover:bg-white/10">
+          <Button variant="outline" size="sm" className="rounded-full shadow-sm bg-background/50 backdrop-blur-md">
             <Share2 className="w-4 h-4 md:mr-2" /> <span className="hidden md:inline">Share</span>
           </Button>
         </div>
@@ -65,52 +65,52 @@ export default function MatchCenterPage() {
         {/* Left Column: Match Report & POTM */}
         <div className="space-y-8 lg:col-span-1">
           {/* Player of the Match */}
-          <Card className="glass border-primary/30 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-bl-full z-0" />
+          <Card className="bg-card border-primary/20 relative overflow-hidden shadow-sm">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full z-0 blur-xl" />
             <CardHeader className="pb-2 relative z-10">
-              <CardTitle className="flex items-center text-primary text-sm uppercase tracking-widest">
+              <CardTitle className="flex items-center text-primary text-xs font-semibold uppercase tracking-wider">
                 <Trophy className="w-4 h-4 mr-2" /> Player of the Match
               </CardTitle>
             </CardHeader>
             <CardContent className="relative z-10 flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-black border-2 border-primary overflow-hidden">
-                 <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-xs text-muted-foreground">Photo</div>
+              <div className="w-16 h-16 rounded-full bg-secondary border border-border shadow-sm overflow-hidden flex-shrink-0">
+                 <div className="w-full h-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Photo</div>
               </div>
               <div>
-                <h3 className="font-heading font-bold text-xl">{MOCK_MATCH.home_player.name}</h3>
-                <p className="text-sm text-muted-foreground">Rating: 8.5 • 2 Goals</p>
+                <h3 className="font-heading font-bold tracking-tight text-xl text-foreground">{MOCK_MATCH.home_player.name}</h3>
+                <p className="text-xs font-medium text-muted-foreground mt-1">Rating: 8.5 • 2 Goals</p>
               </div>
             </CardContent>
           </Card>
 
           {/* AI Match Report */}
-          <Card className="glass border-border">
-            <CardHeader className="border-b border-white/5 pb-4">
-              <CardTitle className="flex items-center text-lg">
+          <Card className="bg-card border-border shadow-sm">
+            <CardHeader className="border-b border-border pb-4">
+              <CardTitle className="flex items-center text-lg tracking-tight font-semibold">
                 <Bot className="w-5 h-5 mr-2 text-primary" /> AI Match Report
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
-              <h4 className="font-bold font-heading text-xl text-foreground">Alpha's Tactical Masterclass Secures Victory</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <h4 className="font-bold font-heading tracking-tight text-lg text-foreground">Alpha's Tactical Masterclass Secures Victory</h4>
+              <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                 In a thrilling encounter, Player Alpha dominated the midfield with 55% possession, eventually breaking down Beta's stubborn defense. Alpha's clinical finishing proved to be the difference maker in this highly anticipated Group Stage clash.
               </p>
-              <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                <p className="text-xs text-primary font-bold mb-1">Key Insight</p>
-                <p className="text-xs text-muted-foreground">Alpha completed 120 passes with an 88% accuracy, effectively neutralizing Beta's counter-attacking threat.</p>
+              <div className="bg-muted/30 p-4 rounded-xl border border-border shadow-inner">
+                <p className="text-[10px] uppercase tracking-wider text-primary font-bold mb-1.5">Key Insight</p>
+                <p className="text-xs font-medium text-muted-foreground leading-relaxed">Alpha completed 120 passes with an 88% accuracy, effectively neutralizing Beta's counter-attacking threat.</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Original Screenshot */}
-          <Card className="glass border-border">
-            <CardHeader className="border-b border-white/5 pb-4">
-              <CardTitle className="flex items-center text-lg text-muted-foreground">
+          <Card className="bg-card border-border shadow-sm">
+            <CardHeader className="border-b border-border pb-4">
+              <CardTitle className="flex items-center text-lg tracking-tight font-semibold text-muted-foreground">
                 <ImageIcon className="w-5 h-5 mr-2" /> Match Evidence
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
-              <div className="aspect-video bg-black/50 rounded-lg border border-white/10 flex items-center justify-center text-xs text-muted-foreground">
+              <div className="aspect-video bg-muted/50 rounded-xl border border-border shadow-inner flex items-center justify-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Screenshot not available
               </div>
             </CardContent>
@@ -119,22 +119,22 @@ export default function MatchCenterPage() {
 
         {/* Right Column: Full Statistics */}
         <div className="lg:col-span-2">
-          <Card className="glass-elevated border-border h-full">
-            <CardHeader className="border-b border-white/5 text-center">
-              <CardTitle className="font-heading text-2xl tracking-tight">Match Statistics</CardTitle>
+          <Card className="bg-card border-border shadow-sm h-full">
+            <CardHeader className="border-b border-border text-center">
+              <CardTitle className="font-heading font-bold text-2xl tracking-tight text-foreground">Match Statistics</CardTitle>
             </CardHeader>
             <CardContent className="pt-8 px-6 md:px-12 space-y-6">
               
               {/* Possession Donut / Bar */}
               <div className="mb-10 text-center">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest mb-3">Possession</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-4">Possession</p>
                 <div className="flex items-center justify-center gap-6 font-heading font-bold text-3xl">
                   <span className={MOCK_STATS.home_possession > MOCK_STATS.away_possession ? "text-primary" : "text-foreground"}>
                     {MOCK_STATS.home_possession}%
                   </span>
-                  <div className="w-1/2 h-4 rounded-full flex overflow-hidden border border-white/10 bg-black">
+                  <div className="w-1/2 h-3 rounded-full flex overflow-hidden shadow-inner bg-muted">
                     <div className="bg-primary h-full transition-all duration-1000" style={{ width: `${MOCK_STATS.home_possession}%` }} />
-                    <div className="bg-white h-full transition-all duration-1000" style={{ width: `${MOCK_STATS.away_possession}%` }} />
+                    <div className="bg-primary/20 h-full transition-all duration-1000" style={{ width: `${MOCK_STATS.away_possession}%` }} />
                   </div>
                   <span className={MOCK_STATS.away_possession > MOCK_STATS.home_possession ? "text-primary" : "text-foreground"}>
                     {MOCK_STATS.away_possession}%
@@ -151,31 +151,31 @@ export default function MatchCenterPage() {
                 <StatBar label="Fouls" homeValue={MOCK_STATS.home_fouls} awayValue={MOCK_STATS.away_fouls} />
               </div>
 
-              <div className="grid grid-cols-2 gap-8 pt-8 mt-8 border-t border-white/5">
+              <div className="grid grid-cols-2 gap-8 pt-8 mt-8 border-t border-border">
                 <div className="space-y-4">
-                  <p className="text-center text-xs text-muted-foreground uppercase tracking-widest">Cards</p>
+                  <p className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Cards</p>
                   <div className="flex justify-center gap-8">
                     <div className="flex flex-col items-center">
-                      <div className="w-8 h-10 bg-yellow-400 rounded-sm mb-2 shadow-[0_0_10px_rgba(250,204,21,0.3)]" />
-                      <span className="font-bold text-xl">{MOCK_STATS.home_yellow_cards}</span>
+                      <div className="w-8 h-10 bg-yellow-400 rounded-sm mb-2 shadow-sm" />
+                      <span className="font-bold text-xl text-foreground">{MOCK_STATS.home_yellow_cards}</span>
                     </div>
                     <div className="flex flex-col items-center">
-                      <div className="w-8 h-10 bg-red-500 rounded-sm mb-2 shadow-[0_0_10px_rgba(239,68,68,0.3)]" />
-                      <span className="font-bold text-xl">{MOCK_STATS.home_red_cards}</span>
+                      <div className="w-8 h-10 bg-destructive rounded-sm mb-2 shadow-sm" />
+                      <span className="font-bold text-xl text-foreground">{MOCK_STATS.home_red_cards}</span>
                     </div>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
-                  <p className="text-center text-xs text-muted-foreground uppercase tracking-widest">Cards</p>
+                  <p className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Cards</p>
                   <div className="flex justify-center gap-8">
                     <div className="flex flex-col items-center">
-                      <div className="w-8 h-10 bg-yellow-400 rounded-sm mb-2 shadow-[0_0_10px_rgba(250,204,21,0.3)]" />
-                      <span className="font-bold text-xl">{MOCK_STATS.away_yellow_cards}</span>
+                      <div className="w-8 h-10 bg-yellow-400 rounded-sm mb-2 shadow-sm" />
+                      <span className="font-bold text-xl text-foreground">{MOCK_STATS.away_yellow_cards}</span>
                     </div>
                     <div className="flex flex-col items-center">
-                      <div className="w-8 h-10 bg-red-500 rounded-sm mb-2 shadow-[0_0_10px_rgba(239,68,68,0.3)]" />
-                      <span className="font-bold text-xl">{MOCK_STATS.away_red_cards}</span>
+                      <div className="w-8 h-10 bg-destructive rounded-sm mb-2 shadow-sm" />
+                      <span className="font-bold text-xl text-foreground">{MOCK_STATS.away_red_cards}</span>
                     </div>
                   </div>
                 </div>

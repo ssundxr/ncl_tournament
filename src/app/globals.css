@@ -10,6 +10,7 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-heading);
+  --font-fifa: var(--font-fifa);
   
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -32,49 +33,80 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;      /* 16px */
-  --radius-xl: 1.25rem;   /* 20px */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
 }
 
-:root, .dark {
-  /* Official F1 Dark Theme */
-  --background: #15151e;
-  --foreground: #ffffff;
+:root {
+  /* NCL Bold Grunge Athletic - Light Theme */
+  --background: #FFFFFF;
+  --foreground: #111827;
   
-  --card: #1e1e27;
-  --card-foreground: #ffffff;
+  --card: #FFFFFF;
+  --card-foreground: #111827;
   
-  --popover: #15151e;
-  --popover-foreground: #ffffff;
+  --popover: #FFFFFF;
+  --popover-foreground: #111827;
   
-  /* Primary Accent: F1 Red */
-  --primary: #e10600;
-  --primary-foreground: #ffffff;
+  /* Primary Accent: Bold Crimson Red */
+  --primary: #DC2626;
+  --primary-foreground: #FFFFFF;
   
-  /* Secondary: Darker Panel */
-  --secondary: #111118;
-  --secondary-foreground: #ffffff;
+  /* Secondary: Pure Black */
+  --secondary: #111827;
+  --secondary-foreground: #FFFFFF;
   
   /* Muted */
-  --muted: #38384f;
-  --muted-foreground: #999999;
+  --muted: #F3F4F6;
+  --muted-foreground: #4B5563;
   
   /* Accent: Hover states */
-  --accent: #2d2d39;
-  --accent-foreground: #ffffff;
+  --accent: #F9FAFB;
+  --accent-foreground: #111827;
   
-  /* Status */
-  --destructive: #e10600;
-  --success: #00A19B; /* Teal */
+  /* Status / CTA */
+  --destructive: #B91C1C;
+  --success: #15803D;
   
   /* Borders & Inputs */
-  --border: #2d2d39;
-  --input: #2d2d39;
-  --ring: #e10600;
+  --border: #D1D5DB;
+  --input: #E5E7EB;
+  --ring: #DC2626;
   
-  --radius: 0.5rem; /* Clean F1 rounded corners */
+  --radius: 0rem; /* Sharp corners for aggressive athletic look */
+}
+
+.dark {
+  /* Dark mode also available if needed, but styling mostly light based on image */
+  --background: #000000;
+  --foreground: #F9FAFB;
+  
+  --card: #111827;
+  --card-foreground: #F9FAFB;
+  
+  --popover: #111827;
+  --popover-foreground: #F9FAFB;
+  
+  --primary: #DC2626;
+  --primary-foreground: #FFFFFF;
+  
+  --secondary: #F9FAFB;
+  --secondary-foreground: #000000;
+  
+  --muted: #1F2937;
+  --muted-foreground: #9CA3AF;
+  
+  --accent: #1F2937;
+  --accent-foreground: #F9FAFB;
+  
+  --destructive: #EF4444;
+  --success: #22C55E;
+  
+  --border: #374151;
+  --input: #374151;
+  --ring: #DC2626;
 }
 
 @layer base {
@@ -83,6 +115,8 @@
   }
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    background-image: radial-gradient(#E5E7EB 1px, transparent 1px);
+    background-size: 24px 24px; /* Subtle athletic dot texture */
   }
   html {
     color-scheme: light dark;
@@ -92,27 +126,41 @@
   }
 }
 
-/* Custom Glassmorphism Utility */
+/* Custom Effects */
 @layer utilities {
+  .grunge-overlay {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" opacity="0.05"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)"/></svg>');
+    pointer-events: none;
+  }
+  .brutal-shadow {
+    box-shadow: 4px 4px 0px 0px var(--foreground);
+  }
+  .brutal-shadow-hover:hover {
+    box-shadow: 6px 6px 0px 0px var(--primary);
+    transform: translate(-2px, -2px);
+  }
+  
   .glass {
-    @apply bg-card/60 backdrop-blur-md border border-border;
+    @apply bg-white/90 border-2 border-foreground;
+    box-shadow: 4px 4px 0px 0px var(--foreground);
   }
   .glass-elevated {
-    @apply bg-card/80 backdrop-blur-xl border border-secondary shadow-lg dark:border-secondary;
+    @apply bg-white border-4 border-foreground shadow-[8px_8px_0px_0px_rgba(220,38,38,1)];
   }
+  
   .f1-slant {
-    clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+    clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
   }
   .f1-slant-reverse {
-    clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+    clip-path: polygon(16px 0, 100% 0, 100% 100%, 0 100%);
   }
   .f1-slant-right {
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
   }
   .f1-gradient-teal {
-    background: linear-gradient(135deg, #00A19B 0%, #004D4A 100%);
+    background: linear-gradient(135deg, #111827 0%, #374151 100%);
   }
   .f1-gradient-red {
-    background: linear-gradient(135deg, #E10600 0%, #8A0400 100%);
+    background: linear-gradient(135deg, #DC2626 0%, #7F1D1D 100%);
   }
 }

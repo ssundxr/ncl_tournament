@@ -13,84 +13,94 @@ interface ShareMatchResultProps {
 export const ShareMatchResult = forwardRef<HTMLDivElement, ShareMatchResultProps>(
   ({ homeName, awayName, homeScore, awayScore, homePhoto, awayPhoto, groupName }, ref) => {
     return (
-      <div
-        style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}
-      >
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
         <div
           ref={ref}
-          className="flex flex-col relative overflow-hidden"
+          className="flex flex-col relative overflow-hidden bg-[#0A0A0A]"
           style={{
             width: '1080px',
             height: '1350px', // 4:5 Instagram Post format
-            background: 'linear-gradient(135deg, #0B0E14 0%, #1A1F2C 100%)',
-            fontFamily: 'system-ui, -apple-system, sans-serif'
+            fontFamily: 'var(--font-sans), system-ui, sans-serif'
           }}
         >
-          {/* Background Elements */}
-          <div className="absolute top-[-30%] left-[-20%] w-[1200px] h-[1200px] bg-red-600 rounded-full blur-[400px] opacity-30" />
-          <div className="absolute bottom-[-30%] right-[-20%] w-[1200px] h-[1200px] bg-blue-600 rounded-full blur-[400px] opacity-30" />
+          {/* F1 Grid Background */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_2px,transparent_2px),linear-gradient(90deg,rgba(255,255,255,0.05)_2px,transparent_2px)] bg-[size:100px_100px] z-0 pointer-events-none" />
           
+          {/* Diagonal Cuts */}
+          <div className="absolute top-0 right-0 w-[800px] h-[1350px] bg-red-600 z-0" style={{ clipPath: 'polygon(100% 0, 100% 100%, 30% 100%, 80% 0)' }} />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-white z-0" style={{ clipPath: 'polygon(0 100%, 100% 100%, 0 0)' }} />
+          
+          {/* Noise */}
+          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-40 mix-blend-overlay z-0 pointer-events-none" />
+
           {/* Header */}
-          <div className="flex flex-col items-center justify-center pt-24 pb-8 z-10">
-            <h2 className="text-red-500 font-bold tracking-[0.4em] text-2xl uppercase mb-4">Namma Football League</h2>
-            <h1 className="text-white font-black text-7xl uppercase tracking-tighter italic">
-              MATCH <span className="text-red-600">RESULT</span>
+          <div className="flex flex-col items-start justify-start pt-20 pl-20 z-10 w-full relative">
+            <h2 className="bg-red-600 text-white font-black tracking-[0.4em] text-2xl uppercase px-4 py-2 border-l-[8px] border-white skew-x-[-10deg] mb-6 inline-block">
+              <span className="skew-x-[10deg] block">Namma Football League</span>
+            </h2>
+            <h1 className="text-white font-black text-[90px] uppercase tracking-tighter leading-none skew-x-[-10deg]">
+              MATCH <span className="text-red-600 bg-white px-4">RESULT</span>
             </h1>
             {groupName && (
-              <div className="mt-6 px-8 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                <span className="text-white font-bold text-2xl tracking-widest uppercase">{groupName}</span>
+              <div className="mt-8 px-6 py-2 bg-black border-4 border-white inline-block skew-x-[-10deg]">
+                <span className="text-white font-black text-3xl tracking-widest uppercase skew-x-[10deg] block">{groupName}</span>
               </div>
             )}
           </div>
 
           {/* Score Container */}
-          <div className="flex-1 flex flex-col items-center justify-center z-10 w-full px-16">
-            <div className="flex items-center justify-between w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[4rem] p-16 shadow-2xl relative">
+          <div className="flex-1 flex flex-col items-center justify-center z-10 w-full px-20 mt-12">
+            <div className="flex items-center justify-between w-full bg-black border-8 border-white p-12 shadow-[20px_20px_0px_0px_rgba(220,38,38,1)] relative skew-x-[-5deg]">
               
               {/* Home Player */}
-              <div className="flex flex-col items-center gap-8 w-1/3">
-                <div className="w-56 h-56 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-4 border-white/20 shadow-2xl">
+              <div className="flex flex-col items-center gap-6 w-[35%] skew-x-[5deg]">
+                <div className="w-64 h-64 bg-gray-900 flex items-center justify-center overflow-hidden border-8 border-white shadow-[10px_10px_0px_0px_rgba(255,255,255,0.2)]" style={{ clipPath: 'polygon(15% 0, 100% 0, 85% 100%, 0 100%)' }}>
                   {homePhoto ? (
-                    <img src={homePhoto} alt="" className="w-full h-full object-cover" />
+                    <img src={homePhoto} alt="" className="w-full h-full object-cover contrast-125 saturate-50" />
                   ) : (
-                    <span className="text-8xl text-white font-bold">{homeName.charAt(0)}</span>
+                    <span className="text-[120px] text-white font-black uppercase">{homeName.charAt(0)}</span>
                   )}
                 </div>
-                <span className="text-5xl font-black text-white uppercase text-center">{homeName}</span>
-                {homeScore > awayScore && <span className="text-green-400 font-bold tracking-widest text-2xl uppercase">Winner</span>}
+                <div className="bg-white px-6 py-2 border-b-8 border-red-600">
+                  <span className="text-4xl font-black text-black uppercase text-center tracking-tighter">{homeName}</span>
+                </div>
+                {homeScore > awayScore && <span className="text-green-500 font-black tracking-widest text-3xl uppercase bg-black px-4 py-1 border-2 border-green-500">Winner</span>}
               </div>
 
               {/* Score */}
-              <div className="flex flex-col items-center justify-center w-1/3 gap-4">
-                <div className="flex items-center gap-8">
-                  <span className={`text-9xl font-black ${homeScore > awayScore ? 'text-white' : 'text-white/60'}`}>{homeScore}</span>
-                  <span className="text-6xl font-black text-white/30">-</span>
-                  <span className={`text-9xl font-black ${awayScore > homeScore ? 'text-white' : 'text-white/60'}`}>{awayScore}</span>
+              <div className="flex flex-col items-center justify-center w-[30%] gap-4 skew-x-[5deg]">
+                <div className="flex items-center gap-6 bg-red-600 px-8 py-4 border-4 border-white shadow-[10px_10px_0px_0px_rgba(255,255,255,0.2)]">
+                  <span className={`text-[120px] font-black leading-none ${homeScore > awayScore ? 'text-white' : 'text-white/60'}`}>{homeScore}</span>
+                  <span className="text-[80px] font-black text-white/50 leading-none">-</span>
+                  <span className={`text-[120px] font-black leading-none ${awayScore > homeScore ? 'text-white' : 'text-white/60'}`}>{awayScore}</span>
                 </div>
-                <div className="px-8 py-2 bg-red-600/20 border border-red-500/50 rounded-full mt-4">
-                  <span className="text-red-500 font-bold text-xl tracking-[0.2em] uppercase">Full Time</span>
+                <div className="px-6 py-2 bg-black border-2 border-white mt-6">
+                  <span className="text-white font-black text-2xl tracking-[0.3em] uppercase">Full Time</span>
                 </div>
               </div>
 
               {/* Away Player */}
-              <div className="flex flex-col items-center gap-8 w-1/3">
-                <div className="w-56 h-56 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-4 border-white/20 shadow-2xl">
+              <div className="flex flex-col items-center gap-6 w-[35%] skew-x-[5deg]">
+                <div className="w-64 h-64 bg-gray-900 flex items-center justify-center overflow-hidden border-8 border-white shadow-[10px_10px_0px_0px_rgba(255,255,255,0.2)]" style={{ clipPath: 'polygon(15% 0, 100% 0, 85% 100%, 0 100%)' }}>
                   {awayPhoto ? (
-                    <img src={awayPhoto} alt="" className="w-full h-full object-cover" />
+                    <img src={awayPhoto} alt="" className="w-full h-full object-cover contrast-125 saturate-50" />
                   ) : (
-                    <span className="text-8xl text-white font-bold">{awayName.charAt(0)}</span>
+                    <span className="text-[120px] text-white font-black uppercase">{awayName.charAt(0)}</span>
                   )}
                 </div>
-                <span className="text-5xl font-black text-white uppercase text-center">{awayName}</span>
-                {awayScore > homeScore && <span className="text-green-400 font-bold tracking-widest text-2xl uppercase">Winner</span>}
+                <div className="bg-white px-6 py-2 border-b-8 border-red-600">
+                  <span className="text-4xl font-black text-black uppercase text-center tracking-tighter">{awayName}</span>
+                </div>
+                {awayScore > homeScore && <span className="text-green-500 font-black tracking-widest text-3xl uppercase bg-black px-4 py-1 border-2 border-green-500">Winner</span>}
               </div>
 
             </div>
           </div>
 
           {/* Footer */}
-          <div className="py-20 text-center z-10">
-            <p className="text-white/40 text-2xl font-bold tracking-widest">NFL.SUNDXR.DEV</p>
+          <div className="mt-auto py-12 px-20 flex justify-between items-end z-10 w-full relative">
+            <p className="text-white font-black text-3xl tracking-[0.3em] uppercase">NFL.SUNDXR.DEV</p>
+            <img src="/logo_nfl.png" className="w-24 h-24 object-contain brightness-0 invert" />
           </div>
         </div>
       </div>

@@ -368,11 +368,12 @@ function HomeContent() {
   return (
     <div className="flex flex-col w-full min-h-screen pb-20 md:pb-0 font-sans bg-background text-foreground">
       {/* Sliding Hero Section */}
-      <section className="relative w-full h-[75vh] flex items-end overflow-hidden bg-background border-b border-border">
+      <section className="relative w-full h-[75vh] flex items-end overflow-hidden bg-background border-b-4 border-foreground">
         {/* Background Overlay */}
-        <div className="absolute inset-0 bg-[url('/bg_banner.jpeg')] bg-cover bg-center bg-no-repeat" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent z-10" />
+        <div className="absolute inset-0 bg-[url('/bg_banner.jpeg')] bg-cover bg-center bg-no-repeat opacity-70" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
+        <div className="absolute inset-0 grunge-overlay z-10 opacity-60" />
 
         {/* Slideshow Content Container */}
         <div className="relative z-20 w-full px-4 md:px-12 lg:px-24 xl:px-32 pb-20 h-full flex flex-col justify-end">
@@ -380,49 +381,49 @@ function HomeContent() {
             {currentSlideSeason && (
               <motion.div
                 key={currentSlideSeason.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.5 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
                 className="flex flex-col md:flex-row items-end justify-between gap-8 w-full"
               >
                 <div className="flex flex-col items-start max-w-4xl">
-                  <div className="inline-flex items-center px-3 py-1 bg-primary text-primary-foreground mb-4 font-bold text-[10px] uppercase tracking-widest rounded-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse mr-2" /> 
+                  <div className="inline-flex items-center px-4 py-1.5 bg-primary text-primary-foreground border-2 border-foreground mb-6 font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)]">
+                    <span className="w-2 h-2 bg-white animate-pulse mr-2" /> 
                     {currentSlideSeason.status}
                   </div>
-                  
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-4 text-white leading-tight uppercase font-heading">
-                    {cleanBranding(currentSlideSeason.tournament?.name || "NFL")}: {cleanBranding(currentSlideSeason.name)}
+                  <h1 className="text-5xl sm:text-6xl md:text-[110px] tracking-normal mb-4 text-foreground leading-[0.85] font-fifa uppercase drop-shadow-sm">
+                    {cleanBranding(currentSlideSeason.tournament?.name || "NFL")}:<br/>
+                    <span className="text-primary">{cleanBranding(currentSlideSeason.name)}</span>
                   </h1>
                   
-                  <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-2xl">
-                    Experience the ultimate eFootball mobile tournament. Track standings, fixtures, and check results dynamically.
+                  <p className="text-lg sm:text-xl text-foreground/80 mb-8 max-w-2xl font-bold tracking-tight">
+                    Experience the ultimate eFootball mobile tournament. Track standings, fixtures, and check results dynamically in a premium ecosystem.
                   </p>
                   
                   <div className="flex flex-wrap gap-4">
                     <Link href={`/fixtures?season=${currentSlideSeason.id}`}>
-                      <Button size="lg" className="font-bold rounded-md px-8 h-12 bg-white text-black hover:bg-white/90 border-0 transition-colors uppercase tracking-widest text-xs">
-                        <PlayCircle className="mr-2 h-4 w-4" /> View Fixtures
+                      <Button size="lg" className="rounded-none px-8 h-14 border-2 border-foreground brutal-shadow-hover font-black uppercase tracking-widest bg-foreground text-background transition-all">
+                        <PlayCircle className="mr-2 h-6 w-6" /> View Fixtures
                       </Button>
                     </Link>
                     {currentSlideSeason.status === 'active' && (
                       <Link href={`/enroll?season=${currentSlideSeason.id}`}>
-                        <Button size="lg" className="font-bold rounded-md px-8 h-12 bg-primary hover:bg-primary/90 text-white border-0 transition-colors uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(var(--primary),0.5)]">
-                          <User className="mr-2 h-4 w-4" /> Enroll Now
+                        <Button size="lg" className="rounded-none px-8 h-14 bg-primary text-primary-foreground border-2 border-primary brutal-shadow-hover font-black uppercase tracking-widest transition-all">
+                          <User className="mr-2 h-6 w-6" /> Enroll Now
                         </Button>
                       </Link>
                     )}
                     <Link href={`/standings?season=${currentSlideSeason.id}`}>
-                      <Button size="lg" variant="outline" className="font-bold rounded-md px-8 h-12 border-2 border-muted hover:border-white text-white bg-background/50 backdrop-blur-sm transition-colors uppercase tracking-widest text-xs">
-                        View Standings <ChevronRight className="ml-2 h-4 w-4" />
+                      <Button size="lg" variant="outline" className="rounded-none px-8 h-14 font-black uppercase tracking-widest bg-white border-2 border-foreground brutal-shadow-hover text-foreground transition-all">
+                        Standings <ChevronRight className="ml-2 h-5 w-5" />
                       </Button>
                     </Link>
                   </div>
                 </div>
 
-                <div className="hidden md:flex flex-shrink-0 items-center justify-center opacity-80 drop-shadow-[0_0_30px_rgba(225,6,0,0.25)] pointer-events-none">
-                  <img src="/logo_nfl.png" alt="NFL Logo" className="w-[380px] lg:w-[480px] h-auto object-contain" />
+                <div className="hidden md:flex flex-shrink-0 items-center justify-center pointer-events-none transition-transform duration-700 hover:scale-105">
+                  <img src="/logo_nfl.png" alt="NFL Logo" className="w-[320px] lg:w-[400px] h-auto object-contain drop-shadow-2xl opacity-90" />
                 </div>
               </motion.div>
             )}
@@ -548,7 +549,7 @@ function HomeContent() {
       {/* Top Players */}
       <section className="w-full px-4 md:px-12 lg:px-24 xl:px-32 mt-12 mb-16 relative z-20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4 mb-8">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-white">Global Top Competitors</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Global Top Competitors</h3>
         </div>
 
         {competitorsLoading ? (
@@ -579,47 +580,51 @@ function HomeContent() {
               return (
                 <div 
                   key={player.id}
-                  className="bg-[#13131a] border border-border rounded-lg p-6 relative overflow-hidden group hover:border-primary/50 transition-colors h-[280px] flex flex-col justify-between"
+                  className="bg-background border-4 border-foreground shadow-[8px_8px_0px_0px_rgba(220,38,38,1)] relative overflow-hidden group transition-all duration-300 hover:translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(220,38,38,1)] h-[300px] flex"
                 >
-                  {/* Big Cross-Cut Background Image */}
-                  {player.photo_url ? (
-                    <div className="absolute top-0 right-0 w-[75%] h-full z-0 overflow-hidden" 
-                         style={{ clipPath: 'polygon(30% 0, 100% 0, 100% 100%, 0% 100%)' }}>
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#13131a] via-[#13131a]/50 to-transparent z-10" />
-                      <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover object-top opacity-50 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700 grayscale-0" />
-                    </div>
-                  ) : (
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32 group-hover:bg-primary/20 transition-colors z-0" />
-                  )}
-
-                  <div className="flex items-start justify-between relative z-10">
+                  {/* Left Solid Block (Text) */}
+                  <div className="w-[60%] h-full bg-background relative z-10 flex flex-col p-6" style={{ clipPath: 'polygon(0 0, 100% 0, calc(100% - 30px) 100%, 0 100%)' }}>
                     <div className="flex flex-col">
-                      <span className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-1">{player.favorite_team || 'IND'}</span>
-                      <span className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Rank</span>
-                      <span className="text-white text-5xl font-black tabular-nums tracking-tighter leading-none">{rank}</span>
+                      <span className="bg-foreground text-background px-2 py-0.5 w-max text-xs font-black uppercase tracking-widest mb-2 border-l-[4px] border-primary">{player.favorite_team || 'IND'}</span>
+                      <div className="flex items-end gap-2">
+                        <span className="text-foreground text-5xl font-black tabular-nums tracking-tighter leading-none font-heading">{rank}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto">
+                      <h3 className="text-lg font-bold text-foreground uppercase tracking-tight leading-none mb-0.5 font-heading text-muted-foreground">{firstName}</h3>
+                      <h3 className="text-3xl font-black text-foreground uppercase tracking-tighter leading-none mb-4 font-heading">{lastName}</h3>
+                      
+                      <div className="flex items-center justify-between border-t-4 border-primary pt-3">
+                        <div className="flex flex-col">
+                          <span className="text-foreground text-[10px] font-black uppercase tracking-widest mb-0.5">Total PTS</span>
+                          <span className="text-foreground text-3xl font-black tracking-tighter leading-none font-heading">{(player as any).allTimePoints}</span>
+                        </div>
+                        
+                        <Button 
+                          onClick={() => handleDownloadCard(player)}
+                          disabled={isGenerating}
+                          variant="outline"
+                          size="sm"
+                          className="font-black uppercase tracking-widest text-[10px] h-8 px-2 rounded-none border-2 border-foreground hover:bg-primary hover:text-primary-foreground transition-colors mr-8"
+                        >
+                          {isGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
+                          4K
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="relative z-10 mt-auto">
-                    <h3 className="text-xl font-bold text-white uppercase tracking-tight leading-none mb-1 drop-shadow-md">{firstName}</h3>
-                    <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-4 drop-shadow-md">{lastName}</h3>
-                    
-                    <div className="flex items-end justify-between border-t border-white/10 pt-4">
-                      <div className="flex flex-col">
-                        <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-1 drop-shadow-md">Total PTS</span>
-                        <span className="text-white text-3xl font-black tracking-tighter leading-none drop-shadow-md">{(player as any).allTimePoints}</span>
+                  {/* Right Image Block */}
+                  <div className="absolute top-0 right-0 w-[50%] h-full z-0 bg-muted">
+                    {player.photo_url ? (
+                      <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover object-[75%_top] filter contrast-125 saturate-100 group-hover:scale-105 transition-transform duration-700" />
+                    ) : (
+                      <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                        <User className="w-12 h-12 text-foreground/20" />
                       </div>
-                      
-                      <Button 
-                        onClick={() => handleDownloadCard(player)}
-                        disabled={isGenerating}
-                        size="sm"
-                        className="bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-widest text-[10px] h-8 rounded-sm backdrop-blur-md border border-white/10"
-                      >
-                        {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />}
-                        4K Card
-                      </Button>
-                    </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   </div>
                 </div>
               );
@@ -728,21 +733,20 @@ function HomeContent() {
 
       {/* Standings */}
       <section className="w-full px-4 md:px-12 lg:px-24 xl:px-32 mb-24 relative z-30 flex flex-col gap-6">
-        <div className="w-full h-2 bg-primary f1-slant-right mb-2" />
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4 mb-4">
-          <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight font-heading text-white">
+          <h2 className="text-3xl font-bold tracking-tight font-heading text-foreground">
             Standings
           </h2>
           
           {/* Local Season Selector */}
           {seasonsList.length > 0 && (
-            <div className="flex items-center gap-2 bg-[#1a1a24] border border-border rounded-md px-3 py-1.5 self-start sm:self-auto">
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Season:</span>
+            <div className="flex items-center gap-2 bg-card border border-border shadow-sm rounded-lg px-3 py-2 self-start sm:self-auto">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Season</span>
               <select
                 value={standingsSeasonId || ""}
                 onChange={(e) => setStandingsSeasonId(e.target.value)}
-                className="bg-transparent text-white text-xs font-black uppercase tracking-widest outline-none border-0 cursor-pointer pr-4"
+                className="bg-transparent text-foreground text-sm font-semibold outline-none border-0 cursor-pointer pr-4"
               >
                 {seasonsList.map((s) => (
                   <option key={s.id} value={s.id} className="bg-[#15151e] text-white">
@@ -783,8 +787,8 @@ function HomeContent() {
                 return (
                   <div key={group.id} className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-1.5 h-6 bg-primary" />
-                      <h3 className="text-xl font-black uppercase tracking-tight text-white">{group.name}</h3>
+                      <div className="w-2 h-8 bg-primary" />
+                      <h3 className="text-3xl font-black uppercase tracking-tight text-foreground font-heading">{group.name}</h3>
                     </div>
                     <GroupTable 
                       groupName={group.name}

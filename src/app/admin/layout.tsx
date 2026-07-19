@@ -9,7 +9,6 @@ import {
   Users, 
   CalendarDays, 
   Swords, 
-  Settings, 
   LogOut,
   LayoutDashboard
 } from "lucide-react";
@@ -36,26 +35,28 @@ function AdminSidebar() {
   };
 
   return (
-    <div className="w-64 h-screen bg-[#15151e] border-r border-border flex flex-col fixed left-0 top-0">
+    <div className="w-64 h-screen bg-card border-r border-border flex flex-col fixed left-0 top-0 shadow-sm">
       <div className="h-16 border-b border-border flex items-center px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl font-black font-heading text-primary uppercase tracking-widest">NFL</span>
-          <span className="font-bold text-white uppercase text-sm tracking-wider">Admin</span>
+        <Link href="/" className="flex items-center gap-2 group">
+          <span className="text-xl font-heading font-bold text-foreground tracking-tight transition-transform duration-200 group-hover:scale-[1.02]">NCL</span>
+          <span className="font-medium text-muted-foreground text-sm">Admin</span>
         </Link>
       </div>
 
-      <nav className="flex-1 py-6 px-4 space-y-2">
+      <nav className="flex-1 py-6 px-4 space-y-1">
         {links.map((link) => {
-          const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+          const isActive = pathname === link.href || (link.href !== "/admin" && pathname.startsWith(`${link.href}/`));
           const Icon = link.icon;
           return (
             <Link
               key={link.name}
               href={link.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-md transition-colors font-bold uppercase tracking-wide text-sm
-                ${isActive ? "bg-primary text-white" : "text-muted-foreground hover:bg-white/5 hover:text-white"}`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium
+                ${isActive 
+                  ? "bg-secondary text-secondary-foreground shadow-sm" 
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className={`w-4 h-4 ${isActive ? "text-secondary-foreground" : "text-muted-foreground"}`} />
               {link.name}
             </Link>
           );
@@ -63,8 +64,8 @@ function AdminSidebar() {
       </nav>
 
       <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3 px-4 py-3 mb-4">
-          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold overflow-hidden">
+        <div className="flex items-center gap-3 px-2 py-3 mb-2">
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold overflow-hidden border border-primary/20">
             {user?.photoURL ? (
               <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
@@ -72,17 +73,17 @@ function AdminSidebar() {
             )}
           </div>
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-bold text-white truncate">{user?.displayName || "Admin"}</span>
+            <span className="text-sm font-semibold text-foreground truncate">{user?.displayName || "Admin User"}</span>
             <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
           </div>
         </div>
         <Button 
           variant="ghost" 
           onClick={handleLogout}
-          className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 uppercase tracking-widest font-bold"
+          className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-sm font-medium"
         >
-          <LogOut className="w-5 h-5 mr-3" />
-          Logout
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign Out
         </Button>
       </div>
     </div>
@@ -113,8 +114,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
       <main className="flex-1 ml-64 min-h-screen overflow-y-auto">
-        <div className="w-full h-1 bg-primary fixed top-0 z-50 left-64 right-0" />
-        <div className="p-8 mt-1">
+        <div className="p-8">
           {children}
         </div>
       </main>

@@ -65,13 +65,13 @@ export function MatchBox({ fixture }: MatchBoxProps) {
       )}
 
       <Link href={`/match/${fixture.id}`}>
-        <Card className="bg-[#1e1e27] border-border hover:border-primary/50 transition-all cursor-pointer rounded-xl overflow-hidden relative group hover:shadow-[0_0_20px_rgba(225,6,0,0.15)] flex flex-col justify-between min-h-[210px] select-none pb-2">
+        <Card className="bg-card border-[3px] border-foreground hover:shadow-[6px_6px_0px_0px_rgba(220,38,38,1)] hover:-translate-y-1 transition-all cursor-pointer rounded-none overflow-hidden relative group flex flex-col justify-between min-h-[210px] select-none pb-2">
           {/* Halftone dot mesh overlay */}
-          <div className="absolute inset-0 bg-[radial-gradient(#ffffff04_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none mix-blend-overlay" />
+          <div className="absolute inset-0 bg-[radial-gradient(currentColor_1px,transparent_1px)] [background-size:12px_12px] opacity-[0.03] pointer-events-none mix-blend-overlay" />
 
           {/* Top Bar with Matchday & Status Badge */}
-          <div className="flex items-center justify-between px-4 py-3 bg-[#15151e] border-b border-border z-10">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+          <div className="flex items-center justify-between px-4 py-3 bg-foreground text-background border-b-[3px] border-foreground z-10">
+            <span className="text-[10px] font-black uppercase tracking-widest font-heading">
               Matchday {fixture.matchday || "-"}
             </span>
             <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export function MatchBox({ fixture }: MatchBoxProps) {
                 <button
                   onClick={handleShare}
                   disabled={isExporting}
-                  className="p-1 hover:bg-primary/20 hover:text-primary text-muted-foreground rounded transition-all cursor-pointer mr-1"
+                  className="p-1 hover:bg-muted hover:text-foreground text-muted-foreground rounded transition-all cursor-pointer mr-1"
                   title="Share Image"
                 >
                   <Share2 className="w-3.5 h-3.5" />
@@ -94,25 +94,25 @@ export function MatchBox({ fixture }: MatchBoxProps) {
             {/* Home Contender */}
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-secondary border border-border flex items-center justify-center shrink-0 overflow-hidden relative">
+                <div className="w-10 h-10 rounded-none bg-white border-2 border-foreground flex items-center justify-center shrink-0 overflow-hidden relative shadow-[2px_2px_0px_0px_rgba(17,24,39,1)]">
                   {fixture.home_player.photo_url ? (
-                    <img src={fixture.home_player.photo_url} alt="" className="w-full h-full object-cover" />
+                    <img src={fixture.home_player.photo_url} alt="" className="w-full h-full object-cover filter contrast-125 saturate-50" />
                   ) : (
-                    <Shield className="w-4 h-4 text-primary" />
+                    <Shield className="w-5 h-5 text-foreground" />
                   )}
                 </div>
                 <div className="min-w-0">
-                  <span className="font-heading font-black text-sm uppercase tracking-wide text-white truncate block">
+                  <span className="font-heading font-black text-base tracking-tight text-foreground uppercase truncate block leading-none mb-1">
                     {fixture.home_player.name}
                   </span>
-                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate block leading-none mt-0.5">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate block leading-none">
                     {fixture.home_player.favorite_team || "Free Agent"}
                   </span>
                 </div>
               </div>
               
               {(isCompleted || isLive) && (
-                <span className={`font-heading font-black text-xl shrink-0 ${fixture.home_score! > fixture.away_score! ? "text-primary" : "text-white"}`}>
+                <span className={`font-heading font-black text-3xl shrink-0 ${fixture.home_score! > fixture.away_score! ? "text-primary drop-shadow-[2px_2px_0px_rgba(17,24,39,1)]" : "text-muted-foreground"}`}>
                   {fixture.home_score ?? 0}
                 </span>
               )}
@@ -120,33 +120,33 @@ export function MatchBox({ fixture }: MatchBoxProps) {
 
             {/* Split Divider */}
             <div className="flex items-center gap-2">
-              <div className="h-px bg-border flex-1 opacity-50" />
-              <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest px-1">VS</span>
-              <div className="h-px bg-border flex-1 opacity-50" />
+              <div className="h-0.5 bg-foreground/20 flex-1" />
+              <span className="text-[10px] font-black text-foreground uppercase tracking-widest px-2 bg-muted skew-x-[-10deg] border-2 border-foreground/20">VS</span>
+              <div className="h-0.5 bg-foreground/20 flex-1" />
             </div>
 
             {/* Away Contender */}
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-secondary border border-border flex items-center justify-center shrink-0 overflow-hidden relative">
+                <div className="w-10 h-10 rounded-none bg-white border-2 border-foreground flex items-center justify-center shrink-0 overflow-hidden relative shadow-[2px_2px_0px_0px_rgba(17,24,39,1)]">
                   {fixture.away_player.photo_url ? (
-                    <img src={fixture.away_player.photo_url} alt="" className="w-full h-full object-cover" />
+                    <img src={fixture.away_player.photo_url} alt="" className="w-full h-full object-cover filter contrast-125 saturate-50" />
                   ) : (
-                    <Shield className="w-4 h-4 text-primary" />
+                    <Shield className="w-5 h-5 text-foreground" />
                   )}
                 </div>
                 <div className="min-w-0">
-                  <span className="font-heading font-black text-sm uppercase tracking-wide text-white truncate block">
+                  <span className="font-heading font-black text-base tracking-tight text-foreground uppercase truncate block leading-none mb-1">
                     {fixture.away_player.name}
                   </span>
-                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate block leading-none mt-0.5">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate block leading-none">
                     {fixture.away_player.favorite_team || "Free Agent"}
                   </span>
                 </div>
               </div>
               
               {(isCompleted || isLive) && (
-                <span className={`font-heading font-black text-xl shrink-0 ${fixture.away_score! > fixture.home_score! ? "text-primary" : "text-white"}`}>
+                <span className={`font-heading font-black text-3xl shrink-0 ${fixture.away_score! > fixture.home_score! ? "text-primary drop-shadow-[2px_2px_0px_rgba(17,24,39,1)]" : "text-muted-foreground"}`}>
                   {fixture.away_score ?? 0}
                 </span>
               )}
@@ -155,9 +155,9 @@ export function MatchBox({ fixture }: MatchBoxProps) {
 
           {/* Footer scheduling time */}
           {isScheduled && (
-            <div className="mx-4 py-2 border-t border-border flex items-center justify-between text-[9px] font-bold text-muted-foreground z-10">
-              <span>SCHEDULED TIME</span>
-              <span className="text-white font-black font-heading tracking-wide">
+            <div className="mx-4 py-3 border-t-2 border-foreground/10 flex items-center justify-between text-[10px] font-black text-muted-foreground z-10">
+              <span className="uppercase tracking-widest">Scheduled Time</span>
+              <span className="text-foreground font-black tracking-tight font-heading text-xs">
                 {fixture.scheduled_at ? format(new Date(fixture.scheduled_at), "HH:mm") : "TBD"}
               </span>
             </div>

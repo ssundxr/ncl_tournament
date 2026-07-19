@@ -62,21 +62,21 @@ export default function AdminPlayersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight">Players</h1>
-          <p className="text-muted-foreground mt-1">Manage tournament participants</p>
+          <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">Players</h1>
+          <p className="text-muted-foreground mt-1 text-sm font-medium">Manage tournament participants</p>
         </div>
         <Link href="/admin/players/new">
-          <Button className="bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-wider">
-            <Plus className="w-5 h-5 mr-2" /> Add Player
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold tracking-wide">
+            <Plus className="w-4 h-4 mr-2" /> Add Player
           </Button>
         </Link>
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-background text-muted-foreground border-b border-border">
-              <tr className="font-bold text-sm uppercase tracking-widest">
+            <thead className="bg-muted/50 text-muted-foreground border-b border-border">
+              <tr className="font-semibold text-xs uppercase tracking-wider">
                 <th className="px-6 py-4">Player</th>
                 <th className="px-6 py-4">Favorite Team</th>
                 <th className="px-6 py-4">Rating</th>
@@ -101,26 +101,26 @@ export default function AdminPlayersPage() {
                 </tr>
               ) : (
                 players.map((player) => (
-                  <tr key={player.id} className="hover:bg-white/5 transition-colors">
+                  <tr key={player.id} className="hover:bg-muted/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center overflow-hidden shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
                           {player.photo_url ? (
-                            <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover" />
+                            <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                           ) : (
                             <UserIcon className="w-5 h-5 text-muted-foreground" />
                           )}
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-bold text-white">{player.name}</span>
+                          <span className="font-semibold text-foreground tracking-tight">{player.name}</span>
                           <span className="text-xs text-muted-foreground">{player.slug}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-bold text-muted-foreground">
+                    <td className="px-6 py-4 font-medium text-foreground">
                       {player.favorite_team || "-"}
                     </td>
-                    <td className="px-6 py-4 font-black text-white">
+                    <td className="px-6 py-4 font-bold text-foreground">
                       {player.overall_rating || "-"}
                     </td>
                     <td className="px-6 py-4">

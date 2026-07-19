@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Loader2, UserPlus, CheckCircle2, ShieldAlert, Lock, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { Season } from "@/types";
-import { load } from '@cashfreepayments/cashfree-js';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 function EnrollForm() {
   const router = useRouter();
@@ -25,6 +30,7 @@ function EnrollForm() {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [processingText, setProcessingText] = useState("");
   const [generatedRefNo, setGeneratedRefNo] = useState("");
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -35,6 +41,23 @@ function EnrollForm() {
   
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadScript = () => {
+      if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+        setScriptLoaded(true);
+        return;
+      }
+      
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => setScriptLoaded(true);
+      document.body.appendChild(script);
+    };
+
+    loadScript();
+  }, []);
 
   // Fetch season context
   useEffect(() => {
@@ -95,6 +118,12 @@ function EnrollForm() {
       setError("Please fill in all required fields.");
       return;
     }
+    
+    if (!scriptLoaded) {
+      setError("Payment gateway is still loading. Please wait a moment and try again.");
+      return;
+    }
+
     setError("");
     setSaving(true);
     setPaymentProcessing(true);
@@ -103,7 +132,6 @@ function EnrollForm() {
     try {
       let finalPhotoUrl = "";
 
-      // Handle photo upload
       if (photoFile) {
         try {
           const timestamp = Date.now();
@@ -114,13 +142,10 @@ function EnrollForm() {
             .from('ncl-media')
             .upload(filename, photoFile);
             
-          if (uploadError) {
-            console.warn("Photo upload failed:", uploadError);
-          } else {
+          if (!uploadError) {
             const { data: { publicUrl } } = supabase.storage
               .from('ncl-media')
               .getPublicUrl(filename);
-              
             finalPhotoUrl = publicUrl;
           }
         } catch (err) {
@@ -128,10 +153,9 @@ function EnrollForm() {
         }
       }
 
-      // Generate unique slug
       const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.floor(Math.random() * 1000);
 
-      // 1. Create player in database
+      // Create player (excluding 'phone' because it's not in schema cache)
       const { data: newPlayer, error: playerError } = await supabase
         .from("players")
         .insert({
@@ -140,7 +164,6 @@ function EnrollForm() {
           favorite_team: formData.favorite_team,
           bio: formData.bio,
           photo_url: finalPhotoUrl,
-          phone: formData.phone,
           overall_rating: 70
         })
         .select()
@@ -148,56 +171,26 @@ function EnrollForm() {
 
       if (playerError) throw playerError;
 
-      // 2. Call backend to create Cashfree order
-      const returnUrl = `${window.location.origin}/enroll?season=${season?.id}&payment=success&order_id={order_id}`;
-      
-      const response = await fetch('/api/cashfree/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          player_id: newPlayer.id,
-          phone: formData.phone,
-          name: formData.name,
-          season_id: season?.id,
-          return_url: returnUrl
-        })
-      });
-
-      const orderData = await response.json();
-      if (!response.ok) {
-        throw new Error(orderData.error || 'Failed to initialize payment');
-      }
-
-      // 3. Store pending enrollment
+      // Store enrollment (schema only has season_id and player_id)
       if (season) {
         await supabase
           .from("season_enrollments")
           .insert({
             season_id: season.id,
-            player_id: newPlayer.id,
-            payment_status: 'pending', 
-            amount_paid: 25,        
-            payment_ref: orderData.order_id 
+            player_id: newPlayer.id
           });
       }
 
-      setGeneratedRefNo(orderData.order_id);
-      setProcessingText("Redirecting to Cashfree Payment Gateway...");
+      // Redirect directly to the requested Razorpay Payment Link
+      setProcessingText("Redirecting to Secure Payment Portal...");
+      window.location.href = "https://rzp.io/rzp/CXsRikNz";
 
-      // 4. Open Cashfree Checkout
-      const cashfree = await load({ mode: "sandbox" });
-      
-      cashfree.checkout({
-        paymentSessionId: orderData.payment_session_id,
-        redirectTarget: "_self", // Or _modal if you prefer, but redirect is more robust for UPI apps
-      });
-      
     } catch (err: any) {
       console.error(err);
       setError(err.message || "An error occurred during enrollment.");
       setPaymentProcessing(false);
     } finally {
-      setSaving(false);
+      // Don't set saving to false here so the loader stays while redirecting
     }
   };
 
@@ -228,10 +221,10 @@ function EnrollForm() {
   if (!season) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
-        <h2 className="text-2xl font-black uppercase text-white">Season Not Found</h2>
-        <p className="text-muted-foreground">The season you are trying to enroll in does not exist or has ended.</p>
+        <h2 className="text-2xl font-heading font-bold tracking-tight text-foreground">Season Not Found</h2>
+        <p className="text-muted-foreground font-medium">The season you are trying to enroll in does not exist or has ended.</p>
         <Link href="/">
-          <Button className="mt-4">Return Home</Button>
+          <Button className="mt-4 shadow-sm font-semibold tracking-wide">Return Home</Button>
         </Link>
       </div>
     );
@@ -245,14 +238,14 @@ function EnrollForm() {
           <Lock className="w-10 h-10 text-destructive" />
         </div>
         <div>
-          <h2 className="text-3xl font-black uppercase text-white tracking-tight mb-2">Enrollment Closed</h2>
-          <p className="text-muted-foreground max-w-sm mx-auto">
+          <h2 className="text-3xl font-heading font-bold text-foreground tracking-tight mb-2">Enrollment Closed</h2>
+          <p className="text-muted-foreground font-medium max-w-sm mx-auto">
             Registration for <strong>{season.tournament?.name || "NFL"}: {season.name}</strong> is currently closed. 
             Stay tuned for the next season!
           </p>
         </div>
         <Link href="/">
-          <Button size="lg" variant="outline" className="font-bold uppercase tracking-widest border-border text-muted-foreground hover:text-white">
+          <Button size="lg" variant="outline" className="font-semibold tracking-wide border-border text-muted-foreground hover:text-foreground">
             Return Home
           </Button>
         </Link>
@@ -264,54 +257,56 @@ function EnrollForm() {
   if (success) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] py-12 px-4 max-w-lg mx-auto">
-        <div className="w-20 h-20 bg-success/15 rounded-full flex items-center justify-center mb-6 animate-pulse">
+        <div className="w-20 h-20 bg-success/15 rounded-full flex items-center justify-center mb-6 shadow-sm">
           <CheckCircle2 className="w-10 h-10 text-success" />
         </div>
-        <h2 className="text-3xl font-black uppercase text-white tracking-tight mb-2">Registration Complete!</h2>
-        <p className="text-muted-foreground text-center mb-6">
+        <h2 className="text-3xl font-heading font-bold text-foreground tracking-tight mb-2">Registration Complete!</h2>
+        <p className="text-muted-foreground font-medium text-center mb-6">
           You are now enrolled in <strong>{season.tournament?.name || "NFL"}: {season.name}</strong>.
         </p>
 
         {/* Receipt Box */}
-        <div className="w-full bg-[#1b1b24] border border-border p-6 rounded-xl space-y-4 shadow-xl mb-6 relative">
-          <div className="absolute inset-0 bg-[radial-gradient(#ffffff02_1px,transparent_1px)] [background-size:10px_10px] pointer-events-none rounded-xl" />
-          <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b border-border pb-2">NFL Official Receipt</h3>
-          <div className="grid grid-cols-2 gap-y-2.5 text-xs">
+        <div className="w-full bg-card border border-border p-6 rounded-xl space-y-4 shadow-sm mb-6 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(currentColor_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.02] pointer-events-none rounded-xl" />
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary border-b border-border pb-2">NFL Official Receipt</h3>
+          <div className="grid grid-cols-2 gap-y-3 text-sm">
             {formData.name && (
               <>
-                <span className="text-muted-foreground uppercase font-bold">Player Name:</span>
-                <span className="text-white text-right font-bold truncate">{formData.name}</span>
+                <span className="text-muted-foreground font-medium">Player Name</span>
+                <span className="text-foreground text-right font-semibold truncate">{formData.name}</span>
               </>
             )}
             
             {formData.phone && (
               <>
-                <span className="text-muted-foreground uppercase font-bold">Mobile Number:</span>
-                <span className="text-white text-right font-bold">{formData.phone}</span>
+                <span className="text-muted-foreground font-medium">Mobile Number</span>
+                <span className="text-foreground text-right font-semibold">{formData.phone}</span>
               </>
             )}
 
-            <span className="text-muted-foreground uppercase font-bold">Amount Paid:</span>
-            <span className="text-white text-right font-black text-sm text-green-400">₹25.00</span>
+            <span className="text-muted-foreground font-medium">Amount Paid</span>
+            <span className="text-success text-right font-bold">₹25.00</span>
 
-            <span className="text-muted-foreground uppercase font-bold">Payment Ref:</span>
-            <span className="text-white text-right font-bold font-mono text-[10px]">{generatedRefNo}</span>
+            <span className="text-muted-foreground font-medium">Payment Ref</span>
+            <span className="text-foreground text-right font-mono text-xs">{generatedRefNo}</span>
 
-            <span className="text-muted-foreground uppercase font-bold">Status:</span>
-            <span className="text-right"><span className="bg-success/10 border border-success/30 text-success px-2 py-0.5 rounded text-[10px] font-black uppercase">PAID</span></span>
+            <span className="text-muted-foreground font-medium">Status</span>
+            <span className="text-right">
+              <span className="bg-success/10 border border-success/20 text-success px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Paid</span>
+            </span>
           </div>
         </div>
 
         <Button 
           onClick={triggerWhatsAppRedirect}
           size="lg" 
-          className="bg-[#25D366] hover:bg-[#20ba59] text-white font-bold uppercase tracking-widest w-full h-14 rounded-lg flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,211,102,0.3)] mb-4"
+          className="bg-[#25D366] hover:bg-[#20ba59] text-primary-foreground font-semibold tracking-wide w-full h-14 rounded-lg flex items-center justify-center gap-2 shadow-sm mb-4 transition-colors"
         >
-          <MessageSquare className="w-5 h-5 fill-current" /> Send Confirmation to WhatsApp
+          <MessageSquare className="w-5 h-5" /> Send Confirmation to WhatsApp
         </Button>
 
         <Link href="/" className="w-full">
-          <Button size="lg" variant="outline" className="font-bold uppercase tracking-widest w-full h-12 border-border text-muted-foreground hover:text-white">
+          <Button size="lg" variant="outline" className="font-semibold tracking-wide w-full h-12 border-border text-muted-foreground hover:text-foreground">
             Return Home
           </Button>
         </Link>
@@ -323,12 +318,12 @@ function EnrollForm() {
   if (paymentProcessing) {
     return (
       <div className="max-w-md mx-auto py-12 px-4">
-        <div className="bg-card border border-border rounded-xl p-8 flex flex-col items-center justify-center min-h-[400px] text-center space-y-6 shadow-2xl">
+        <div className="bg-card border border-border rounded-2xl p-8 flex flex-col items-center justify-center min-h-[400px] text-center space-y-6 shadow-lg">
           <Loader2 className="w-12 h-12 animate-spin text-primary" />
-          <h3 className="text-xl font-bold uppercase tracking-tight text-white">Processing Secure Payment</h3>
-          <p className="text-muted-foreground text-sm max-w-xs">{processingText}</p>
-          <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-bold uppercase tracking-wider justify-center mt-4">
-            <ShieldAlert className="w-3.5 h-3.5 text-primary" /> Encrypted 256-bit Secure Gateway
+          <h3 className="text-xl font-heading font-bold tracking-tight text-foreground">Processing Secure Payment</h3>
+          <p className="text-muted-foreground font-medium text-sm max-w-xs">{processingText}</p>
+          <div className="flex items-center gap-2 text-muted-foreground text-xs font-semibold tracking-wide justify-center mt-4">
+            <ShieldAlert className="w-4 h-4 text-primary" /> Encrypted 256-bit Secure Gateway
           </div>
         </div>
       </div>
@@ -339,30 +334,30 @@ function EnrollForm() {
   return (
     <div className="max-w-2xl mx-auto py-12 px-4">
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-black font-heading uppercase text-white tracking-tight mb-2">Join the Action</h1>
-        <p className="text-muted-foreground text-lg">
-          Register for <strong>{season.tournament?.name || "NFL"}: {season.name}</strong>
+        <h1 className="text-4xl font-bold font-heading text-foreground tracking-tight mb-3">Join the Action</h1>
+        <p className="text-muted-foreground text-lg font-medium">
+          Register for <strong className="text-foreground">{season.tournament?.name || "NFL"}: {season.name}</strong>
         </p>
       </div>
 
       {error && (
-        <div className="bg-destructive/20 border border-destructive/50 text-destructive px-4 py-3 rounded-lg mb-6 text-sm font-bold">
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg mb-6 text-sm font-semibold">
           {error}
         </div>
       )}
 
-      <div className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-2xl">
+      <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm">
         <form onSubmit={handleProceedToPayment} className="space-y-6">
           {/* Photo Upload */}
           <div className="flex flex-col items-center mb-8">
-            <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-background bg-muted mb-4 group cursor-pointer flex items-center justify-center shadow-md">
+            <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-background bg-secondary mb-4 group cursor-pointer flex items-center justify-center shadow-sm">
               {photoPreview ? (
                 <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
               ) : (
-                <UserPlus className="w-12 h-12 text-muted-foreground group-hover:text-white transition-colors" />
+                <UserPlus className="w-12 h-12 text-muted-foreground group-hover:text-foreground transition-colors" />
               )}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                <span className="text-xs font-bold uppercase text-white">Upload</span>
+              <div className="absolute inset-0 bg-background/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-sm">
+                <span className="text-xs font-semibold tracking-wider text-foreground">Upload</span>
               </div>
               <input 
                 type="file" 
@@ -371,66 +366,68 @@ function EnrollForm() {
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Player Photo</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Player Photo</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Player Name *</label>
-            <input 
-              required 
-              type="text" 
-              name="name" 
-              value={formData.name} 
-              onChange={handleChange} 
-              className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary text-sm" 
-              placeholder="Your gaming alias"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Favorite Team *</label>
-            <input 
-              required 
-              type="text" 
-              name="favorite_team" 
-              value={formData.favorite_team} 
-              onChange={handleChange} 
-              className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary text-sm" 
-              placeholder="e.g. Real Madrid, Arsenal"
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Player Name *</label>
+              <input 
+                required 
+                type="text" 
+                name="name" 
+                value={formData.name} 
+                onChange={handleChange} 
+                className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm" 
+                placeholder="Your gaming alias"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Favorite Team *</label>
+              <input 
+                required 
+                type="text" 
+                name="favorite_team" 
+                value={formData.favorite_team} 
+                onChange={handleChange} 
+                className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm" 
+                placeholder="e.g. Real Madrid, Arsenal"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Mobile Number *</label>
+              <input 
+                required 
+                type="tel" 
+                name="phone" 
+                value={formData.phone} 
+                onChange={handleChange} 
+                className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm" 
+                placeholder="e.g. +91 98765 43210"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Bio (Optional)</label>
+              <textarea 
+                name="bio" 
+                value={formData.bio} 
+                onChange={handleChange} 
+                rows={3}
+                className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none text-sm" 
+                placeholder="Tell us about your playstyle..."
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Mobile Number *</label>
-            <input 
-              required 
-              type="tel" 
-              name="phone" 
-              value={formData.phone} 
-              onChange={handleChange} 
-              className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary text-sm" 
-              placeholder="e.g. +91 98765 43210"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Bio (Optional)</label>
-            <textarea 
-              name="bio" 
-              value={formData.bio} 
-              onChange={handleChange} 
-              rows={3}
-              className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary resize-none text-sm" 
-              placeholder="Tell us about your playstyle..."
-            />
-          </div>
-
-          <div className="pt-4">
+          <div className="pt-6 border-t border-border mt-8">
             <Button 
               type="submit" 
               disabled={saving}
               size="lg"
-              className="w-full bg-primary text-white hover:bg-primary/90 font-bold uppercase tracking-widest h-14 text-xs"
+              className="w-full font-semibold tracking-wide h-14"
             >
               {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Proceed to Payment"}
             </Button>

@@ -1,5 +1,7 @@
-import { Trophy, Users, Swords, Activity } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Trophy, Users, Swords, Activity, ArrowRight, PlusCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function AdminDashboardPage() {
   const stats = [
@@ -32,10 +34,10 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-black font-heading uppercase text-white tracking-tight">
+        <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">
           Dashboard
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-muted-foreground font-medium mt-1 text-sm">
           Overview of the Namma Football League operations.
         </p>
       </div>
@@ -44,16 +46,16 @@ export default function AdminDashboardPage() {
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <Card key={i} className="bg-card border-border border transition-colors hover:border-primary/50">
+            <Card key={i} className="bg-card border-border shadow-sm transition-colors hover:border-primary/50 group">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <Icon className="w-5 h-5 text-primary" />
+                <Icon className="w-4 h-4 text-primary opacity-80 group-hover:opacity-100 transition-opacity" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-white">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <div className="text-3xl font-bold font-heading text-foreground tracking-tight">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1 font-medium">
                   {stat.description}
                 </p>
               </CardContent>
@@ -62,17 +64,25 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="bg-card border-border border">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="bg-card border-border shadow-sm">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-white uppercase tracking-wider">Quick Actions</CardTitle>
+            <CardTitle className="text-lg font-semibold tracking-tight">Quick Actions</CardTitle>
+            <CardDescription>Shortcuts to common administrative tasks</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col space-y-2">
-              <a href="/admin/matches" className="text-sm text-primary hover:underline font-bold">Start Next Match</a>
-              <a href="/admin/players/new" className="text-sm text-white hover:text-primary transition-colors">Add New Player</a>
-              <a href="/admin/tournaments" className="text-sm text-white hover:text-primary transition-colors">Manage Tournaments</a>
-            </div>
+          <CardContent className="space-y-3">
+            <Link href="/admin/matches" className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/50 hover:bg-muted transition-colors group">
+              <span className="text-sm font-semibold text-foreground">Start Next Match</span>
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </Link>
+            <Link href="/admin/players" className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/50 hover:bg-muted transition-colors group">
+              <span className="text-sm font-semibold text-foreground">Manage Players</span>
+              <Users className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </Link>
+            <Link href="/admin/tournaments" className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/50 hover:bg-muted transition-colors group">
+              <span className="text-sm font-semibold text-foreground">Manage Tournaments</span>
+              <Trophy className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </Link>
           </CardContent>
         </Card>
       </div>

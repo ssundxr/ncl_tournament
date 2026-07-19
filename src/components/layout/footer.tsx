@@ -2,54 +2,54 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="w-full glass border-t border-border mt-auto pb-16 md:pb-0">
-      <div className="container mx-auto px-4 py-8 md:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="w-full bg-foreground border-t-8 border-primary mt-auto pb-16 md:pb-0 text-background">
+      <div className="container mx-auto px-4 py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-4">
-            <h3 className="text-xl font-bold font-heading text-primary">NFL Hub</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="text-4xl font-black font-heading text-background tracking-tighter uppercase skew-x-[10deg]">NFL <span className="text-primary">Hub</span></h3>
+            <p className="text-sm text-background/60 font-medium">
               The premium tournament ecosystem for eFootball Mobile competitions.
               Experience broadcast-quality tournaments.
             </p>
           </div>
           
           <div>
-            <h4 className="font-heading font-semibold mb-4 text-foreground">Competitions</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/standings" className="hover:text-primary">Current Season</Link></li>
-              <li><Link href="/bracket" className="hover:text-primary">Knockout Stage</Link></li>
-              <li><Link href="/fixtures" className="hover:text-primary">All Fixtures</Link></li>
-              <li><Link href="/results" className="hover:text-primary">Match Results</Link></li>
+            <h4 className="font-heading font-black text-xl mb-4 text-background uppercase tracking-widest">Competitions</h4>
+            <ul className="space-y-3 text-sm font-bold">
+              <li><Link href="/standings" className="text-background/60 hover:text-primary transition-colors">Current Season</Link></li>
+              <li><Link href="/bracket" className="text-background/60 hover:text-primary transition-colors">Knockout Stage</Link></li>
+              <li><Link href="/fixtures" className="text-background/60 hover:text-primary transition-colors">All Fixtures</Link></li>
+              <li><Link href="/results" className="text-background/60 hover:text-primary transition-colors">Match Results</Link></li>
             </ul>
           </div>
           
           <div>
-            <h4 className="font-heading font-semibold mb-4 text-foreground">Players & Stats</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/statistics" className="hover:text-primary">Top Scorers</Link></li>
-              <li><Link href="/statistics" className="hover:text-primary">Most Assists</Link></li>
-              <li><Link href="/players" className="hover:text-primary">Player Directory</Link></li>
-              <li><Link href="/statistics" className="hover:text-primary">Team Stats</Link></li>
+            <h4 className="font-heading font-black text-xl mb-4 text-background uppercase tracking-widest">Stats</h4>
+            <ul className="space-y-3 text-sm font-bold">
+              <li><Link href="/statistics" className="text-background/60 hover:text-primary transition-colors">Top Scorers</Link></li>
+              <li><Link href="/statistics" className="text-background/60 hover:text-primary transition-colors">Most Assists</Link></li>
+              <li><Link href="/players" className="text-background/60 hover:text-primary transition-colors">Player Directory</Link></li>
+              <li><Link href="/statistics" className="text-background/60 hover:text-primary transition-colors">Team Stats</Link></li>
             </ul>
           </div>
           
           <div>
-            <h4 className="font-heading font-semibold mb-4 text-foreground">About</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/about" className="hover:text-primary">About NFL</Link></li>
-              <li><Link href="/rules" className="hover:text-primary">Tournament Rules</Link></li>
-              <li><Link href="/contact" className="hover:text-primary">Contact Organizers</Link></li>
+            <h4 className="font-heading font-black text-xl mb-4 text-background uppercase tracking-widest">About</h4>
+            <ul className="space-y-3 text-sm font-bold">
+              <li><Link href="/about" className="text-background/60 hover:text-primary transition-colors">About NFL</Link></li>
+              <li><Link href="/rules" className="text-background/60 hover:text-primary transition-colors">Tournament Rules</Link></li>
+              <li><Link href="/contact" className="text-background/60 hover:text-primary transition-colors">Contact Organizers</Link></li>
             </ul>
           </div>
         </div>
         
-        <div className="mt-8 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-muted-foreground">
+        <div className="mt-12 pt-8 border-t-[3px] border-background/10 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs font-bold text-background/40 uppercase tracking-widest">
             &copy; {new Date().getFullYear()} Namma Football League. All rights reserved.
           </p>
-          <div className="flex space-x-4 text-xs text-muted-foreground">
-            <Link href="/privacy" className="hover:text-primary">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-primary">Terms of Service</Link>
+          <div className="flex space-x-6 text-xs font-bold text-background/40 uppercase tracking-widest">
+            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>
