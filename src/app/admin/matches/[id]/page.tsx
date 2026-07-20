@@ -5,7 +5,9 @@ import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Play, Square, Save, Upload, Loader2, Image as ImageIcon, Shield } from "lucide-react";
+import { ChevronLeft, Play, Square, Save, Upload, Loader2, Image as ImageIcon, Shield, Trophy, Medal } from "lucide-react";
+import ShareFinalistCard from "@/components/share/ShareFinalistCard";
+import ShareChampionCard from "@/components/share/ShareChampionCard";
 
 export default function MatchControlPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -20,6 +22,8 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [showFinalistCard, setShowFinalistCard] = useState(false);
+  const [showChampionCard, setShowChampionCard] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -219,10 +223,36 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
                   losses: b.losses,
                   goals_for: b.goals_for,
                   goals_against: b.goals_against,
+                  goal_difference: b.goals_for - b.goals_against,
                   points: b.points,
                   form: b.form.slice(-5)
                 })
                 .eq('id', b.id);
+            }
+          }
+        }
+        }
+      } else if (fixture.stage === 'semi_final') {
+        // Auto-advance winner to Final
+        const winnerId = homeScore > awayScore ? fixture.home_player_id : 
+                         awayScore > homeScore ? fixture.away_player_id : null;
+        
+        if (winnerId) {
+          const { data: finalFixture } = await supabase
+            .from('fixtures')
+            .select('*')
+            .eq('season_id', fixture.season_id)
+            .eq('stage', 'final')
+            .single();
+
+          if (finalFixture) {
+            // Assign to home if empty, or if they are already assigned there.
+            if (!finalFixture.home_player_id || finalFixture.home_player_id === winnerId) {
+              await supabase.from('fixtures').update({ home_player_id: winnerId }).eq('id', finalFixture.id);
+            } 
+            // Else assign to away if empty, or if they are already assigned there.
+            else if (!finalFixture.away_player_id || finalFixture.away_player_id === winnerId) {
+              await supabase.from('fixtures').update({ away_player_id: winnerId }).eq('id', finalFixture.id);
             }
           }
         }
@@ -342,6 +372,31 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
               )}
             </div>
           </div>
+
+          {/* Celebration Cards */}
+          {(fixture.stage === 'semi_final' && fixture.status === 'completed') && (
+            <div className="bg-card border border-border rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center">
+               <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500" />
+               <Medal className="w-12 h-12 text-yellow-500 mb-4" />
+               <h3 className="text-xl font-black uppercase text-foreground mb-2">Finalist Secured</h3>
+               <p className="text-muted-foreground text-sm text-center mb-6">Generate the premium finalist celebration card for the winner.</p>
+               <Button onClick={() => setShowFinalistCard(true)} className="bg-yellow-500 text-black hover:bg-yellow-600 font-bold uppercase tracking-wider w-full">
+                 View Finalist Card
+               </Button>
+            </div>
+          )}
+
+          {(fixture.stage === 'final' && fixture.status === 'completed') && (
+            <div className="bg-card border border-border rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center">
+               <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500" />
+               <Trophy className="w-12 h-12 text-yellow-500 mb-4" />
+               <h3 className="text-xl font-black uppercase text-foreground mb-2">Champion Crowned</h3>
+               <p className="text-muted-foreground text-sm text-center mb-6">Generate the premium champion celebration card for the winner.</p>
+               <Button onClick={() => setShowChampionCard(true)} className="bg-yellow-500 text-black hover:bg-yellow-600 font-bold uppercase tracking-wider w-full">
+                 View Champion Card
+               </Button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -392,6 +447,22 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
       </div>
+      
+      {showFinalistCard && fixture && matchData && (
+        <ShareFinalistCard 
+          fixture={fixture} 
+          match={matchData} 
+          onClose={() => setShowFinalistCard(false)} 
+        />
+      )}
+
+      {showChampionCard && fixture && matchData && (
+        <ShareChampionCard 
+          fixture={fixture} 
+          match={matchData} 
+          onClose={() => setShowChampionCard(false)} 
+        />
+      )}
     </div>
   );
 }
