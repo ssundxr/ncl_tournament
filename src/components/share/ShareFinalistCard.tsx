@@ -11,13 +11,17 @@ export default function ShareFinalistCard({ fixture, match, onClose }: { fixture
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [totalGoals, setTotalGoals] = useState<number | null>(null);
+  const [seasonName, setSeasonName] = useState<string>((fixture as any).season?.name || '');
 
   const winner = match.home_score > match.away_score ? fixture.home_player : match.away_score > match.home_score ? fixture.away_player : null;
-  const seasonName = (fixture as any).season?.name || 'Tournament';
 
   useEffect(() => {
     if (!winner || !fixture) return;
-    const fetchGoals = async () => {
+    const fetchData = async () => {
+      if (!seasonName && fixture.season_id) {
+        const { data: sData } = await supabase.from('seasons').select('name').eq('id', fixture.season_id).single();
+        if (sData) setSeasonName(sData.name);
+      }
       const { data } = await supabase
         .from('fixtures')
         .select('id, home_player_id, away_player_id, home_score, away_score')
@@ -50,8 +54,8 @@ export default function ShareFinalistCard({ fixture, match, onClose }: { fixture
         setTotalGoals(calcGoals);
       }
     };
-    fetchGoals();
-  }, [winner, fixture, match]);
+    fetchData();
+  }, [winner, fixture, match, seasonName]);
 
   if (!winner) {
     return (
