@@ -254,6 +254,15 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
             else if (!finalFixture.away_player_id || finalFixture.away_player_id === winnerId) {
               await supabase.from('fixtures').update({ away_player_id: winnerId }).eq('id', finalFixture.id);
             }
+          } else {
+            // Create the Grand Final fixture if it doesn't exist yet
+            await supabase.from('fixtures').insert({
+              season_id: fixture.season_id,
+              stage: 'final',
+              home_player_id: winnerId,
+              matchday: (fixture.matchday || 100) + 1,
+              status: 'scheduled'
+            });
           }
         }
       }
