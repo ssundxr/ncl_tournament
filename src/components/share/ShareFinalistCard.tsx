@@ -20,7 +20,7 @@ export default function ShareFinalistCard({ fixture, match, onClose }: { fixture
     const fetchGoals = async () => {
       const { data } = await supabase
         .from('fixtures')
-        .select('home_player_id, away_player_id, home_score, away_score')
+        .select('id, home_player_id, away_player_id, home_score, away_score')
         .eq('season_id', fixture.season_id)
         .eq('status', 'completed');
       

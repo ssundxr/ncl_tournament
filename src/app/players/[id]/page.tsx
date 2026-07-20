@@ -97,13 +97,13 @@ export default function PlayerProfilePage() {
             <CardContent className="pt-4 space-y-4">
               {/* Reuse MatchCard component with mock data */}
               <MatchCard fixture={{
-                  id: "m1", round: "Group Stage", matchday: 3, scheduled_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+                  id: "m1", season_id: "mock", round: "Group Stage", matchday: 3, scheduled_at: new Date(Date.now() - 86400000).toISOString(),
                   status: "completed", home_player: MOCK_PLAYER, 
-                  away_player: { id: "2", name: "Player Beta", slug: "beta", photo_url: null, overall_rating: 92, favorite_team: "Real Madrid", bio: null },
-                  home_score: 3, away_score: 1,
-              }} />
+                  away_player: { id: "2", name: "Player Beta", slug: "beta", photo_url: null, overall_rating: 85, favorite_team: "Arsenal", bio: null },
+                  home_score: 3, away_score: 1
+                }} />
               <MatchCard fixture={{
-                  id: "m3", round: "Group Stage", matchday: 2, scheduled_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+                  id: "m3", season_id: "mock", round: "Group Stage", matchday: 2, scheduled_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
                   status: "completed", home_player: MOCK_PLAYER, 
                   away_player: { id: "4", name: "Player Delta", slug: "delta", photo_url: null, overall_rating: 85, favorite_team: "Bayern Munich", bio: null },
                   home_score: 4, away_score: 0,

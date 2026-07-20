@@ -24,6 +24,7 @@ export type Match = {
 
 export type Fixture = {
   id: string;
+  season_id: string;
   round: string;
   matchday: number;
   scheduled_at: string | null;
