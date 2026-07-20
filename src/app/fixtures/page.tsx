@@ -194,31 +194,60 @@ function FixturesPageContent() {
                   Knockout Bracket
                 </h2>
               </div>
-              <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto bg-[#13131a] p-6 border border-border rounded-2xl relative">
-                {/* Semis */}
-                <div className="space-y-6">
-                  <h3 className="text-xs font-black uppercase text-primary tracking-widest text-center border-b border-border pb-2">Semi-Finals</h3>
-                  {semis.map((match) => (
-                    <MatchBox key={match.id} fixture={match} />
-                  ))}
-                  {semis.length === 0 && (
-                    <div className="border border-dashed border-border rounded-xl p-8 text-center text-muted-foreground text-xs font-bold uppercase tracking-wider">
-                      Semis TBD
-                    </div>
-                  )}
-                </div>
+              
+              {/* Pannable/Scrollable Bracket Container */}
+              <div className="bg-[#13131a] p-8 border border-border rounded-2xl overflow-x-auto custom-scrollbar relative shadow-2xl">
+                <div className="flex items-center min-w-max mx-auto justify-center gap-16 py-4">
+                  
+                  {/* Semi Finals Column */}
+                  <div className="flex flex-col gap-16 w-[320px] relative z-10">
+                    <h3 className="text-xs font-black uppercase text-primary tracking-widest text-center border-b border-border pb-2 absolute -top-8 w-full">Semi-Finals</h3>
+                    {semis.length > 0 ? (
+                      semis.map((match, idx) => (
+                        <div key={match.id} className="relative group">
+                          <MatchBox fixture={match} />
+                          
+                          {/* Horizontal connecting line out */}
+                          {finals.length > 0 && (
+                            <div className="absolute top-1/2 -right-8 w-8 h-[2px] bg-border transition-colors group-hover:bg-primary" />
+                          )}
+                          {/* Vertical bracket line connecting the two semis */}
+                          {finals.length > 0 && idx === 0 && semis.length === 2 && (
+                            <div className="absolute top-1/2 -right-8 w-[2px] h-[calc(100%+4rem)] bg-border" />
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="border border-dashed border-border rounded-xl p-8 text-center text-muted-foreground text-xs font-bold uppercase tracking-wider h-[210px] flex items-center justify-center">
+                        Semis TBD
+                      </div>
+                    )}
+                  </div>
 
-                {/* Finals */}
-                <div className="space-y-6 flex flex-col justify-center">
-                  <h3 className="text-xs font-black uppercase text-yellow-500 tracking-widest text-center border-b border-border pb-2">Grand Final</h3>
-                  {finals.map((match) => (
-                    <MatchBox key={match.id} fixture={match} />
-                  ))}
-                  {finals.length === 0 && (
-                    <div className="border border-dashed border-border rounded-xl p-8 text-center text-muted-foreground text-xs font-bold uppercase tracking-wider">
-                      Grand Final TBD
-                    </div>
-                  )}
+                  {/* Grand Final Column */}
+                  <div className="flex flex-col justify-center w-[350px] relative z-10">
+                    <h3 className="text-xs font-black uppercase text-yellow-500 tracking-widest text-center border-b border-border pb-2 absolute -top-8 w-full drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">Grand Final</h3>
+                    
+                    {/* Horizontal connecting line in */}
+                    {semis.length > 0 && (
+                      <div className="absolute top-1/2 -left-8 w-8 h-[2px] bg-border" />
+                    )}
+
+                    {finals.length > 0 ? (
+                      finals.map((match) => (
+                        <div key={match.id} className="relative transform scale-110">
+                          {/* Optional glowing effect for the final */}
+                          <div className="absolute -inset-2 bg-yellow-500/10 blur-xl rounded-full z-[-1]" />
+                          <MatchBox fixture={match} />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="border border-dashed border-border rounded-xl p-8 text-center text-muted-foreground text-xs font-bold uppercase tracking-wider h-[210px] flex items-center justify-center">
+                        Grand Final TBD
+                      </div>
+                    )}
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -264,6 +293,9 @@ function FixturesPageContent() {
               <p className="text-white/50 text-2xl font-black uppercase tracking-widest italic">{
                 seasons.find(s => s.id === selectedSeasonId)?.name || 'Season'
               }</p>
+              <p className="text-white text-xl font-bold uppercase mt-2">
+                {fixtures.length > 0 && fixtures[0].stage === 'group' ? 'GROUP STAGE' : 'KNOCKOUTS'}
+              </p>
             </div>
           </div>
 
@@ -298,7 +330,7 @@ function FixturesPageContent() {
                            <h2 className="text-white text-5xl font-black uppercase italic tracking-tight drop-shadow-lg">{home.name}</h2>
                          </div>
                          {home.photo_url ? (
-                           <img src={home.photo_url} crossOrigin="anonymous" className="w-24 h-24 rounded-full border-[3px] border-white/20 object-cover grayscale contrast-125 shadow-[0_0_20px_rgba(0,0,0,0.8)]" />
+                           <img src={home.photo_url} crossOrigin="anonymous" className="w-24 h-24 rounded-full border-[3px] border-white/20 object-cover shadow-[0_0_20px_rgba(0,0,0,0.8)]" />
                          ) : (
                            <div className="w-24 h-24 rounded-full bg-white/5 border-[3px] border-white/20" />
                          )}
@@ -317,7 +349,7 @@ function FixturesPageContent() {
                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -ml-10 -mb-10" />
                        <div className="skew-x-[15deg] flex items-center gap-6 relative z-10">
                          {away.photo_url ? (
-                           <img src={away.photo_url} crossOrigin="anonymous" className="w-24 h-24 rounded-full border-[3px] border-white/20 object-cover grayscale contrast-125 shadow-[0_0_20px_rgba(0,0,0,0.8)]" />
+                           <img src={away.photo_url} crossOrigin="anonymous" className="w-24 h-24 rounded-full border-[3px] border-white/20 object-cover shadow-[0_0_20px_rgba(0,0,0,0.8)]" />
                          ) : (
                            <div className="w-24 h-24 rounded-full bg-white/5 border-[3px] border-white/20" />
                          )}
