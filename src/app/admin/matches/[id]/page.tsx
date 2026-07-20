@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Play, Square, Save, Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, Play, Square, Save, Upload, Loader2, Image as ImageIcon, Shield } from "lucide-react";
 
 export default function MatchControlPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -238,19 +238,19 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
     }
   };
 
-  if (loading) return <div className="text-white p-8">Loading match data...</div>;
-  if (!fixture) return <div className="text-white p-8">Match not found.</div>;
+  if (loading) return <div className="text-foreground p-8">Loading match data...</div>;
+  if (!fixture) return <div className="text-foreground p-8">Match not found.</div>;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/admin/matches">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
             <ChevronLeft className="w-6 h-6" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight">Match Control</h1>
+          <h1 className="text-3xl font-black font-heading uppercase text-foreground tracking-tight">Match Control</h1>
           <p className="text-muted-foreground mt-1">MD {fixture.matchday} • {fixture.stage}</p>
         </div>
       </div>
@@ -263,8 +263,8 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
             <div className="flex justify-between items-center mb-8">
               <span className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Live Score</span>
               <div className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${
-                fixture.status === 'live' ? 'bg-primary text-white animate-pulse' : 
-                fixture.status === 'completed' ? 'bg-success text-black' : 'bg-muted text-white'
+                fixture.status === 'live' ? 'bg-primary text-primary-foreground animate-pulse' : 
+                fixture.status === 'completed' ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'
               }`}>
                 {fixture.status}
               </div>
@@ -272,28 +272,42 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
 
             <div className="flex items-center justify-between mb-8">
               <div className="flex flex-col items-center flex-1">
-                <span className="font-black text-2xl text-white uppercase text-center">{fixture.home_player?.name}</span>
+                <div className="w-16 h-16 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border mb-3">
+                  {fixture.home_player?.photo_url ? (
+                    <img src={fixture.home_player.photo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Shield className="w-8 h-8 text-muted-foreground" />
+                  )}
+                </div>
+                <span className="font-black text-2xl text-foreground uppercase text-center">{fixture.home_player?.name}</span>
                 <input 
                   type="number" 
                   min="0"
                   value={homeScore}
                   onChange={e => setHomeScore(parseInt(e.target.value) || 0)}
                   disabled={fixture.status === 'scheduled'}
-                  className="mt-4 w-24 h-24 bg-background border-2 border-border rounded-xl text-5xl font-black text-center text-white focus:border-primary focus:outline-none"
+                  className="mt-4 w-24 h-24 bg-background border-2 border-border rounded-xl text-5xl font-black text-center text-foreground focus:border-primary focus:outline-none"
                 />
               </div>
               <div className="flex flex-col items-center px-4">
                 <span className="text-xl font-black text-muted-foreground uppercase">VS</span>
               </div>
               <div className="flex flex-col items-center flex-1">
-                <span className="font-black text-2xl text-white uppercase text-center">{fixture.away_player?.name}</span>
+                <div className="w-16 h-16 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border mb-3">
+                  {fixture.away_player?.photo_url ? (
+                    <img src={fixture.away_player.photo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Shield className="w-8 h-8 text-muted-foreground" />
+                  )}
+                </div>
+                <span className="font-black text-2xl text-foreground uppercase text-center">{fixture.away_player?.name}</span>
                 <input 
                   type="number" 
                   min="0"
                   value={awayScore}
                   onChange={e => setAwayScore(parseInt(e.target.value) || 0)}
                   disabled={fixture.status === 'scheduled'}
-                  className="mt-4 w-24 h-24 bg-background border-2 border-border rounded-xl text-5xl font-black text-center text-white focus:border-primary focus:outline-none"
+                  className="mt-4 w-24 h-24 bg-background border-2 border-border rounded-xl text-5xl font-black text-center text-foreground focus:border-primary focus:outline-none"
                 />
               </div>
             </div>
@@ -343,7 +357,7 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
                 <Button 
                   variant="outline" 
                   onClick={() => setScreenshotUrl("")}
-                  className="w-full border-border text-white hover:bg-white/5 uppercase font-bold text-xs"
+                  className="w-full border-border text-foreground hover:bg-muted uppercase font-bold text-xs"
                 >
                   Change Image
                 </Button>
@@ -359,7 +373,7 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
                     type="file" 
                     accept="image/*"
                     onChange={e => setScreenshotFile(e.target.files?.[0] || null)}
-                    className="text-xs w-full max-w-[200px] text-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-primary file:text-white hover:file:bg-primary/90"
+                    className="text-xs w-full max-w-[200px] text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                   />
                 </div>
                 <Button 
