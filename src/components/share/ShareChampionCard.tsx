@@ -11,6 +11,7 @@ export default function ShareChampionCard({ fixture, match, onClose }: { fixture
   const [downloading, setDownloading] = useState(false);
 
   const winner = match.home_score > match.away_score ? fixture.home_player : match.away_score > match.home_score ? fixture.away_player : null;
+  const seasonName = (fixture as any).season?.name || 'the Tournament';
 
   if (!winner) {
     return (
@@ -123,7 +124,7 @@ export default function ShareChampionCard({ fixture, match, onClose }: { fixture
               
               <div className="w-32 h-2 bg-yellow-500 mb-6 rounded-full" />
               
-              <p className="text-yellow-100 text-3xl font-medium tracking-widest uppercase">Has conquered the NFL</p>
+              <p className="text-yellow-100 text-3xl font-medium tracking-widest uppercase">Has conquered {seasonName}</p>
             </div>
           </div>
         </div>

@@ -11,6 +11,7 @@ export default function ShareFinalistCard({ fixture, match, onClose }: { fixture
   const [downloading, setDownloading] = useState(false);
 
   const winner = match.home_score > match.away_score ? fixture.home_player : match.away_score > match.home_score ? fixture.away_player : null;
+  const seasonName = (fixture as any).season?.name || 'the Tournament';
 
   if (!winner) {
     return (
@@ -102,7 +103,7 @@ export default function ShareFinalistCard({ fixture, match, onClose }: { fixture
           <div className="absolute bottom-16 left-16 right-16 z-30 flex flex-col border-l-[8px] border-yellow-500 pl-12 bg-black/40 backdrop-blur-md p-10">
             <h3 className="text-yellow-500 text-3xl font-black uppercase tracking-[0.4em] mb-4 drop-shadow-lg">Ticket to the Final</h3>
             <h1 className="text-white text-[100px] font-black uppercase tracking-tighter leading-none mb-4 shadow-black drop-shadow-2xl">{winner.name}</h1>
-            <p className="text-gray-300 text-3xl font-medium tracking-widest uppercase">Has reached the Grand Final</p>
+            <p className="text-gray-300 text-3xl font-medium tracking-widest uppercase">Has reached the {seasonName} Grand Final</p>
           </div>
         </div>
       </div>
