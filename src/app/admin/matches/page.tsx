@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { PlayCircle, CheckCircle2, Clock } from "lucide-react";
+import { PlayCircle, CheckCircle2, Clock, Shield } from "lucide-react";
 import { Fixture, Player } from "@/types";
 
 interface FixtureWithPlayers extends Fixture {
@@ -49,7 +49,7 @@ export default function AdminMatchesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight">Match Control</h1>
+          <h1 className="text-3xl font-black font-heading uppercase text-foreground tracking-tight">Match Control</h1>
           <p className="text-muted-foreground mt-1">Manage auto-generated live matches and upload results</p>
         </div>
       </div>
@@ -89,15 +89,29 @@ export default function AdminMatchesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-white text-right w-32 truncate">{fixture.home_player?.name}</span>
+                        <span className="font-bold text-foreground text-right w-32 truncate">{fixture.home_player?.name}</span>
+                        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
+                          {fixture.home_player?.photo_url ? (
+                            <img src={fixture.home_player.photo_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Shield className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
                         <span className="text-xs font-black text-muted-foreground uppercase px-2">VS</span>
-                        <span className="font-bold text-white w-32 truncate">{fixture.away_player?.name}</span>
+                        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
+                          {fixture.away_player?.photo_url ? (
+                            <img src={fixture.away_player.photo_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Shield className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <span className="font-bold text-foreground w-32 truncate">{fixture.away_player?.name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(fixture.status)}
-                        <span className="font-bold text-sm uppercase tracking-wider text-white">
+                        <span className="font-bold text-sm uppercase tracking-wider text-foreground">
                           {fixture.status}
                         </span>
                       </div>
