@@ -231,7 +231,6 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
             }
           }
         }
-        }
       } else if (fixture.stage === 'semi_final') {
         // Auto-advance winner to Final
         const winnerId = homeScore > awayScore ? fixture.home_player_id : 
