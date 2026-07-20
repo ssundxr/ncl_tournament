@@ -302,10 +302,8 @@ function FixturesPageContent() {
           {/* Fixtures List */}
           <div className="relative z-10 flex-1 flex flex-col gap-12 mt-8">
             {fixtures.slice(0, 5).map((fixture, idx) => {
-              const home = fixture.home_player;
-              const away = fixture.away_player;
-              
-              if (!home || !away) return null;
+              const home = fixture.home_player || { name: 'TBD', favorite_team: 'Waiting', photo_url: '' };
+              const away = fixture.away_player || { name: 'TBD', favorite_team: 'Waiting', photo_url: '' };
               
               // Stage naming
               let stageName = "GROUP STAGE";

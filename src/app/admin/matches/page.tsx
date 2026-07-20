@@ -89,7 +89,7 @@ export default function AdminMatchesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-foreground text-right w-32 truncate">{fixture.home_player?.name}</span>
+                        <span className="font-bold text-foreground text-right w-32 truncate">{fixture.home_player?.name || 'TBD'}</span>
                         <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
                           {fixture.home_player?.photo_url ? (
                             <img src={fixture.home_player.photo_url} alt="" className="w-full h-full object-cover" />
@@ -105,7 +105,7 @@ export default function AdminMatchesPage() {
                             <Shield className="w-4 h-4 text-muted-foreground" />
                           )}
                         </div>
-                        <span className="font-bold text-foreground w-32 truncate">{fixture.away_player?.name}</span>
+                        <span className="font-bold text-foreground w-32 truncate">{fixture.away_player?.name || 'TBD'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">

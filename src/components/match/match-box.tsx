@@ -32,35 +32,38 @@ export function MatchBox({ fixture }: MatchBoxProps) {
     setIsExporting(true);
     
     if (isCompleted && shareResultRef.current) {
-      await exportAsImage(shareResultRef, `result-${fixture.home_player.name}-vs-${fixture.away_player.name}`);
+      await exportAsImage(shareResultRef, `result-${fixture.home_player?.name || 'TBD'}-vs-${fixture.away_player?.name || 'TBD'}`);
     } else if (isScheduled && shareUpcomingRef.current) {
-      await exportAsImage(shareUpcomingRef, `upcoming-${fixture.home_player.name}-vs-${fixture.away_player.name}`);
+      await exportAsImage(shareUpcomingRef, `upcoming-${fixture.home_player?.name || 'TBD'}-vs-${fixture.away_player?.name || 'TBD'}`);
     }
     
     setIsExporting(false);
   };
+
+  const homePlayer = fixture.home_player || { name: 'TBD', favorite_team: 'Waiting', photo_url: '' };
+  const awayPlayer = fixture.away_player || { name: 'TBD', favorite_team: 'Waiting', photo_url: '' };
 
   return (
     <>
       {isCompleted && (
         <ShareMatchResult 
           ref={shareResultRef}
-          homeName={fixture.home_player.name}
-          awayName={fixture.away_player.name}
+          homeName={homePlayer.name}
+          awayName={awayPlayer.name}
           homeScore={fixture.home_score || 0}
           awayScore={fixture.away_score || 0}
-          homePhoto={fixture.home_player.photo_url || undefined}
-          awayPhoto={fixture.away_player.photo_url || undefined}
+          homePhoto={homePlayer.photo_url || undefined}
+          awayPhoto={awayPlayer.photo_url || undefined}
         />
       )}
       
       {isScheduled && (
         <ShareUpcomingMatch 
           ref={shareUpcomingRef}
-          homeName={fixture.home_player.name}
-          awayName={fixture.away_player.name}
-          homePhoto={fixture.home_player.photo_url || undefined}
-          awayPhoto={fixture.away_player.photo_url || undefined}
+          homeName={homePlayer.name}
+          awayName={awayPlayer.name}
+          homePhoto={homePlayer.photo_url || undefined}
+          awayPhoto={awayPlayer.photo_url || undefined}
           matchday={fixture.matchday}
         />
       )}
@@ -96,18 +99,18 @@ export function MatchBox({ fixture }: MatchBoxProps) {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-none bg-white border-2 border-foreground flex items-center justify-center shrink-0 overflow-hidden relative shadow-[2px_2px_0px_0px_rgba(17,24,39,1)]">
-                  {fixture.home_player.photo_url ? (
-                    <img src={fixture.home_player.photo_url} alt="" className="w-full h-full object-cover filter contrast-125 saturate-50" />
+                  {homePlayer.photo_url ? (
+                    <img src={homePlayer.photo_url} alt="" className="w-full h-full object-cover filter contrast-125 saturate-50" />
                   ) : (
                     <Shield className="w-5 h-5 text-foreground" />
                   )}
                 </div>
                 <div className="min-w-0">
                   <span className="font-heading font-black text-base tracking-tight text-foreground uppercase truncate block leading-none mb-1">
-                    {fixture.home_player.name}
+                    {homePlayer.name}
                   </span>
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate block leading-none">
-                    {fixture.home_player.favorite_team || "Free Agent"}
+                    {homePlayer.favorite_team || "Free Agent"}
                   </span>
                 </div>
               </div>
@@ -130,18 +133,18 @@ export function MatchBox({ fixture }: MatchBoxProps) {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-none bg-white border-2 border-foreground flex items-center justify-center shrink-0 overflow-hidden relative shadow-[2px_2px_0px_0px_rgba(17,24,39,1)]">
-                  {fixture.away_player.photo_url ? (
-                    <img src={fixture.away_player.photo_url} alt="" className="w-full h-full object-cover filter contrast-125 saturate-50" />
+                  {awayPlayer.photo_url ? (
+                    <img src={awayPlayer.photo_url} alt="" className="w-full h-full object-cover filter contrast-125 saturate-50" />
                   ) : (
                     <Shield className="w-5 h-5 text-foreground" />
                   )}
                 </div>
                 <div className="min-w-0">
                   <span className="font-heading font-black text-base tracking-tight text-foreground uppercase truncate block leading-none mb-1">
-                    {fixture.away_player.name}
+                    {awayPlayer.name}
                   </span>
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate block leading-none">
-                    {fixture.away_player.favorite_team || "Free Agent"}
+                    {awayPlayer.favorite_team || "Free Agent"}
                   </span>
                 </div>
               </div>
