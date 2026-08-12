@@ -29,9 +29,9 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
 
   return (
     <section className="relative w-full h-[75vh] flex items-end overflow-hidden bg-background border-b-4 border-foreground">
-      <div className="absolute inset-0 bg-[url('/bg_banner.jpeg')] bg-cover bg-center opacity-70" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
+      <div className="absolute inset-0 bg-[url('/bg_banner1.png')] bg-cover bg-center opacity-80" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent z-10" />
       <div className="absolute inset-0 grunge-overlay z-10 opacity-60" />
 
       <div className="relative z-20 w-full px-4 md:px-12 lg:px-24 xl:px-32 pb-20 h-full flex flex-col justify-end">
@@ -50,7 +50,7 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
                 {currentSeason.status}
               </div>
               <h1 className="text-5xl sm:text-6xl md:text-[100px] tracking-normal mb-4 text-foreground leading-[0.85] font-fifa uppercase drop-shadow-sm">
-                {cleanBranding(currentSeason.tournament?.name ?? "NCL")}:
+                <span className="text-efootball">{cleanBranding(currentSeason.tournament?.name ?? "NCL")}</span>:
                 <br />
                 <span className="text-primary">{cleanBranding(currentSeason.name)}</span>
               </h1>

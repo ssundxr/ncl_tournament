@@ -64,42 +64,40 @@ export function InstallPrompt() {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 pb-safe animate-in slide-in-from-bottom-full duration-500">
-      <div className="max-w-md mx-auto bg-card border-2 border-primary shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] p-4 relative flex items-start gap-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="w-full max-w-sm bg-card border-4 border-primary shadow-[8px_8px_0px_0px_rgba(220,38,38,1)] p-6 relative flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
         <button 
           onClick={handleDismiss}
-          className="absolute -top-3 -right-3 bg-card border-2 border-border rounded-full p-1 hover:bg-muted transition-colors text-foreground"
+          className="absolute -top-4 -right-4 bg-background border-4 border-foreground rounded-full p-2 hover:bg-muted transition-colors text-foreground shadow-[4px_4px_0px_0px_rgba(17,24,39,1)]"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
         
-        <div className="w-12 h-12 bg-primary flex items-center justify-center shrink-0">
-          <Download className="w-6 h-6 text-primary-foreground" />
+        <div className="w-16 h-16 bg-primary flex items-center justify-center rounded-full mb-4 shadow-lg">
+          <Download className="w-8 h-8 text-primary-foreground" />
         </div>
         
-        <div className="flex-1">
-          <h3 className="font-heading font-black uppercase text-lg text-foreground leading-tight">Install NCL Hub</h3>
-          
-          {isIOS ? (
-            <p className="text-xs font-medium text-muted-foreground mt-1">
-              To install this app on your iPhone: tap the <strong className="text-foreground">Share</strong> icon below, then select <strong className="text-foreground">Add to Home Screen</strong>.
+        <h3 className="font-heading font-black uppercase text-2xl text-foreground leading-tight mb-2">Install NCL Hub</h3>
+        
+        {isIOS ? (
+          <p className="text-sm font-medium text-muted-foreground mb-4">
+            To install this app on your iPhone: tap the <strong className="text-foreground">Share</strong> icon at the bottom of Safari, then select <strong className="text-foreground">Add to Home Screen</strong>.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-medium text-muted-foreground mb-6">
+              Install our app on your device for quick access to the tournament schedule, standings, and instant real-time updates!
             </p>
-          ) : (
-            <>
-              <p className="text-xs font-medium text-muted-foreground mt-1 mb-3">
-                Install our app on your device for quick access to the tournament!
-              </p>
-              {isInstallable && (
-                <Button 
-                  onClick={handleInstallClick}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-xs h-9 rounded-none"
-                >
-                  Install App Now
-                </Button>
-              )}
-            </>
-          )}
-        </div>
+            {isInstallable && (
+              <Button 
+                onClick={handleInstallClick}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-sm h-12 rounded-none shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-none hover:translate-y-1 hover:translate-x-1 transition-all"
+              >
+                Install App Now
+              </Button>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
