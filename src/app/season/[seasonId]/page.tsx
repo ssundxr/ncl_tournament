@@ -32,8 +32,8 @@ export default function SeasonOverviewPage({
     Promise.all([
       getGroups(seasonId),
       getLeaderboards(seasonId),
-      getFixturesWithScores(seasonId, false),
-      getFixturesWithScores(seasonId, true),
+      getFixturesWithScores(seasonId, 'upcoming'),
+      getFixturesWithScores(seasonId, 'completed'),
     ])
       .then(([g, l, upcoming, results]) => {
         setGroups(g);
