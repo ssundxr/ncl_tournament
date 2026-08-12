@@ -84,9 +84,11 @@ export type Season = {
   tournament_id: string;
   name: string;
   number: number;
-  status: 'upcoming' | 'active' | 'in_progress' | 'completed';
-  start_date: string | null;
-  end_date: string | null;
+  status: "upcoming" | "active" | "completed";
+  start_date?: string;
+  end_date?: string;
+  registration_start?: string;
+  registration_end?: string;
   created_at: string;
   tournament?: Tournament;
 };

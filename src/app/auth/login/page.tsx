@@ -44,7 +44,7 @@ export default function LoginPage() {
           Admin Portal
         </h1>
         <p className="text-muted-foreground text-center mb-8">
-          Sign in to access the NFL tournament management dashboard.
+          Sign in to access the NCL tournament management dashboard.
         </p>
 
         {error && (

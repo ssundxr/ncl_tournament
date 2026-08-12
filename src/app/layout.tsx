@@ -5,6 +5,9 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { MobileNav } from "@/components/layout/mobile-nav";
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 const barlow = Barlow({
   variable: "--font-sans",
   subsets: ["latin"],
@@ -27,10 +30,6 @@ export const metadata: Metadata = {
   title: "Namma Football League",
   description: "The premium tournament ecosystem for eFootball Mobile competitions.",
   manifest: "/manifest.json",
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/logo_nfl.png",
-  },
 };
 
 export const viewport = {
@@ -39,19 +38,19 @@ export const viewport = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html
-      lang="en"
-      className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col selection:bg-primary/30 selection:text-primary">
+    <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable}`}>
+      <body className="bg-background text-foreground antialiased min-h-screen flex flex-col font-sans">
         <Header />
-        <main className="flex-1 flex flex-col w-full">{children}</main>
+        <main className="flex-1 pb-16 md:pb-0">
+          {children}
+        </main>
         <Footer />
         <MobileNav />
+        <InstallPrompt />
       </body>
     </html>
   );

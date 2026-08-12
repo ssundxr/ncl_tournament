@@ -198,7 +198,7 @@ function EnrollForm() {
   const triggerWhatsAppRedirect = () => {
     const rawMessage = `⚽ *NAMMA FOOTBALL LEAGUE REGISTRATION* ⚽\n` +
       `----------------------------------\n` +
-      `*Tournament:* ${season?.tournament?.name || "NFL Championship"}\n` +
+      `*Tournament:* ${season?.tournament?.name || "NCL Championship"}\n` +
       `*Season:* ${season?.name || ""}\n` +
       `*Player Name:* ${formData.name || "Newly Registered Player"}\n` +
       `*Registration Fee:* ₹25.00 (Paid)\n` +
@@ -240,7 +240,7 @@ function EnrollForm() {
         <div>
           <h2 className="text-3xl font-heading font-bold text-foreground tracking-tight mb-2">Enrollment Closed</h2>
           <p className="text-muted-foreground font-medium max-w-sm mx-auto">
-            Registration for <strong>{season.tournament?.name || "NFL"}: {season.name}</strong> is currently closed. 
+            Registration for <strong>{season.tournament?.name || "NCL"}: {season.name}</strong> is currently closed. 
             Stay tuned for the next season!
           </p>
         </div>
@@ -262,13 +262,13 @@ function EnrollForm() {
         </div>
         <h2 className="text-3xl font-heading font-bold text-foreground tracking-tight mb-2">Registration Complete!</h2>
         <p className="text-muted-foreground font-medium text-center mb-6">
-          You are now enrolled in <strong>{season.tournament?.name || "NFL"}: {season.name}</strong>.
+          You are now enrolled in <strong>{season.tournament?.name || "NCL"}: {season.name}</strong>.
         </p>
 
         {/* Receipt Box */}
         <div className="w-full bg-card border border-border p-6 rounded-xl space-y-4 shadow-sm mb-6 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(currentColor_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.02] pointer-events-none rounded-xl" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary border-b border-border pb-2">NFL Official Receipt</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary border-b border-border pb-2">NCL Official Receipt</h3>
           <div className="grid grid-cols-2 gap-y-3 text-sm">
             {formData.name && (
               <>
@@ -336,7 +336,7 @@ function EnrollForm() {
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold font-heading text-foreground tracking-tight mb-3">Join the Action</h1>
         <p className="text-muted-foreground text-lg font-medium">
-          Register for <strong className="text-foreground">{season.tournament?.name || "NFL"}: {season.name}</strong>
+          Register for <strong className="text-foreground">{season.tournament?.name || "NCL"}: {season.name}</strong>
         </p>
       </div>
 

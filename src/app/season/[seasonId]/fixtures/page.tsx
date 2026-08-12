@@ -27,7 +27,7 @@ export default function SeasonFixturesPage({
     if (!seasonId) return;
     setLoading(true);
     Promise.all([
-      getFixturesWithScores(seasonId, false),
+      getFixturesWithScores(seasonId, 'all'),
       getKnockouts(seasonId),
     ])
       .then(([f, k]) => {

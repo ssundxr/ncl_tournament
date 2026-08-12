@@ -63,10 +63,10 @@ export default function NewTournamentPage() {
               className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary appearance-none"
             >
               <option value="">Select a predefined tournament</option>
-              <option value="NFL Premier League">NFL Premier League</option>
-              <option value="NFL Championship">NFL Championship</option>
-              <option value="NFL Super Cup">NFL Super Cup</option>
-              <option value="NFL eFootball League">NFL eFootball League</option>
+              <option value="NCL Premier League">NCL Premier League</option>
+              <option value="NCL Championship">NCL Championship</option>
+              <option value="NCL Super Cup">NCL Super Cup</option>
+              <option value="NCL eFootball League">NCL eFootball League</option>
               <option value="Inter Comp">Inter Comp</option>
               <option value="World Cup">World Cup</option>
             </select>

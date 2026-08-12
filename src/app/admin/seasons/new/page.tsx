@@ -12,7 +12,9 @@ export default function NewSeasonPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [formData, setFormData] = useState({ tournament_id: "", name: "", number: "1" });
+  const [formData, setFormData] = useState({ 
+    tournament_id: "", name: "", number: "1", registration_start: "", registration_end: "" 
+  });
 
   useEffect(() => {
     async function loadTournaments() {
@@ -30,11 +32,15 @@ export default function NewSeasonPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.from("seasons").insert({
+    const payload: any = {
       tournament_id: formData.tournament_id,
       name: formData.name,
       number: parseInt(formData.number)
-    });
+    };
+    if (formData.registration_start) payload.registration_start = new Date(formData.registration_start).toISOString();
+    if (formData.registration_end) payload.registration_end = new Date(formData.registration_end).toISOString();
+    
+    const { error } = await supabase.from("seasons").insert(payload);
     setLoading(false);
     if (!error) {
       router.push("/admin/seasons");
@@ -66,9 +72,23 @@ export default function NewSeasonPage() {
             <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Season Name *</label>
             <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary" placeholder="e.g. 2026 Season 1" />
           </div>
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Season Number *</label>
-            <input required type="number" name="number" min="1" value={formData.number} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Season Number *</label>
+              <input required type="number" name="number" min="1" value={formData.number} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary" />
+            </div>
+            <div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border mt-4">
+            <div>
+              <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Registration Opens</label>
+              <input type="datetime-local" name="registration_start" value={formData.registration_start} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary [color-scheme:dark]" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Registration Closes</label>
+              <input type="datetime-local" name="registration_end" value={formData.registration_end} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary [color-scheme:dark]" />
+            </div>
           </div>
           <div className="flex justify-end pt-4">
             <Button type="submit" disabled={loading || !formData.tournament_id} className="bg-primary text-white font-bold uppercase">

@@ -263,6 +263,43 @@ export default function SeasonControlPanel() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="font-black uppercase tracking-tight text-xl">Actions</h2>
         </div>
+
+        <div className="mb-8 p-4 bg-muted border border-border rounded-lg">
+          <h3 className="font-bold uppercase tracking-tight text-sm mb-3">Registration Window (Optional)</h3>
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Opens</label>
+              <input 
+                type="datetime-local" 
+                className="bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary [color-scheme:dark]"
+                value={season.registration_start ? new Date(new Date(season.registration_start).getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : ""}
+                onChange={(e) => setSeason({...season, registration_start: e.target.value ? new Date(e.target.value).toISOString() : null} as any)}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Closes</label>
+              <input 
+                type="datetime-local" 
+                className="bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary [color-scheme:dark]"
+                value={season.registration_end ? new Date(new Date(season.registration_end).getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : ""}
+                onChange={(e) => setSeason({...season, registration_end: e.target.value ? new Date(e.target.value).toISOString() : null} as any)}
+              />
+            </div>
+            <Button 
+              onClick={async () => {
+                const { error } = await supabase.from("seasons").update({
+                  registration_start: season.registration_start,
+                  registration_end: season.registration_end
+                }).eq("id", seasonId);
+                if (error) alert(error.message);
+                else alert("Registration window saved!");
+              }}
+              className="bg-primary hover:bg-primary/90 text-white text-xs font-bold uppercase"
+            >
+              Save Times
+            </Button>
+          </div>
+        </div>
         
         <div className="flex flex-wrap gap-4">
           {season.status === 'upcoming' && (

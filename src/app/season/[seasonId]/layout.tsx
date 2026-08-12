@@ -46,7 +46,7 @@ function SeasonSubNav({ seasonId }: { seasonId: string }) {
           href="/"
           className="text-muted-foreground hover:text-foreground text-xs font-bold uppercase tracking-widest transition-colors"
         >
-          NFL
+          NCL
         </Link>
         <ChevronRight className="w-3 h-3 text-muted-foreground" />
         {isLoading ? (

@@ -50,7 +50,7 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
                 {currentSeason.status}
               </div>
               <h1 className="text-5xl sm:text-6xl md:text-[100px] tracking-normal mb-4 text-foreground leading-[0.85] font-fifa uppercase drop-shadow-sm">
-                {cleanBranding(currentSeason.tournament?.name ?? "NFL")}:
+                {cleanBranding(currentSeason.tournament?.name ?? "NCL")}:
                 <br />
                 <span className="text-primary">{cleanBranding(currentSeason.name)}</span>
               </h1>
@@ -79,7 +79,7 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
             </div>
 
             <div className="hidden md:flex flex-shrink-0 items-center justify-center pointer-events-none">
-              <img src="/logo_nfl.png" alt="NFL Logo" className="w-[300px] lg:w-[380px] h-auto object-contain drop-shadow-2xl opacity-90 hover:scale-105 transition-transform duration-700" />
+              <img src="/logo_nfl.png" alt="NCL Logo" className="w-[300px] lg:w-[380px] h-auto object-contain drop-shadow-2xl opacity-90 hover:scale-105 transition-transform duration-700" />
             </div>
           </motion.div>
         </AnimatePresence>

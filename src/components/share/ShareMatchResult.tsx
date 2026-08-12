@@ -99,7 +99,7 @@ export const ShareMatchResult = forwardRef<HTMLDivElement, ShareMatchResultProps
 
           {/* Footer */}
           <div className="mt-auto py-12 px-20 flex justify-between items-end z-10 w-full relative">
-            <p className="text-white font-black text-3xl tracking-[0.3em] uppercase">NFL.SUNDXR.DEV</p>
+            <p className="text-white font-black text-3xl tracking-[0.3em] uppercase">NCL.SUNDXR.DEV</p>
             <img src="/logo_nfl.png" className="w-24 h-24 object-contain brightness-0 invert" />
           </div>
         </div>

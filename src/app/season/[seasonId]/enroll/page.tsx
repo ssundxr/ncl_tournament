@@ -12,7 +12,7 @@ import { QRCodeSVG } from "qrcode.react";
 
 const UPI_ID = "ashwinfejl357@oksbi";
 const AMOUNT = "25.00";
-const PAYEE_NAME = "NFL Tournament";
+const PAYEE_NAME = "NCL Tournament";
 
 function EnrollContent({ seasonId }: { seasonId: string }) {
   const { season, tournament, isLoading: seasonLoading } = useSeason();
@@ -136,27 +136,40 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
 
   if (!season) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-4">
-        <h2 className="text-2xl font-black uppercase text-foreground">Season Not Found</h2>
-        <Link href="/"><Button>Return Home</Button></Link>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <h2 className="text-2xl font-bold uppercase tracking-widest text-muted-foreground">Season Not Found</h2>
+        <Link href="/">
+          <Button variant="outline" className="font-bold">Go Home</Button>
+        </Link>
       </div>
     );
   }
 
-  if (season.status !== "active" && !success) {
+  const now = new Date();
+  const isEarly = season.registration_start ? now < new Date(season.registration_start) : false;
+  const isLate = season.registration_end ? now > new Date(season.registration_end) : false;
+
+  if (season.status !== "active" || isEarly || isLate) {
+    let message = "Registration is not active for this season.";
+    if (isEarly) {
+      message = `Registration opens on ${new Date(season.registration_start!).toLocaleString()}`;
+    } else if (isLate) {
+      message = "Registration for this season has closed.";
+    } else if (season.status === 'upcoming') {
+      message = "Registration for this season has not opened yet.";
+    } else if (season.status === 'completed') {
+      message = "Registration for this season has closed.";
+    }
+
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 gap-6">
-        <div className="w-20 h-20 bg-destructive/10 flex items-center justify-center">
-          <Lock className="w-10 h-10 text-destructive" />
-        </div>
-        <div>
-          <h2 className="text-3xl font-black font-heading uppercase text-foreground mb-2">Enrollment Closed</h2>
-          <p className="text-muted-foreground font-medium max-w-sm mx-auto">
-            Registration for <strong>{tournament?.name ?? "NFL"}: {season.name}</strong> is currently closed.
-          </p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center px-4">
+        <ShieldAlert className="w-16 h-16 text-muted-foreground" />
+        <div className="space-y-2 max-w-md">
+          <h2 className="text-3xl font-black font-heading uppercase tracking-tighter">Registration Closed</h2>
+          <p className="text-muted-foreground font-medium">{message}</p>
         </div>
         <Link href={`/season/${seasonId}`}>
-          <Button variant="outline" className="font-black uppercase tracking-widest">Back to Season</Button>
+          <Button variant="outline" className="w-full font-black uppercase tracking-widest">Back to Season</Button>
         </Link>
       </div>
     );
@@ -198,7 +211,7 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
       <div className="text-center mb-10">
         <h1 className="text-4xl font-black font-heading uppercase tracking-tighter text-foreground mb-3">Join the Action</h1>
         <p className="text-muted-foreground text-lg font-medium">
-          Register for <strong className="text-foreground">{tournament?.name ?? "NFL"}: {season.name}</strong>
+          Register for <strong className="text-foreground">{tournament?.name ?? "NCL"}: {season.name}</strong>
         </p>
       </div>
 
@@ -282,11 +295,21 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
             </div>
 
             {/* Direct Pay Button (Mobile) */}
-            <a href={upiIntentUrl} className="w-full">
-              <Button className="w-full h-14 bg-primary text-primary-foreground font-black uppercase tracking-widest text-lg gap-2">
-                <ExternalLink className="w-5 h-5" /> Open UPI App to Pay ₹{AMOUNT}
-              </Button>
-            </a>
+            <div className="w-full space-y-3">
+              <a href={upiIntentUrl} className="w-full block">
+                <Button className="w-full h-14 bg-primary text-primary-foreground font-black uppercase tracking-widest text-lg gap-2">
+                  <ExternalLink className="w-5 h-5" /> Open UPI App to Pay ₹{AMOUNT}
+                </Button>
+              </a>
+              <div className="bg-muted/50 p-3 text-xs text-muted-foreground font-medium text-left border border-border">
+                <span className="font-bold text-foreground block mb-1">Getting a limit/security error?</span>
+                UPI apps sometimes block deep links for personal accounts. If the button above is blocked:
+                <ul className="list-disc pl-4 mt-1 space-y-1">
+                  <li>Take a screenshot of the QR code and scan it from your gallery inside the UPI app.</li>
+                  <li>Or copy the UPI ID below and pay manually.</li>
+                </ul>
+              </div>
+            </div>
             
             <div className="flex items-center gap-2 text-muted-foreground font-bold">
               <span>UPI ID: {UPI_ID}</span>

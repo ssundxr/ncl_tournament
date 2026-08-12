@@ -99,7 +99,7 @@ export default function SeasonOverviewPage({
       <motion.div {...fadeUp} className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground mb-2">
-            {cleanBranding(tournament?.name ?? "NFL")}
+            {cleanBranding(tournament?.name ?? "NCL")}
           </p>
           <h1 className="text-5xl md:text-7xl font-black font-heading uppercase tracking-tighter text-foreground leading-none">
             {cleanBranding(season.name)}

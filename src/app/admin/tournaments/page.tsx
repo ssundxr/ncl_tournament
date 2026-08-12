@@ -27,7 +27,7 @@ export default function AdminTournamentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight">Tournaments</h1>
-          <p className="text-muted-foreground mt-1">Manage all NFL tournaments</p>
+          <p className="text-muted-foreground mt-1">Manage all NCL tournaments</p>
         </div>
         <Link href="/admin/tournaments/new">
           <Button className="bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-wider">

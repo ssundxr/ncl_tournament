@@ -89,7 +89,7 @@ export default function PlayerProfilePage() {
 
           <div className="flex-1 text-center md:text-left">
             <div className="inline-flex items-center px-3 py-1 border-2 border-primary bg-primary/10 mb-4">
-              <span className="text-primary text-[10px] font-black tracking-wider uppercase">NFL Competitor</span>
+              <span className="text-primary text-[10px] font-black tracking-wider uppercase">NCL Competitor</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-heading font-black tracking-tighter text-foreground mb-2 uppercase">
               {player.name}

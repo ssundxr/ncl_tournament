@@ -53,7 +53,7 @@ export async function getFixtures(seasonId: string, status?: string) {
   return data ?? [];
 }
 
-export async function getFixturesWithScores(seasonId: string, completedOnly = false) {
+export async function getFixturesWithScores(seasonId: string, statusFilter: 'completed' | 'upcoming' | 'all' = 'all') {
   let query = supabase
     .from("fixtures")
     .select(`
@@ -64,8 +64,11 @@ export async function getFixturesWithScores(seasonId: string, completedOnly = fa
     .eq("season_id", seasonId)
     .order("matchday", { ascending: true });
 
-  if (completedOnly) query = query.eq("status", "completed");
-  else query = query.neq("status", "completed");
+  if (statusFilter === 'completed') {
+    query = query.eq("status", "completed");
+  } else if (statusFilter === 'upcoming') {
+    query = query.neq("status", "completed");
+  }
 
   const { data: fixturesData } = await query;
   const { data: matchesData } = await supabase.from("matches").select("*");

@@ -4,7 +4,5 @@
  */
 export function cleanBranding(str: string): string {
   if (!str) return "";
-  return str
-    .replace(/Namma Champions League/gi, "Namma Football League")
-    .replace(/\bNCL\b/g, "NFL");
+  return str;
 }

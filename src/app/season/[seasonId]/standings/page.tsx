@@ -80,7 +80,7 @@ export default function SeasonStandingsPage({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-l-8 border-primary pl-6">
         <div>
           <h1 className="text-5xl md:text-7xl font-black font-heading uppercase tracking-tighter text-foreground skew-x-[-10deg]">
-            <span className="block skew-x-[10deg]">{cleanBranding(tournament?.name ?? "NFL")}</span>
+            <span className="block skew-x-[10deg]">{cleanBranding(tournament?.name ?? "NCL")}</span>
             <span className="text-primary block skew-x-[10deg]">STANDINGS</span>
           </h1>
           {season && (

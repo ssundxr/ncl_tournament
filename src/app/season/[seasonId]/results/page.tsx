@@ -21,7 +21,7 @@ export default function SeasonResultsPage({
   useEffect(() => {
     if (!seasonId) return;
     setLoading(true);
-    getFixturesWithScores(seasonId, true)
+    getFixturesWithScores(seasonId, 'completed')
       .then((data) => setResults(data))
       .finally(() => setLoading(false));
   }, [seasonId]);
