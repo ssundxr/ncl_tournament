@@ -11,7 +11,7 @@ import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 
 const UPI_ID = "ashwinfejl357@oksbi";
-const AMOUNT = "25.00";
+const AMOUNT = "30.00";
 const PAYEE_NAME = "NCL Tournament";
 
 function EnrollContent({ seasonId }: { seasonId: string }) {
@@ -199,6 +199,11 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
         <Link href={`/season/${seasonId}/enrollment-status`} className="w-full">
           <Button className="w-full h-14 font-black uppercase tracking-widest text-lg">Check Status</Button>
         </Link>
+        <a href="https://chat.whatsapp.com/CYqbdmsPaEpGyfKiRheit0" target="_blank" rel="noreferrer" className="w-full">
+          <Button className="w-full h-14 font-black uppercase tracking-widest text-lg bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center gap-2 justify-center">
+            Join WhatsApp Group
+          </Button>
+        </a>
         <Link href={`/season/${seasonId}`} className="w-full">
           <Button variant="outline" className="w-full font-black uppercase tracking-widest">Back to Season</Button>
         </Link>
@@ -294,19 +299,15 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
               <QRCodeSVG value={upiIntentUrl} size={180} />
             </div>
 
-            {/* Direct Pay Button (Mobile) */}
+            {/* Direct Pay Instructions */}
             <div className="w-full space-y-3">
-              <a href={upiIntentUrl} className="w-full block">
-                <Button className="w-full h-14 bg-primary text-primary-foreground font-black uppercase tracking-widest text-lg gap-2">
-                  <ExternalLink className="w-5 h-5" /> Open UPI App to Pay ₹{AMOUNT}
-                </Button>
-              </a>
-              <div className="bg-muted/50 p-3 text-xs text-muted-foreground font-medium text-left border border-border">
-                <span className="font-bold text-foreground block mb-1">Getting a limit/security error?</span>
-                UPI apps sometimes block deep links for personal accounts. If the button above is blocked:
-                <ul className="list-disc pl-4 mt-1 space-y-1">
-                  <li>Take a screenshot of the QR code and scan it from your gallery inside the UPI app.</li>
-                  <li>Or copy the UPI ID below and pay manually.</li>
+              <div className="bg-muted/50 p-4 text-sm text-foreground font-medium text-left border-2 border-border">
+                <span className="font-bold text-foreground block mb-2 text-lg text-center uppercase tracking-wider text-primary">How to Pay ₹{AMOUNT}</span>
+                <ul className="list-decimal pl-5 space-y-2 text-muted-foreground font-bold">
+                  <li>Copy the UPI ID below (or take a screenshot of the QR code).</li>
+                  <li>Open <strong className="text-foreground">Google Pay</strong> (or any UPI app).</li>
+                  <li>Pay exactly <strong className="text-foreground">₹{AMOUNT}</strong> manually.</li>
+                  <li>Copy the 12-digit Transaction ID (UTR) and paste it below.</li>
                 </ul>
               </div>
             </div>

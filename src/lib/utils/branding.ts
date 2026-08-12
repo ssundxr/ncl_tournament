@@ -4,5 +4,9 @@
  */
 export function cleanBranding(str: string): string {
   if (!str) return "";
-  return str;
+  let clean = str;
+  if (clean.toLowerCase() === "namma football league") {
+    clean = "NCL";
+  }
+  return clean;
 }
