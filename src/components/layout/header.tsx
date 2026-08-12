@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function Header() {
   const pathname = usePathname();
@@ -97,6 +98,7 @@ export function Header() {
               </span>
             </div>
           )}
+          <ThemeToggle />
 
           <Link href="/auth/login">
             <Button

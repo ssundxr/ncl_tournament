@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -50,15 +51,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable} ${quanticoFont.variable}`}>
-      <body className="bg-background text-foreground antialiased min-h-screen flex flex-col font-sans">
-        <Header />
-        <main className="flex-1 pb-16 md:pb-0">
-          {children}
-        </main>
-        <Footer />
-        <MobileNav />
-        <InstallPrompt />
+    <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable} ${quanticoFont.variable}`} suppressHydrationWarning>
+      <body className="bg-background text-foreground antialiased min-h-screen flex flex-col font-sans transition-colors duration-300">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
+          <Header />
+          <main className="flex-1 pb-16 md:pb-0">
+            {children}
+          </main>
+          <Footer />
+          <MobileNav />
+          <InstallPrompt />
+        </ThemeProvider>
       </body>
     </html>
   );
