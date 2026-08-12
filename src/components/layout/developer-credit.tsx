@@ -80,24 +80,21 @@ export function DeveloperCredit() {
           
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
 
-          {/* Card Content */}
-          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full border border-white/10 rounded-[3rem] bg-white/[0.02] backdrop-blur-3xl p-16 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-            
-            {/* Aesthetic Avatar */}
-            <div className="relative w-64 h-64 rounded-full p-1.5 bg-gradient-to-tr from-zinc-800 via-zinc-400 to-zinc-800 shadow-2xl mb-12">
-              <div className="w-full h-full rounded-full overflow-hidden bg-black relative border-[6px] border-black">
-                <img 
-                  src="/shyam.png" 
-                  alt="Shyam Sunder" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Shyam+Sunder&background=0D8ABC&color=fff&size=512';
-                  }}
-                />
-              </div>
-              <div className="absolute inset-0 rounded-full bg-white/5 ring-1 ring-white/10" />
+          {/* Giant Aesthetic Background Image */}
+          <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.15] mix-blend-luminosity overflow-hidden">
+            <div className="relative w-[150%] h-[150%] max-w-none ml-[20%] mt-[10%]">
+              <img 
+                src="/shyam.png" 
+                alt="Shyam Sunder" 
+                className="w-full h-full object-contain object-right-bottom filter contrast-125 brightness-75 drop-shadow-3xl mask-image-linear"
+                style={{ maskImage: "radial-gradient(circle at center, black 40%, transparent 80%)", WebkitMaskImage: "radial-gradient(circle at center, black 40%, transparent 80%)" }}
+              />
             </div>
+          </div>
 
+          {/* Card Content */}
+          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full border border-white/10 rounded-[3rem] bg-black/40 backdrop-blur-[8px] p-16 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+            
             <div className="inline-flex items-center px-6 py-2 rounded-full bg-white/5 border border-white/10 text-xl uppercase tracking-[0.4em] text-white/60 font-semibold mb-8">
               System Architect & Lead Developer
             </div>
