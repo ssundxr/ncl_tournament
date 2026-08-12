@@ -46,8 +46,8 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
       >
         <source src="/banner.mp4" type="video/mp4" />
       </video>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/25 to-transparent z-10" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/25 to-transparent z-10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-10" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/10 to-transparent z-10" />
       <div className="absolute inset-0 grunge-overlay z-10 opacity-25" />
 
       <div className="relative z-20 w-full px-4 md:px-12 lg:px-24 xl:px-32 pb-20 h-full flex flex-col justify-end">
@@ -61,12 +61,12 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
             className="flex flex-col md:flex-row items-end justify-between gap-8 w-full"
           >
             <div className="flex flex-col items-start max-w-4xl">
-              <div className={`inline-flex items-center px-4 py-1.5 text-white border-2 border-foreground mb-6 font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] ${statusColors[currentSeason.status] ?? "bg-muted"}`}>
+              <div className={`inline-flex items-center px-4 py-1.5 text-white border-2 border-white/20 mb-6 font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] ${statusColors[currentSeason.status] ?? "bg-muted"}`}>
                 {currentSeason.status === "active" && <span className="w-2 h-2 bg-white animate-pulse mr-2" />}
                 {currentSeason.status}
               </div>
               <h1 className="text-5xl sm:text-6xl md:text-[80px] tracking-normal mb-4 text-foreground leading-[0.85] font-fifa uppercase drop-shadow-sm flex flex-col">
-                <span className="text-black drop-shadow-sm">
+                <span className="text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">
                   {currentSeason.tournament?.name ?? "NAMMA CHAMPIONS LEAGUE"}
                 </span>
                 <span className="text-primary mt-2">{cleanBranding(currentSeason.name)}</span>
@@ -79,7 +79,7 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
                   </div>
                 </div>
               ) : (
-                <p className="text-lg sm:text-xl text-foreground/80 mb-8 max-w-2xl font-bold tracking-tight">
+                <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl font-bold tracking-tight drop-shadow-md">
                   Experience the ultimate eFootball mobile tournament. Track standings, fixtures, and check results dynamically.
                 </p>
               )}
