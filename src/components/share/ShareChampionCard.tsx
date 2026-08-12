@@ -160,7 +160,7 @@ export default function ShareChampionCard({ fixture, match, onClose }: { fixture
           {/* Top Seal / Logo */}
           <div className="absolute top-44 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
             <div className="w-32 h-32 rounded-full border-4 border-[#ffb703] flex items-center justify-center bg-black/70 backdrop-blur-md shadow-[0_0_40px_rgba(255,183,3,0.5)]">
-              <img src="/logo_nfl.png" className="w-20 h-20 object-contain opacity-100 filter grayscale brightness-200" crossOrigin="anonymous" />
+              <img src="/logo_ncl.png" className="w-20 h-20 object-contain opacity-100 filter grayscale brightness-200" crossOrigin="anonymous" />
             </div>
             <div className="h-16 w-1 bg-[#ffb703] mt-6" />
           </div>

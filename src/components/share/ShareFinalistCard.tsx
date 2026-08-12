@@ -166,7 +166,7 @@ export default function ShareFinalistCard({ fixture, match, onClose }: { fixture
           {/* Top Right Seal */}
           <div className="absolute top-16 right-20 z-30">
             <div className="w-24 h-24 rounded-none border-2 border-red-600 flex items-center justify-center bg-black/70 backdrop-blur-md skew-x-[-15deg]">
-              <img src="/logo_nfl.png" className="w-16 h-16 object-contain opacity-100 skew-x-[15deg] filter grayscale brightness-200" crossOrigin="anonymous" />
+              <img src="/logo_ncl.png" className="w-16 h-16 object-contain opacity-100 skew-x-[15deg] filter grayscale brightness-200" crossOrigin="anonymous" />
             </div>
           </div>
 

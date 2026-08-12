@@ -79,7 +79,7 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
             </div>
 
             <div className="hidden md:flex flex-shrink-0 items-center justify-center pointer-events-none">
-              <img src="/logo_nfl.png" alt="NCL Logo" className="w-[300px] lg:w-[380px] h-auto object-contain drop-shadow-2xl opacity-90 hover:scale-105 transition-transform duration-700" />
+              <img src="/logo_ncl.png" alt="NCL Logo" className="w-[300px] lg:w-[380px] h-auto object-contain drop-shadow-2xl opacity-90 hover:scale-105 transition-transform duration-700" />
             </div>
           </motion.div>
         </AnimatePresence>

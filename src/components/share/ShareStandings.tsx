@@ -101,7 +101,7 @@ export const ShareStandings = forwardRef<HTMLDivElement, ShareStandingsProps>(
           {/* Footer */}
           <div className="mt-auto py-16 px-24 flex justify-between items-end z-10 w-full relative">
             <p className="text-white font-black text-3xl tracking-[0.3em] uppercase">NCL.SUNDXR.DEV</p>
-            <img src="/logo_nfl.png" className="w-32 h-32 object-contain brightness-0 invert" />
+            <img src="/logo_ncl.png" className="w-32 h-32 object-contain brightness-0 invert" />
           </div>
         </div>
       </div>

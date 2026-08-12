@@ -139,7 +139,7 @@ export function AllTimeLeaderboard({ topPlayers }: { topPlayers: any[] }) {
             <div className="absolute -right-[200px] top-[100px] w-[900px] h-[900px] bg-red-600/40 rounded-full blur-[100px] z-10 mix-blend-screen" />
             <div className="absolute top-16 left-16 z-30 flex flex-col items-center">
               <div className="w-40 h-40 rounded-full border-[6px] border-red-600/80 flex flex-col items-center justify-center bg-black/50 backdrop-blur-xl p-2 text-center">
-                <img src="/logo_nfl.png" className="w-16 h-16 object-contain mb-1" crossOrigin="anonymous" />
+                <img src="/logo_ncl.png" className="w-16 h-16 object-contain mb-1" crossOrigin="anonymous" />
                 <p className="text-xs font-black uppercase tracking-[0.4em] text-white leading-tight mt-1">TOP 1%<br /><span className="text-red-500">ELITE</span></p>
               </div>
             </div>
@@ -160,7 +160,7 @@ export function AllTimeLeaderboard({ topPlayers }: { topPlayers: any[] }) {
             </div>
             <div className="absolute bottom-0 left-0 w-full h-[250px] bg-gradient-to-t from-red-950 via-black to-black z-30 flex items-end justify-between px-16 pb-16">
               <p className="text-white/60 text-2xl font-medium italic">"Legends are forged in the shadows, crowned in the lights."</p>
-              <img src="/logo_nfl.png" className="h-28 opacity-80" crossOrigin="anonymous" />
+              <img src="/logo_ncl.png" className="h-28 opacity-80" crossOrigin="anonymous" />
             </div>
           </div>
         </div>
