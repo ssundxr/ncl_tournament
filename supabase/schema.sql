@@ -203,6 +203,9 @@ CREATE TABLE media (
 CREATE TABLE season_enrollments (
   season_id UUID REFERENCES seasons(id) ON DELETE CASCADE,
   player_id UUID REFERENCES players(id) ON DELETE CASCADE,
+  status TEXT CHECK (status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+  transaction_id TEXT,
+  phone TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   PRIMARY KEY (season_id, player_id)
 );

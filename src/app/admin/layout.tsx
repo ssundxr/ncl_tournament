@@ -10,7 +10,8 @@ import {
   CalendarDays, 
   Swords, 
   LogOut,
-  LayoutDashboard
+  LayoutDashboard,
+  ClipboardList
 } from "lucide-react";
 import { auth } from "@/lib/firebase/client";
 import { signOut } from "firebase/auth";
@@ -23,6 +24,7 @@ function AdminSidebar() {
 
   const links = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Enrollments", href: "/admin/enrollments", icon: ClipboardList },
     { name: "Tournaments", href: "/admin/tournaments", icon: Trophy },
     { name: "Seasons", href: "/admin/seasons", icon: CalendarDays },
     { name: "Matches", href: "/admin/matches", icon: Swords },
