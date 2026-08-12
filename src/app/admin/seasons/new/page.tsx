@@ -53,9 +53,9 @@ export default function NewSeasonPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/admin/seasons"><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white"><ChevronLeft className="w-6 h-6" /></Button></Link>
+        <Link href="/admin/seasons"><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground"><ChevronLeft className="w-6 h-6" /></Button></Link>
         <div>
-          <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight">New Season</h1>
+          <h1 className="text-3xl font-black font-heading uppercase text-foreground tracking-tight">New Season</h1>
         </div>
       </div>
 
@@ -63,19 +63,19 @@ export default function NewSeasonPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Tournament *</label>
-            <select required name="tournament_id" value={formData.tournament_id} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary">
+            <select required name="tournament_id" value={formData.tournament_id} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary">
               <option value="">Select a tournament</option>
               {tournaments.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Season Name *</label>
-            <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary" placeholder="e.g. 2026 Season 1" />
+            <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary" placeholder="e.g. 2026 Season 1" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Season Number *</label>
-              <input required type="number" name="number" min="1" value={formData.number} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary" />
+              <input required type="number" name="number" min="1" value={formData.number} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary" />
             </div>
             <div>
             </div>
@@ -83,11 +83,11 @@ export default function NewSeasonPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border mt-4">
             <div>
               <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Registration Opens</label>
-              <input type="datetime-local" name="registration_start" value={formData.registration_start} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary [color-scheme:dark]" />
+              <input type="datetime-local" name="registration_start" value={formData.registration_start} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary" />
             </div>
             <div>
               <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Registration Closes</label>
-              <input type="datetime-local" name="registration_end" value={formData.registration_end} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary [color-scheme:dark]" />
+              <input type="datetime-local" name="registration_end" value={formData.registration_end} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary" />
             </div>
           </div>
           <div className="flex justify-end pt-4">
