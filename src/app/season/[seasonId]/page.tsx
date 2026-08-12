@@ -122,7 +122,7 @@ export default function SeasonOverviewPage({
               <Trophy className="w-4 h-4 mr-2" /> Standings
             </Button>
           </Link>
-          {season.status === "active" && (
+          {(season.status === "active" || season.status === "upcoming") && (
             <Link href={`/season/${seasonId}/enroll`}>
               <Button className="rounded-none border-2 border-primary bg-primary text-white font-black uppercase tracking-widest">
                 <UserPlus className="w-4 h-4 mr-2" /> Enroll
