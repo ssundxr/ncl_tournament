@@ -37,7 +37,15 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
 
   return (
     <section className="relative w-full h-[75vh] flex items-end overflow-hidden bg-background border-b-4 border-foreground">
-      <div className="absolute inset-0 bg-[url('/bg_banner1.png')] bg-cover bg-center opacity-80" />
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover opacity-80"
+      >
+        <source src="/banner.mp4" type="video/mp4" />
+      </video>
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent z-10" />
       <div className="absolute inset-0 grunge-overlay z-10 opacity-60" />
