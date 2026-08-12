@@ -49,8 +49,10 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
                 {currentSeason.status === "active" && <span className="w-2 h-2 bg-white animate-pulse mr-2" />}
                 {currentSeason.status}
               </div>
-              <h1 className="text-5xl sm:text-6xl md:text-[100px] tracking-normal mb-4 text-foreground leading-[0.85] font-fifa uppercase drop-shadow-sm">
-                <span className="text-ncl-brand">{cleanBranding(currentSeason.tournament?.name ?? "NCL")}</span>:
+              <h1 className="text-5xl sm:text-6xl md:text-[80px] tracking-normal mb-4 text-foreground leading-[0.85] font-fifa uppercase drop-shadow-sm">
+                <span className="text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                  {currentSeason.tournament?.name ?? "NAMMA CHAMPIONS LEAGUE"}
+                </span>:
                 <br />
                 <span className="text-primary">{cleanBranding(currentSeason.name)}</span>
               </h1>
