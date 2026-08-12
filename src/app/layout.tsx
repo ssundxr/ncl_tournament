@@ -27,11 +27,11 @@ const bebasNeue = Bebas_Neue({
   weight: ["400"],
 });
 
-import { Black_Ops_One } from "next/font/google";
-const blackOpsOne = Black_Ops_One({
+import { Quantico } from "next/font/google";
+const quanticoFont = Quantico({
   variable: "--font-ncl",
   subsets: ["latin"],
-  weight: ["400"],
+  weight: ["700"],
 });
 
 export const metadata: Metadata = {
@@ -50,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable} ${blackOpsOne.variable}`}>
+    <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable} ${quanticoFont.variable}`}>
       <body className="bg-background text-foreground antialiased min-h-screen flex flex-col font-sans">
         <Header />
         <main className="flex-1 pb-16 md:pb-0">
