@@ -6,6 +6,7 @@ import { PlayCircle, User, ChevronRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cleanBranding } from "@/lib/utils/branding";
 import { useState, useEffect } from "react";
+import { Countdown } from "@/components/ui/countdown";
 
 export function HeroSection({ seasons }: { seasons: any[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -19,7 +20,14 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
   }, [seasons]);
 
   const currentSeason = seasons[activeIndex];
+  
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => setIsClient(true), []);
+
   if (!currentSeason) return null;
+
+  const isEarly = isClient && currentSeason.registration_start ? new Date() < new Date(currentSeason.registration_start) : false;
+  const showCountdown = (currentSeason.status === "upcoming" || isEarly) && currentSeason.registration_start && isEarly;
 
   const statusColors: Record<string, string> = {
     active: "bg-emerald-500",
@@ -55,9 +63,18 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
                 </span>
                 <span className="text-primary mt-2">{cleanBranding(currentSeason.name)}</span>
               </h1>
-              <p className="text-lg sm:text-xl text-foreground/80 mb-8 max-w-2xl font-bold tracking-tight">
-                Experience the ultimate eFootball mobile tournament. Track standings, fixtures, and check results dynamically.
-              </p>
+              {showCountdown ? (
+                <div className="mb-8">
+                  <h3 className="text-primary font-black uppercase tracking-widest text-sm mb-2">Registration Opens In</h3>
+                  <div className="bg-card/80 backdrop-blur-sm border-2 border-border p-4 rounded-xl inline-block shadow-xl">
+                    <Countdown targetDate={currentSeason.registration_start} />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-lg sm:text-xl text-foreground/80 mb-8 max-w-2xl font-bold tracking-tight">
+                  Experience the ultimate eFootball mobile tournament. Track standings, fixtures, and check results dynamically.
+                </p>
+              )}
               <div className="flex flex-wrap gap-4">
                 <Link href={`/season/${currentSeason.id}/fixtures`}>
                   <Button size="lg" className="rounded-none px-8 h-14 border-2 border-foreground brutal-shadow-hover font-black uppercase tracking-widest bg-foreground text-background transition-all">
