@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
+import { Countdown } from "@/components/ui/countdown";
 
 const UPI_ID = "ashwinfejl357@oksbi";
 const AMOUNT = "30.00";
@@ -162,14 +163,22 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
     }
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center px-4">
-        <ShieldAlert className="w-16 h-16 text-muted-foreground" />
-        <div className="space-y-2 max-w-md">
-          <h2 className="text-3xl font-black font-heading uppercase tracking-tighter">Registration Closed</h2>
-          <p className="text-muted-foreground font-medium">{message}</p>
-        </div>
-        <Link href={`/season/${seasonId}`}>
-          <Button variant="outline" className="w-full font-black uppercase tracking-widest">Back to Season</Button>
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center px-4 max-w-3xl mx-auto py-12">
+        <h2 className="text-5xl font-black uppercase tracking-tighter text-foreground font-heading">Stay Tuned!</h2>
+        
+        <p className="text-xl text-muted-foreground font-medium mb-2">
+          {message}
+        </p>
+        
+        {isEarly && season.registration_start && (
+          <div className="w-full bg-card border-4 border-border p-8 mt-2 rounded-2xl shadow-xl">
+            <h3 className="text-primary font-black uppercase tracking-widest text-lg mb-6">Registration Opens In</h3>
+            <Countdown targetDate={season.registration_start} />
+          </div>
+        )}
+        
+        <Link href={`/season/${seasonId}`} className="mt-8">
+          <Button variant="outline" className="font-black uppercase tracking-widest px-8">Back to Season</Button>
         </Link>
       </div>
     );
