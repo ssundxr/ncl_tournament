@@ -106,15 +106,25 @@ export function DeveloperCredit() {
         </div>
       </div>
       
-      {/* Subtle Link under the card */}
-      <a 
-        href="https://www.linkedin.com/in/sundxrr" 
-        target="_blank" 
-        rel="noreferrer"
-        className="mt-6 flex items-center gap-2 text-sm font-medium text-background/60 hover:text-white transition-colors"
-      >
-        linkedin.com/in/sundxrr <ExternalLink className="w-4 h-4" />
-      </a>
+      {/* Subtle Links under the card */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-4 md:gap-8">
+        <a 
+          href="https://sundxr.dev" 
+          target="_blank" 
+          rel="noreferrer"
+          className="flex items-center gap-2 text-sm font-medium text-background/60 hover:text-white transition-colors"
+        >
+          sundxr.dev <ExternalLink className="w-4 h-4" />
+        </a>
+        <a 
+          href="https://www.linkedin.com/in/sundxrr" 
+          target="_blank" 
+          rel="noreferrer"
+          className="flex items-center gap-2 text-sm font-medium text-background/60 hover:text-white transition-colors"
+        >
+          linkedin.com/in/sundxrr <ExternalLink className="w-4 h-4" />
+        </a>
+      </div>
     </div>
   );
 }
