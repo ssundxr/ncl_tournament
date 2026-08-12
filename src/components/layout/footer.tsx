@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DeveloperCredit } from "./developer-credit";
 
 export function Footer() {
   return (
@@ -52,6 +53,7 @@ export function Footer() {
             <Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
           </div>
         </div>
+        <DeveloperCredit />
       </div>
     </footer>
   );
