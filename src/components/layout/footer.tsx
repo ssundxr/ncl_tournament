@@ -6,7 +6,7 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-4">
-            <h3 className="text-4xl font-black font-heading text-background tracking-tighter uppercase skew-x-[10deg]"><span className="text-efootball">NCL</span> <span className="text-primary">Hub</span></h3>
+            <h3 className="text-4xl font-black font-heading text-background tracking-tighter uppercase skew-x-[10deg]"><span className="text-ncl-brand">NCL</span> <span className="text-primary">Hub</span></h3>
             <p className="text-sm text-background/60 font-medium">
               The premium tournament ecosystem for eFootball Mobile competitions.
               Experience broadcast-quality tournaments.

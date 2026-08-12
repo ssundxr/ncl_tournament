@@ -40,11 +40,13 @@
   --radius-xl: 0;
 }
 
-@utility text-efootball {
-  background-image: linear-gradient(to right, #3b82f6, #a855f7, #ec4899);
+@utility text-ncl-brand {
+  background-image: linear-gradient(to bottom right, #ff4b4b, #991b1b);
   -webkit-background-clip: text;
   color: transparent;
+  filter: drop-shadow(0 0 10px rgba(220, 38, 38, 0.5));
   font-family: var(--font-ncl);
+  letter-spacing: 0.05em;
 }
 
 :root {

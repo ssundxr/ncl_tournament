@@ -40,7 +40,7 @@ export function Header() {
           <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-background text-foreground border-r-4 border-foreground">
             <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
               <Link href="/" className="flex items-center gap-2">
-                <span className="font-heading font-black text-2xl tracking-tighter uppercase text-foreground"><span className="text-efootball">NCL</span> Hub</span>
+                <span className="font-heading font-black text-2xl tracking-tighter uppercase text-foreground"><span className="text-ncl-brand">NCL</span> Hub</span>
               </Link>
               <div className="flex flex-col space-y-3 mt-4">
                 {links.map((link) => (
@@ -63,7 +63,7 @@ export function Header() {
           className="flex items-center gap-2 mr-8 group bg-foreground text-background px-4 py-1 h-full skew-x-[-10deg] hover:bg-primary transition-colors border-r-4 border-foreground -ml-4"
         >
           <span className="font-heading font-black text-2xl tracking-tighter uppercase skew-x-[10deg]">
-            <span className="text-efootball">NCL</span>
+            <span className="text-ncl-brand">NCL</span>
           </span>
         </Link>
 

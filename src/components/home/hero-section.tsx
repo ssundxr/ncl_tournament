@@ -50,7 +50,7 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
                 {currentSeason.status}
               </div>
               <h1 className="text-5xl sm:text-6xl md:text-[100px] tracking-normal mb-4 text-foreground leading-[0.85] font-fifa uppercase drop-shadow-sm">
-                <span className="text-efootball">{cleanBranding(currentSeason.tournament?.name ?? "NCL")}</span>:
+                <span className="text-ncl-brand">{cleanBranding(currentSeason.tournament?.name ?? "NCL")}</span>:
                 <br />
                 <span className="text-primary">{cleanBranding(currentSeason.name)}</span>
               </h1>
