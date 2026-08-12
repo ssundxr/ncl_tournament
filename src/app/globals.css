@@ -11,6 +11,7 @@
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-heading);
   --font-fifa: var(--font-fifa);
+  --font-ncl: var(--font-ncl);
   
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -43,6 +44,7 @@
   background-image: linear-gradient(to right, #3b82f6, #a855f7, #ec4899);
   -webkit-background-clip: text;
   color: transparent;
+  font-family: var(--font-ncl);
 }
 
 :root {

@@ -27,6 +27,13 @@ const bebasNeue = Bebas_Neue({
   weight: ["400"],
 });
 
+import { Black_Ops_One } from "next/font/google";
+const blackOpsOne = Black_Ops_One({
+  variable: "--font-ncl",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
 export const metadata: Metadata = {
   title: "Namma Football League",
   description: "The premium tournament ecosystem for eFootball Mobile competitions.",
@@ -43,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable}`}>
+    <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable} ${blackOpsOne.variable}`}>
       <body className="bg-background text-foreground antialiased min-h-screen flex flex-col font-sans">
         <Header />
         <main className="flex-1 pb-16 md:pb-0">
