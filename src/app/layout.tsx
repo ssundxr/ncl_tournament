@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
