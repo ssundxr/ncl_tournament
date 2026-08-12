@@ -46,9 +46,9 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
       >
         <source src="/banner.mp4" type="video/mp4" />
       </video>
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent z-10" />
-      <div className="absolute inset-0 grunge-overlay z-10 opacity-60" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/25 to-transparent z-10" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/25 to-transparent z-10" />
+      <div className="absolute inset-0 grunge-overlay z-10 opacity-25" />
 
       <div className="relative z-20 w-full px-4 md:px-12 lg:px-24 xl:px-32 pb-20 h-full flex flex-col justify-end">
         <AnimatePresence mode="wait">
