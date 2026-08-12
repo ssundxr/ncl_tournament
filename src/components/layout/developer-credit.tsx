@@ -103,8 +103,8 @@ export function DeveloperCredit() {
               Shyam Sunder
             </h1>
             
-            <p className="text-zinc-400 text-3xl font-medium max-w-3xl leading-relaxed mb-24">
-              Crafting premium, highly-performant web applications. Lead engineer for the NCL Hub architecture, delivering seamless, broadcast-quality digital experiences.
+            <p className="text-zinc-300 text-4xl md:text-5xl font-medium max-w-3xl leading-tight mb-24 drop-shadow-2xl">
+              Website thoughtfully designed, engineered, and maintained.
             </p>
 
             {/* Links Block */}
