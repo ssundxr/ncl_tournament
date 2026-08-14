@@ -24,6 +24,11 @@ export function MatchCard({ fixture }: MatchCardProps) {
   const shareUpcomingRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
 
+  const homeName = fixture.home_player?.name || "TBD";
+  const awayName = fixture.away_player?.name || "TBD";
+  const homePhoto = fixture.home_player?.photo_url || undefined;
+  const awayPhoto = fixture.away_player?.photo_url || undefined;
+
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigating to match page
     e.stopPropagation();
@@ -31,9 +36,9 @@ export function MatchCard({ fixture }: MatchCardProps) {
     setIsExporting(true);
     
     if (isCompleted && shareResultRef.current) {
-      await exportAsImage(shareResultRef, `result-${fixture.home_player.name}-vs-${fixture.away_player.name}`);
+      await exportAsImage(shareResultRef, `result-${homeName}-vs-${awayName}`);
     } else if (isScheduled && shareUpcomingRef.current) {
-      await exportAsImage(shareUpcomingRef, `upcoming-${fixture.home_player.name}-vs-${fixture.away_player.name}`);
+      await exportAsImage(shareUpcomingRef, `upcoming-${homeName}-vs-${awayName}`);
     }
     
     setIsExporting(false);
@@ -44,22 +49,22 @@ export function MatchCard({ fixture }: MatchCardProps) {
       {isCompleted && (
         <ShareMatchResult 
           ref={shareResultRef}
-          homeName={fixture.home_player.name}
-          awayName={fixture.away_player.name}
+          homeName={homeName}
+          awayName={awayName}
           homeScore={fixture.home_score || 0}
           awayScore={fixture.away_score || 0}
-          homePhoto={fixture.home_player.photo_url || undefined}
-          awayPhoto={fixture.away_player.photo_url || undefined}
+          homePhoto={homePhoto}
+          awayPhoto={awayPhoto}
         />
       )}
       
       {isScheduled && (
         <ShareUpcomingMatch 
           ref={shareUpcomingRef}
-          homeName={fixture.home_player.name}
-          awayName={fixture.away_player.name}
-          homePhoto={fixture.home_player.photo_url || undefined}
-          awayPhoto={fixture.away_player.photo_url || undefined}
+          homeName={homeName}
+          awayName={awayName}
+          homePhoto={homePhoto}
+          awayPhoto={awayPhoto}
           matchday={fixture.matchday}
         />
       )}
@@ -81,11 +86,11 @@ export function MatchCard({ fixture }: MatchCardProps) {
               {/* Home Player */}
               <div className="flex flex-1 items-center justify-end gap-4 w-full md:w-auto">
                 <span className="font-heading font-black text-base md:text-xl text-right uppercase tracking-wider truncate">
-                  {fixture.home_player.name}
+                  {homeName}
                 </span>
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-none bg-secondary border border-border flex items-center justify-center shrink-0 skew-x-[-10deg] overflow-hidden">
-                   {fixture.home_player.photo_url ? (
-                      <img src={fixture.home_player.photo_url} alt="" className="w-full h-full object-cover skew-x-[10deg]" />
+                   {homePhoto ? (
+                      <img src={homePhoto} alt="" className="w-full h-full object-cover skew-x-[10deg]" />
                    ) : (
                       <Shield className="w-6 h-6 text-primary skew-x-[10deg]" />
                    )}
@@ -115,28 +120,31 @@ export function MatchCard({ fixture }: MatchCardProps) {
               {/* Away Player */}
               <div className="flex flex-1 items-center justify-start gap-4 w-full md:w-auto flex-row-reverse md:flex-row">
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-none bg-secondary border border-border flex items-center justify-center shrink-0 skew-x-[-10deg] overflow-hidden">
-                   {fixture.away_player.photo_url ? (
-                      <img src={fixture.away_player.photo_url} alt="" className="w-full h-full object-cover skew-x-[10deg]" />
+                   {awayPhoto ? (
+                      <img src={awayPhoto} alt="" className="w-full h-full object-cover skew-x-[10deg]" />
                    ) : (
                       <Shield className="w-6 h-6 text-primary skew-x-[10deg]" />
                    )}
                 </div>
                 <span className="font-heading font-black text-base md:text-xl text-left uppercase tracking-wider truncate">
-                  {fixture.away_player.name}
+                  {awayName}
                 </span>
               </div>
               
               {/* Share Button Overlay */}
               {(isCompleted || isScheduled) && (
-                <button
-                  onClick={handleShare}
-                  disabled={isExporting}
-                  className="absolute top-2 right-2 md:top-4 md:right-4 p-2 bg-background/50 hover:bg-primary/20 hover:text-primary text-muted-foreground rounded-full backdrop-blur-sm transition-all z-10"
-                  title="Share Image"
-                >
-                  <Share2 className="w-4 h-4 md:w-5 md:h-5" />
-                </button>
+                <div className="flex justify-end w-full md:w-auto">
+                  <button
+                    onClick={handleShare}
+                    disabled={isExporting}
+                    className="p-2 bg-secondary border border-border hover:bg-primary hover:text-white transition-colors text-muted-foreground skew-x-[-10deg] flex items-center justify-center"
+                    title="Export Share Card"
+                  >
+                    <Share2 className="w-4 h-4 skew-x-[10deg]" />
+                  </button>
+                </div>
               )}
+
             </div>
           </CardContent>
         </Card>

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     // 2. Validate form fields
     const parsed = registrationSchema.safeParse(formFields);
     if (!parsed.success) {
-      const firstError = parsed.error.errors[0]?.message ?? "Validation failed";
+      const firstError = parsed.error.issues[0]?.message ?? "Validation failed";
       return Response.json(
         { success: false, error: firstError } satisfies ApiResponse,
         { status: 400 }

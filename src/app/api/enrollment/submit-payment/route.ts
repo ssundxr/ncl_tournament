@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = paymentSubmissionSchema.safeParse(body);
     if (!parsed.success) {
-      const firstError = parsed.error.errors[0]?.message ?? "Validation failed";
+      const firstError = parsed.error.issues[0]?.message ?? "Validation failed";
       return Response.json(
         { success: false, error: firstError } satisfies ApiResponse,
         { status: 400 }

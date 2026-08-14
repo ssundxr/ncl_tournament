@@ -35,8 +35,8 @@ export default function ShareFinalistCard({ fixture, match, onClose }: { fixture
           if (f.away_player_id === winner.id) goals += (f.away_score || 0);
         });
         // Include the current match goals since fixture might not be marked completed yet in DB
-        if (fixture.home_player.id === winner.id) goals += match.home_score;
-        if (fixture.away_player.id === winner.id) goals += match.away_score;
+        if (fixture.home_player?.id === winner.id) goals += match.home_score;
+        if (fixture.away_player?.id === winner.id) goals += match.away_score;
         
         // Wait, if the current match IS in the DB and completed, we might double count.
         // Let's just calculate from the DB + ensure we don't double count.
@@ -48,8 +48,8 @@ export default function ShareFinalistCard({ fixture, match, onClose }: { fixture
           if (f.id === fixture.id) matchFound = true;
         });
         if (!matchFound) {
-          if (fixture.home_player.id === winner.id) calcGoals += match.home_score;
-          if (fixture.away_player.id === winner.id) calcGoals += match.away_score;
+          if (fixture.home_player?.id === winner.id) calcGoals += match.home_score;
+          if (fixture.away_player?.id === winner.id) calcGoals += match.away_score;
         }
         setTotalGoals(calcGoals);
       }

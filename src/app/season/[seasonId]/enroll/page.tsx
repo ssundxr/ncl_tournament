@@ -133,7 +133,7 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
       const parsed = paymentSubmissionSchema.safeParse(payload);
       if (!parsed.success) {
         const errors: Record<string, string> = {};
-        const issues = parsed.error?.issues || parsed.error?.errors || [];
+        const issues = parsed.error?.issues || [];
         issues.forEach((e: any) => {
           if (e.path && e.path[0]) errors[e.path[0].toString()] = e.message;
         });

@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       return Response.json(
-        { success: false, error: parsed.error.errors[0]?.message } satisfies ApiResponse,
+        { success: false, error: parsed.error.issues[0]?.message } satisfies ApiResponse,
         { status: 400 }
       );
     }

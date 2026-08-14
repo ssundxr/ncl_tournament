@@ -37,8 +37,8 @@ export default function ShareChampionCard({ fixture, match, onClose }: { fixture
           if (f.id === fixture.id) matchFound = true;
         });
         if (!matchFound) {
-          if (fixture.home_player.id === winner.id) calcGoals += match.home_score;
-          if (fixture.away_player.id === winner.id) calcGoals += match.away_score;
+          if (fixture.home_player?.id === winner.id) calcGoals += match.home_score;
+          if (fixture.away_player?.id === winner.id) calcGoals += match.away_score;
         }
         setTotalGoals(calcGoals);
       }
