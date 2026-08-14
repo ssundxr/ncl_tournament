@@ -153,12 +153,12 @@ export default function EditPlayerPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/admin/players">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
             <ChevronLeft className="w-6 h-6" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight">Edit Player</h1>
+          <h1 className="text-3xl font-black font-heading uppercase text-foreground tracking-tight">Edit Player</h1>
           <p className="text-muted-foreground mt-1">Modify player details and rating</p>
         </div>
       </div>
@@ -182,7 +182,7 @@ export default function EditPlayerPage() {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary transition-colors"
                 placeholder="e.g. John Doe"
               />
             </div>
@@ -197,7 +197,7 @@ export default function EditPlayerPage() {
                 required
                 value={formData.slug}
                 onChange={handleChange}
-                className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary transition-colors"
                 placeholder="e.g. john-doe"
               />
             </div>
@@ -212,7 +212,7 @@ export default function EditPlayerPage() {
                   name="favorite_team"
                   value={formData.favorite_team}
                   onChange={handleChange}
-                  className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                  className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary transition-colors"
                   placeholder="e.g. Real Madrid"
                 />
               </div>
@@ -227,7 +227,7 @@ export default function EditPlayerPage() {
                   max="99"
                   value={formData.overall_rating}
                   onChange={handleChange}
-                  className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                  className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary transition-colors"
                   placeholder="e.g. 85"
                 />
               </div>
@@ -265,11 +265,11 @@ export default function EditPlayerPage() {
 
           <div className="pt-4 border-t border-border flex justify-end gap-4">
             <Link href="/admin/players">
-              <Button type="button" variant="outline" className="border-border text-white hover:bg-white/5">
+              <Button type="button" variant="outline" className="border-border text-foreground hover:bg-white/5">
                 Cancel
               </Button>
             </Link>
-            <Button type="submit" disabled={saving || uploading} className="bg-primary text-white hover:bg-primary/90 font-bold uppercase tracking-wider">
+            <Button type="submit" disabled={saving || uploading} className="bg-primary text-foreground hover:bg-primary/90 font-bold uppercase tracking-wider">
               {saving || uploading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
               Save Changes
             </Button>

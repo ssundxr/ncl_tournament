@@ -7,6 +7,8 @@ import { Home, Calendar, Trophy, Users } from "lucide-react";
 export function MobileNav() {
   const pathname = usePathname();
 
+  if (pathname?.startsWith("/admin")) return null;
+
   // When inside a season, show season-scoped tabs
   const seasonMatch = pathname.match(/^\/season\/([^/]+)/);
   const seasonId = seasonMatch?.[1];

@@ -8,10 +8,15 @@ import Link from "next/link";
 import { ChevronLeft, Play, Square, Save, Upload, Loader2, Image as ImageIcon, Shield, Trophy, Medal } from "lucide-react";
 import ShareFinalistCard from "@/components/share/ShareFinalistCard";
 import ShareChampionCard from "@/components/share/ShareChampionCard";
+import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export default function MatchControlPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const unwrappedParams = use(params);
+  const { toast } = useToast();
+  const { confirm } = useConfirm();
+
   const [fixture, setFixture] = useState<any>(null);
   const [matchData, setMatchData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -87,195 +92,49 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
         .from('ncl-media')
         .getPublicUrl(fileName);
         
-      setScreenshotUrl(publicUrl);
+      toast({ variant: "success", title: "Uploaded", description: "Screenshot uploaded successfully!" });
       
       // Update DB
       await supabase.from('matches').update({ screenshot_url: publicUrl }).eq('id', matchData.id);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload failed", err);
-      alert("Failed to upload screenshot. Please make sure the 'ncl-media' bucket exists and is public in Supabase.");
+      toast({ variant: "error", title: "Upload Failed", description: err.message || "Failed to upload screenshot." });
     } finally {
       setUploading(false);
     }
   };
 
   const handleSaveResult = async () => {
+    const ok = await confirm({
+      title: "Save Result?",
+      description: "This will record the score, mark the match completed, and update season standings/knockouts.",
+    });
+
+    if (!ok) return;
+
     setSaving(true);
     try {
-      // 1. Save match score
-      let matchId = matchData?.id;
-      if (!matchData) {
-        const { data: newMatch } = await supabase.from('matches').insert({
+      const res = await fetch("/api/admin/match/save-result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           fixture_id: fixture.id,
           home_score: homeScore,
           away_score: awayScore,
-          started_at: new Date().toISOString(),
-          ended_at: new Date().toISOString(),
-          status: 'completed'
-        }).select().single();
-        if (newMatch) matchId = newMatch.id;
-      } else {
-        await supabase.from('matches').update({
-          home_score: homeScore,
-          away_score: awayScore,
-          ended_at: new Date().toISOString()
-        }).eq('id', matchData.id);
-      }
+        }),
+      });
+
+      const data = await res.json();
       
-      // 2. Mark fixture as completed
-      await supabase.from('fixtures').update({ status: 'completed' }).eq('id', fixture.id);
-      
-      // 3. Auto-recalculate standings for the entire season from scratch (group stage)
-      if (fixture.stage === 'group') {
-        const { data: leaderboards } = await supabase
-          .from('leaderboards')
-          .select('*')
-          .eq('season_id', fixture.season_id);
-
-        if (leaderboards && leaderboards.length > 0) {
-          const boardMap: Record<string, any> = {};
-          leaderboards.forEach(b => {
-            boardMap[`${b.player_id}_${b.group_id}`] = {
-              id: b.id,
-              played: 0,
-              wins: 0,
-              draws: 0,
-              losses: 0,
-              goals_for: 0,
-              goals_against: 0,
-              points: 0,
-              form: []
-            };
-          });
-
-          // Fetch all completed group stage fixtures for this season
-          const { data: fixturesList } = await supabase
-            .from('fixtures')
-            .select('*')
-            .eq('season_id', fixture.season_id)
-            .eq('status', 'completed')
-            .eq('stage', 'group');
-
-          // Fetch all match scores
-          const { data: matchesList } = await supabase
-            .from('matches')
-            .select('*');
-
-          if (fixturesList && matchesList) {
-            const matchMap: Record<string, any> = {};
-            matchesList.forEach(m => {
-              matchMap[m.fixture_id] = m;
-            });
-
-            fixturesList.forEach(f => {
-              const match = matchMap[f.id];
-              if (!match) return;
-
-              const homeBoard = boardMap[`${f.home_player_id}_${f.group_id}`];
-              const awayBoard = boardMap[`${f.away_player_id}_${f.group_id}`];
-
-              if (homeBoard && awayBoard) {
-                const hs = match.home_score ?? 0;
-                const as = match.away_score ?? 0;
-
-                homeBoard.played++;
-                awayBoard.played++;
-                homeBoard.goals_for += hs;
-                homeBoard.goals_against += as;
-                awayBoard.goals_for += as;
-                awayBoard.goals_against += hs;
-
-                if (hs > as) {
-                  homeBoard.wins++;
-                  homeBoard.points += 3;
-                  homeBoard.form.push('W');
-
-                  awayBoard.losses++;
-                  awayBoard.form.push('L');
-                } else if (as > hs) {
-                  awayBoard.wins++;
-                  awayBoard.points += 3;
-                  awayBoard.form.push('W');
-
-                  homeBoard.losses++;
-                  homeBoard.form.push('L');
-                } else {
-                  homeBoard.draws++;
-                  homeBoard.points += 1;
-                  homeBoard.form.push('D');
-
-                  awayBoard.draws++;
-                  awayBoard.points += 1;
-                  awayBoard.form.push('D');
-                }
-              }
-            });
-
-            // Write updates back to Supabase
-            for (const key of Object.keys(boardMap)) {
-              const b = boardMap[key];
-              await supabase
-                .from('leaderboards')
-                .update({
-                  played: b.played,
-                  wins: b.wins,
-                  draws: b.draws,
-                  losses: b.losses,
-                  goals_for: b.goals_for,
-                  goals_against: b.goals_against,
-                  goal_difference: b.goals_for - b.goals_against,
-                  points: b.points,
-                  form: b.form.slice(-5)
-                })
-                .eq('id', b.id);
-            }
-          }
-        }
-      } else if (fixture.stage === 'semi_final') {
-        // Auto-advance winner to Final
-        const winnerId = homeScore > awayScore ? fixture.home_player_id : 
-                         awayScore > homeScore ? fixture.away_player_id : null;
-        
-        if (winnerId) {
-          const { data: finalFixture } = await supabase
-            .from('fixtures')
-            .select('*')
-            .eq('season_id', fixture.season_id)
-            .eq('stage', 'final')
-            .single();
-
-          if (finalFixture) {
-            // Assign to home if empty, or if they are already assigned there.
-            if (!finalFixture.home_player_id || finalFixture.home_player_id === winnerId) {
-              await supabase.from('fixtures').update({ home_player_id: winnerId }).eq('id', finalFixture.id);
-            } 
-            // Else assign to away if empty, or if they are already assigned there.
-            else if (!finalFixture.away_player_id || finalFixture.away_player_id === winnerId) {
-              await supabase.from('fixtures').update({ away_player_id: winnerId }).eq('id', finalFixture.id);
-            }
-          } else {
-            // Create the Grand Final fixture if it doesn't exist yet
-            await supabase.from('fixtures').insert({
-              season_id: fixture.season_id,
-              stage: 'final',
-              home_player_id: winnerId,
-              matchday: (fixture.matchday || 100) + 1,
-              status: 'scheduled'
-            });
-          }
-        }
-      } else if (fixture.stage === 'final') {
-        await supabase
-          .from('seasons')
-          .update({ status: 'completed' })
-          .eq('id', fixture.season_id);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to save match result");
       }
 
-      alert("Result saved and standings updated successfully!");
+      toast({ variant: "success", title: "Success", description: "Result saved and standings updated!" });
       router.push('/admin/matches');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to save result.");
+      toast({ variant: "error", title: "Error", description: err.message || "Failed to save result." });
     } finally {
       setSaving(false);
     }
@@ -360,7 +219,7 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
                 <Button 
                   onClick={() => handleStatusChange('live')}
                   disabled={saving}
-                  className="bg-primary text-white hover:bg-primary/90 font-bold uppercase tracking-wider w-full max-w-xs"
+                  className="bg-primary text-foreground hover:bg-primary/90 font-bold uppercase tracking-wider w-full max-w-xs"
                 >
                   <Play className="w-5 h-5 mr-2" /> Start Match
                 </Button>
@@ -378,7 +237,7 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
                 <Button 
                   onClick={handleSaveResult}
                   disabled={saving}
-                  className="bg-primary text-white hover:bg-primary/90 font-bold uppercase tracking-wider w-full max-w-xs"
+                  className="bg-primary text-foreground hover:bg-primary/90 font-bold uppercase tracking-wider w-full max-w-xs"
                 >
                   <Save className="w-5 h-5 mr-2" /> Update Result
                 </Button>
@@ -447,7 +306,7 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
                 <Button 
                   onClick={handleUploadScreenshot}
                   disabled={!screenshotFile || uploading || !matchData}
-                  className="w-full bg-primary text-white font-bold uppercase text-xs"
+                  className="w-full bg-primary text-foreground font-bold uppercase text-xs"
                 >
                   {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
                   Upload Screenshot

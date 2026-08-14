@@ -49,6 +49,7 @@ export default function SeasonStandingsPage({
         form: l.form || [],
       }));
 
+  const r16 = knockouts.filter((k) => k.stage === "round_of_16");
   const quarters = knockouts.filter((k) => k.stage === "quarter_final");
   const semis = knockouts.filter((k) => k.stage === "semi_final");
   const finals = knockouts.filter((k) => k.stage === "final");
@@ -122,6 +123,14 @@ export default function SeasonStandingsPage({
                 Knockout Stage
               </h2>
               <div className="flex flex-col gap-8">
+                {r16.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-black uppercase text-primary tracking-widest mb-4">Round of 16</h3>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {r16.map((m) => renderKnockoutCard(m, "R16", "border-border"))}
+                    </div>
+                  </div>
+                )}
                 {quarters.length > 0 && (
                   <div>
                     <h3 className="text-sm font-black uppercase text-primary tracking-widest mb-4">Quarter-Finals</h3>

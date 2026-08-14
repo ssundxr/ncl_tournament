@@ -26,11 +26,11 @@ export default function AdminTournamentsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight">Tournaments</h1>
+          <h1 className="text-3xl font-black font-heading uppercase text-foreground tracking-tight">Tournaments</h1>
           <p className="text-muted-foreground mt-1">Manage all NCL tournaments</p>
         </div>
         <Link href="/admin/tournaments/new">
-          <Button className="bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-wider">
+          <Button className="bg-primary hover:bg-primary/90 text-foreground font-bold uppercase tracking-wider">
             <Plus className="w-5 h-5 mr-2" /> Create Tournament
           </Button>
         </Link>
@@ -64,7 +64,7 @@ export default function AdminTournamentsPage() {
                           <Trophy className="w-5 h-5 text-primary" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-bold text-white">{t.name}</span>
+                          <span className="font-bold text-foreground">{t.name}</span>
                           <span className="text-xs text-muted-foreground">{t.slug}</span>
                         </div>
                       </div>

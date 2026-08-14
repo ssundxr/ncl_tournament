@@ -27,7 +27,7 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
   if (!currentSeason) return null;
 
   const isEarly = isClient && currentSeason.registration_start ? new Date() < new Date(currentSeason.registration_start) : false;
-  const showCountdown = (currentSeason.status === "upcoming" || isEarly) && currentSeason.registration_start && isEarly;
+  const showCountdown = (currentSeason.status === "upcoming" || currentSeason.status === "active") && Boolean(currentSeason.registration_start) && isEarly;
 
   const statusColors: Record<string, string> = {
     active: "bg-emerald-500",

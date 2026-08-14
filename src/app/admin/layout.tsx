@@ -11,7 +11,8 @@ import {
   Swords, 
   LogOut,
   LayoutDashboard,
-  ClipboardList
+  ClipboardList,
+  FileText
 } from "lucide-react";
 import { auth } from "@/lib/firebase/client";
 import { signOut } from "firebase/auth";
@@ -29,6 +30,7 @@ function AdminSidebar() {
     { name: "Seasons", href: "/admin/seasons", icon: CalendarDays },
     { name: "Matches", href: "/admin/matches", icon: Swords },
     { name: "Players", href: "/admin/players", icon: Users },
+    { name: "CMS Pages", href: "/admin/cms", icon: FileText },
   ];
 
   const handleLogout = async () => {

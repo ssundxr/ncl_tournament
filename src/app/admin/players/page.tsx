@@ -126,7 +126,7 @@ export default function AdminPlayersPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
                         <Link href={`/admin/players/${player.id}/edit`}>
-                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white">
+                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
                             <Edit className="w-4 h-4" />
                           </Button>
                         </Link>

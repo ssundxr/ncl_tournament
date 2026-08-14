@@ -7,14 +7,15 @@ interface QuickStatsProps {
   totalMatches: number;
   totalGoals: number;
   totalPlayers: number;
+  totalSeasons: number;
 }
 
-export function QuickStats({ totalMatches, totalGoals, totalPlayers }: QuickStatsProps) {
+export function QuickStats({ totalMatches, totalGoals, totalPlayers, totalSeasons }: QuickStatsProps) {
   const stats = [
     { label: "Matches Played", value: totalMatches, icon: Swords, suffix: "" },
     { label: "Total Goals", value: totalGoals, icon: Target, suffix: "" },
     { label: "Registered Players", value: totalPlayers, icon: Users, suffix: "" },
-    { label: "Seasons", value: "-", icon: Trophy, suffix: "" },
+    { label: "Seasons", value: totalSeasons, icon: Trophy, suffix: "" },
   ];
 
   return (

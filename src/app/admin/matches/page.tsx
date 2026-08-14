@@ -15,17 +15,49 @@ interface FixtureWithPlayers extends Fixture {
 export default function AdminMatchesPage() {
   const [fixtures, setFixtures] = useState<FixtureWithPlayers[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seasons, setSeasons] = useState<any[]>([]);
+  const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
+  const [selectedStage, setSelectedStage] = useState<string>("all");
 
   useEffect(() => {
+    async function init() {
+      const { data: seasonsData } = await supabase
+        .from('seasons')
+        .select('id, name, status')
+        .order('created_at', { ascending: false });
+        
+      if (seasonsData && seasonsData.length > 0) {
+        setSeasons(seasonsData);
+        // Default to the first active season, or just the most recent one
+        const active = seasonsData.find(s => s.status === 'active') || seasonsData[0];
+        setSelectedSeason(active.id);
+      } else {
+        setLoading(false);
+      }
+    }
+    init();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedSeason) return;
+    
     async function fetchFixtures() {
-      const { data, error } = await supabase
+      setLoading(true);
+      let query = supabase
         .from('fixtures')
         .select(`
           *,
           home_player:players!home_player_id(*),
           away_player:players!away_player_id(*)
         `)
+        .eq('season_id', selectedSeason)
         .order('matchday', { ascending: true });
+        
+      if (selectedStage !== 'all') {
+        query = query.eq('stage', selectedStage);
+      }
+      
+      const { data, error } = await query;
       
       if (error) {
         console.error("Error fetching fixtures:", error);
@@ -35,7 +67,7 @@ export default function AdminMatchesPage() {
       setLoading(false);
     }
     fetchFixtures();
-  }, []);
+  }, [selectedSeason, selectedStage]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -47,11 +79,44 @@ export default function AdminMatchesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black font-heading uppercase text-foreground tracking-tight">Match Control</h1>
           <p className="text-muted-foreground mt-1">Manage auto-generated live matches and upload results</p>
         </div>
+        
+        {seasons.length > 0 && (
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-muted-foreground uppercase">Season:</span>
+              <select 
+                value={selectedSeason || ""} 
+                onChange={(e) => setSelectedSeason(e.target.value)}
+                className="bg-background border border-border rounded-md px-3 py-2 font-bold uppercase focus:outline-none focus:border-primary text-sm"
+              >
+                {seasons.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} {s.status === 'active' ? '(Active)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-muted-foreground uppercase">Stage:</span>
+              <select 
+                value={selectedStage} 
+                onChange={(e) => setSelectedStage(e.target.value)}
+                className="bg-background border border-border rounded-md px-3 py-2 font-bold uppercase focus:outline-none focus:border-primary text-sm"
+              >
+                <option value="all">All Stages</option>
+                <option value="group">Group Stage</option>
+                <option value="quarter_final">Quarter Finals</option>
+                <option value="semi_final">Semi Finals</option>
+                <option value="final">Finals</option>
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -85,7 +150,8 @@ export default function AdminMatchesPage() {
                 fixtures.map((fixture) => (
                   <tr key={fixture.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4 font-bold text-muted-foreground">
-                      MD {fixture.matchday || "-"}
+                      <div>MD {fixture.matchday || "-"}</div>
+                      <div className="text-[10px] uppercase text-primary tracking-widest mt-1">{fixture.stage?.replace('_', ' ')}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">

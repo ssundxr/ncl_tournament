@@ -84,13 +84,13 @@ export default function EditTournamentPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-6 h-6" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight">
+          <h1 className="text-3xl font-black font-heading uppercase text-foreground tracking-tight">
             Edit Tournament
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -112,7 +112,7 @@ export default function EditTournamentPage() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary"
+              className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary"
             />
           </div>
 
@@ -127,7 +127,7 @@ export default function EditTournamentPage() {
               name="slug"
               value={formData.slug}
               onChange={handleChange}
-              className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary"
+              className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary"
             />
           </div>
 
@@ -140,7 +140,7 @@ export default function EditTournamentPage() {
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary appearance-none"
+              className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary appearance-none"
             >
               <option value="upcoming">Upcoming</option>
               <option value="active">Active</option>
@@ -158,7 +158,7 @@ export default function EditTournamentPage() {
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary min-h-[100px]"
+              className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary min-h-[100px]"
             />
           </div>
 
@@ -166,7 +166,7 @@ export default function EditTournamentPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="bg-primary text-white font-bold uppercase"
+              className="bg-primary text-foreground font-bold uppercase"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -37,11 +37,11 @@ export default function AdminSeasonsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight">Seasons</h1>
+          <h1 className="text-3xl font-black font-heading uppercase text-foreground tracking-tight">Seasons</h1>
           <p className="text-muted-foreground mt-1">Manage tournament seasons</p>
         </div>
         <Link href="/admin/seasons/new">
-          <Button className="bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-wider">
+          <Button className="bg-primary hover:bg-primary/90 text-foreground font-bold uppercase tracking-wider">
             <Plus className="w-5 h-5 mr-2" /> Create Season
           </Button>
         </Link>
@@ -70,7 +70,7 @@ export default function AdminSeasonsPage() {
               ) : (
                 seasons.map((s) => (
                   <tr key={s.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 font-bold text-white">
+                    <td className="px-6 py-4 font-bold text-foreground">
                       {s.tournament?.name}
                     </td>
                     <td className="px-6 py-4">
@@ -79,7 +79,7 @@ export default function AdminSeasonsPage() {
                           <CalendarDays className="w-5 h-5 text-primary" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-bold text-white">{s.name}</span>
+                          <span className="font-bold text-foreground">{s.name}</span>
                           <span className="text-xs text-muted-foreground">Season {s.number}</span>
                         </div>
                       </div>
@@ -100,9 +100,19 @@ export default function AdminSeasonsPage() {
                         size="icon" 
                         className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         onClick={async () => {
-                          if (confirm("Are you sure you want to delete this season?")) {
-                            await supabase.from('seasons').delete().eq('id', s.id);
-                            setSeasons(seasons.filter(season => season.id !== s.id));
+                          if (confirm("Are you sure you want to delete this season? It will be vanished from the website but permanently archived in the database.")) {
+                            try {
+                              const res = await fetch("/api/admin/season/delete", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ season_id: s.id })
+                              });
+                              const data = await res.json();
+                              if (!data.success) throw new Error(data.error);
+                              setSeasons(seasons.filter(season => season.id !== s.id));
+                            } catch (err: any) {
+                              alert(err.message || "Failed to delete season");
+                            }
                           }
                         }}
                       >

@@ -45,9 +45,9 @@ export default function NewTournamentPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/admin/tournaments"><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white"><ChevronLeft className="w-6 h-6" /></Button></Link>
+        <Link href="/admin/tournaments"><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground"><ChevronLeft className="w-6 h-6" /></Button></Link>
         <div>
-          <h1 className="text-3xl font-black font-heading uppercase text-white tracking-tight">New Tournament</h1>
+          <h1 className="text-3xl font-black font-heading uppercase text-foreground tracking-tight">New Tournament</h1>
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export default function NewTournamentPage() {
               name="name" 
               value={formData.name} 
               onChange={handleChange} 
-              className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary appearance-none"
+              className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary appearance-none"
             >
               <option value="">Select a predefined tournament</option>
               <option value="NCL Premier League">NCL Premier League</option>
@@ -73,14 +73,14 @@ export default function NewTournamentPage() {
           </div>
           <div>
             <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Slug *</label>
-            <input required type="text" name="slug" value={formData.slug} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary" />
+            <input required type="text" name="slug" value={formData.slug} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary" />
           </div>
           <div>
             <label className="block text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Description</label>
-            <textarea name="description" value={formData.description} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary min-h-[100px]" />
+            <textarea name="description" value={formData.description} onChange={handleChange} className="w-full bg-background border border-border rounded-md px-4 py-3 text-foreground focus:outline-none focus:border-primary min-h-[100px]" />
           </div>
           <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={loading} className="bg-primary text-white font-bold uppercase">
+            <Button type="submit" disabled={loading} className="bg-primary text-foreground font-bold uppercase">
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Save Tournament
             </Button>
           </div>

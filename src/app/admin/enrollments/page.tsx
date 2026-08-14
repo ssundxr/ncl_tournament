@@ -1,20 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { getSeasons, getSeasonEnrollments } from "@/lib/supabase/queries";
+import { getSeasons } from "@/lib/supabase/queries";
 import { Button } from "@/components/ui/button";
-import { Loader2, Check, X, Search, Filter } from "lucide-react";
+import { Loader2, Check, X, Search, Filter, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
 import { cleanBranding } from "@/lib/utils/branding";
+import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { Enrollment } from "@/types";
 
 export default function AdminEnrollmentsPage() {
+  const { toast } = useToast();
+  const { confirm } = useConfirm();
+
   const [seasons, setSeasons] = useState<any[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string>("");
-  const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedPhones, setSelectedPhones] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     getSeasons().then((data) => {
@@ -25,50 +36,153 @@ export default function AdminEnrollmentsPage() {
     });
   }, []);
 
-  useEffect(() => {
+  const loadEnrollments = async () => {
     if (!selectedSeason) return;
     setLoading(true);
-    getSeasonEnrollments(selectedSeason)
-      .then(setEnrollments)
-      .finally(() => setLoading(false));
+    
+    const { data, error } = await supabase
+      .from("season_enrollments")
+      .select("*, player:players(*)")
+      .eq("season_id", selectedSeason)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setEnrollments(data as Enrollment[]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadEnrollments();
+    setSelectedPhones(new Set());
   }, [selectedSeason]);
 
-  const handleStatusChange = async (playerId: string, newStatus: string) => {
-    setActionLoading(playerId);
+  const filteredEnrollments = useMemo(() => {
+    return enrollments.filter(e => {
+      // Name from player or registration_data
+      const name = (e.player?.name || e.registration_data?.name || "").toLowerCase();
+      const phone = (e.phone || "").toLowerCase();
+      const utr = (e.transaction_id || "").toLowerCase();
+      
+      const matchesSearch = name.includes(search.toLowerCase()) || 
+                           phone.includes(search.toLowerCase()) || 
+                           utr.includes(search.toLowerCase());
+                           
+      const matchesStatus = statusFilter === "all" || 
+                           (statusFilter === "pending_payment" && e.status === "pending" && e.payment_status === "pending") ||
+                           (statusFilter === "pending_approval" && e.status === "pending" && e.payment_status === "submitted") ||
+                           e.status === statusFilter;
+                           
+      return matchesSearch && matchesStatus;
+    });
+  }, [enrollments, search, statusFilter]);
+
+  const toggleSelection = (phone: string) => {
+    const next = new Set(selectedPhones);
+    if (next.has(phone)) next.delete(phone);
+    else next.add(phone);
+    setSelectedPhones(next);
+  };
+
+  const toggleAll = () => {
+    if (selectedPhones.size === filteredEnrollments.length) {
+      setSelectedPhones(new Set());
+    } else {
+      const pendingPhones = filteredEnrollments
+        .filter(e => e.status === 'pending' && e.phone)
+        .map(e => e.phone!);
+      setSelectedPhones(new Set(pendingPhones));
+    }
+  };
+
+  const handleApprove = async (phones: string[]) => {
+    if (phones.length === 0) return;
+    
+    const ok = await confirm({
+      title: "Approve Enrollments",
+      description: `Are you sure you want to approve ${phones.length} enrollment(s)? This will create player records and finalize their registration.`,
+    });
+    
+    if (!ok) return;
+
+    const isBulk = phones.length > 1;
+    if (isBulk) setBulkLoading(true);
+    else setActionLoading(phones[0]);
+
     try {
-      const { error } = await supabase
-        .from("season_enrollments")
-        .update({ status: newStatus })
-        .eq("season_id", selectedSeason)
-        .eq("player_id", playerId);
+      const res = await fetch("/api/admin/enrollment/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          season_id: selectedSeason,
+          enrollment_ids: phones,
+        }),
+      });
+
+      const data = await res.json();
       
-      if (error) throw error;
+      if (!data.success) {
+        throw new Error(data.error || "Failed to approve enrollments");
+      }
+
+      toast({ variant: "success", title: "Approved", description: data.message });
+      setSelectedPhones(new Set());
+      loadEnrollments();
       
-      setEnrollments((prev) => 
-        prev.map((e) => e.player_id === playerId ? { ...e, status: newStatus } : e)
-      );
     } catch (err: any) {
-      alert(`Error updating status: ${err.message}`);
+      toast({ variant: "error", title: "Error", description: err.message });
+    } finally {
+      setBulkLoading(false);
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (phone: string) => {
+    const reason = prompt("Enter rejection reason (optional):");
+    if (reason === null) return; // Cancelled
+
+    setActionLoading(phone);
+    try {
+      const res = await fetch("/api/admin/enrollment/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          season_id: selectedSeason,
+          phone,
+          reason
+        }),
+      });
+
+      const data = await res.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || "Failed to reject enrollment");
+      }
+
+      toast({ variant: "success", title: "Rejected", description: "Enrollment rejected successfully." });
+      loadEnrollments();
+      
+    } catch (err: any) {
+      toast({ variant: "error", title: "Error", description: err.message });
     } finally {
       setActionLoading(null);
     }
   };
 
-  const pendingCount = enrollments.filter(e => e.status === 'pending').length;
+  const pendingVerificationCount = enrollments.filter(e => e.status === 'pending' && e.payment_status === 'submitted').length;
+  const approvedCount = enrollments.filter(e => e.status === 'approved').length;
 
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-heading font-black text-foreground tracking-tight uppercase">Payment Verification</h1>
+          <h1 className="text-3xl font-heading font-black text-foreground tracking-tight uppercase">Enrollments</h1>
           <p className="text-muted-foreground font-medium mt-1 text-sm">
-            Manually verify UPI transactions and approve players for the tournament.
+            Manage registrations, verify payments, and approve players.
           </p>
         </div>
         
-        {/* Season Selector */}
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
           <select
             value={selectedSeason}
             onChange={(e) => setSelectedSeason(e.target.value)}
@@ -86,92 +200,162 @@ export default function AdminEnrollmentsPage() {
       <div className="grid gap-6 md:grid-cols-3 mb-8">
         <Card className="bg-card border-2 border-border">
           <CardHeader className="pb-2"><CardTitle className="text-xs font-black uppercase tracking-wider text-muted-foreground">Total Enrollments</CardTitle></CardHeader>
-          <CardContent><div className="text-3xl font-black font-heading">{enrollments.length}</div></CardContent>
+          <CardContent><div className="text-3xl font-black font-heading text-foreground">{enrollments.length}</div></CardContent>
         </Card>
-        <Card className="bg-card border-2 border-primary/50 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 rounded-bl-full z-0" />
-          <CardHeader className="pb-2 relative z-10"><CardTitle className="text-xs font-black uppercase tracking-wider text-primary">Pending Verification</CardTitle></CardHeader>
-          <CardContent className="relative z-10"><div className="text-3xl font-black font-heading text-primary">{pendingCount}</div></CardContent>
+        <Card className="bg-card border-2 border-yellow-500/50 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 rounded-bl-full z-0" />
+          <CardHeader className="pb-2 relative z-10"><CardTitle className="text-xs font-black uppercase tracking-wider text-yellow-500">Needs Verification (UTR Submitted)</CardTitle></CardHeader>
+          <CardContent className="relative z-10"><div className="text-3xl font-black font-heading text-yellow-500">{pendingVerificationCount}</div></CardContent>
         </Card>
         <Card className="bg-card border-2 border-border">
           <CardHeader className="pb-2"><CardTitle className="text-xs font-black uppercase tracking-wider text-muted-foreground">Approved</CardTitle></CardHeader>
-          <CardContent><div className="text-3xl font-black font-heading text-success">{enrollments.filter(e => e.status === 'approved').length}</div></CardContent>
+          <CardContent><div className="text-3xl font-black font-heading text-success">{approvedCount}</div></CardContent>
         </Card>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-card p-4 border border-border rounded-lg">
+        <div className="flex gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input 
+              type="text" 
+              placeholder="Search name, phone, UTR..." 
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-md text-sm font-medium focus:outline-none focus:border-primary"
+            />
+          </div>
+          <select 
+            value={statusFilter} 
+            onChange={e => setStatusFilter(e.target.value)}
+            className="bg-background border border-border rounded-md px-3 py-2 text-sm font-bold uppercase tracking-wider focus:outline-none focus:border-primary"
+          >
+            <option value="all">All Statuses</option>
+            <option value="pending_payment">Pending (No UTR)</option>
+            <option value="pending_approval">Pending (UTR Submitted)</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        
+        {selectedPhones.size > 0 && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-bold text-muted-foreground">{selectedPhones.size} selected</span>
+            <Button 
+              onClick={() => handleApprove(Array.from(selectedPhones))}
+              disabled={bulkLoading}
+              className="bg-success hover:bg-success/90 text-black font-bold uppercase tracking-wider"
+            >
+              {bulkLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+              Bulk Approve
+            </Button>
+          </div>
+        )}
       </div>
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-      ) : enrollments.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-border text-muted-foreground font-bold uppercase tracking-wider">
-          No enrollments found for this season.
+      ) : filteredEnrollments.length === 0 ? (
+        <div className="text-center py-12 border-2 border-dashed border-border text-muted-foreground font-bold uppercase tracking-wider rounded-lg">
+          No enrollments match your filters.
         </div>
       ) : (
-        <div className="bg-card border-2 border-border overflow-hidden">
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-muted text-xs uppercase font-black tracking-widest text-muted-foreground border-b-2 border-border">
+            <table className="w-full text-sm text-left whitespace-nowrap">
+              <thead className="bg-muted text-xs uppercase font-black tracking-widest text-muted-foreground border-b border-border">
                 <tr>
-                  <th className="px-6 py-4">Player</th>
-                  <th className="px-6 py-4">Mobile</th>
-                  <th className="px-6 py-4">Transaction ID (UTR)</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-4 py-3 w-10">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedPhones.size > 0 && selectedPhones.size === filteredEnrollments.filter(e => e.status === 'pending').length}
+                      onChange={toggleAll}
+                      className="rounded border-border"
+                    />
+                  </th>
+                  <th className="px-4 py-3">Player</th>
+                  <th className="px-4 py-3">Mobile</th>
+                  <th className="px-4 py-3">UTR / Payment</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {enrollments.map((enrollment) => (
-                  <tr key={enrollment.player_id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
-                    <td className="px-6 py-4 font-bold uppercase">{enrollment.player?.name}</td>
-                    <td className="px-6 py-4 font-mono">{enrollment.phone || "—"}</td>
-                    <td className="px-6 py-4 font-mono font-bold">{enrollment.transaction_id || "—"}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{new Date(enrollment.created_at).toLocaleDateString()}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest border ${
-                        enrollment.status === 'approved' ? 'bg-success/10 text-success border-success/30' :
-                        enrollment.status === 'rejected' ? 'bg-destructive/10 text-destructive border-destructive/30' :
-                        'bg-yellow-500/10 text-yellow-500 border-yellow-500/30'
-                      }`}>
-                        {enrollment.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      {enrollment.status === 'pending' && (
-                        <>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="h-8 border-success text-success hover:bg-success hover:text-white uppercase font-black text-[10px]"
-                            onClick={() => handleStatusChange(enrollment.player_id, 'approved')}
-                            disabled={actionLoading === enrollment.player_id}
-                          >
-                            {actionLoading === enrollment.player_id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3 mr-1" />} Approve
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="h-8 border-destructive text-destructive hover:bg-destructive hover:text-white uppercase font-black text-[10px]"
-                            onClick={() => handleStatusChange(enrollment.player_id, 'rejected')}
-                            disabled={actionLoading === enrollment.player_id}
-                          >
-                            <X className="w-3 h-3 mr-1" /> Reject
-                          </Button>
-                        </>
-                      )}
-                      {enrollment.status !== 'pending' && (
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          className="h-8 uppercase font-black text-[10px] text-muted-foreground"
-                          onClick={() => handleStatusChange(enrollment.player_id, 'pending')}
-                          disabled={actionLoading === enrollment.player_id}
-                        >
-                          Revert to Pending
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {filteredEnrollments.map((enrollment) => {
+                  const phone = enrollment.phone!;
+                  const isSelected = selectedPhones.has(phone);
+                  const name = enrollment.player?.name || enrollment.registration_data?.name || "Unknown";
+                  
+                  return (
+                    <tr key={phone} className={`border-b border-border last:border-0 transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-muted/50'}`}>
+                      <td className="px-4 py-3">
+                        {enrollment.status === 'pending' && (
+                          <input 
+                            type="checkbox" 
+                            checked={isSelected}
+                            onChange={() => toggleSelection(phone)}
+                            className="rounded border-border"
+                          />
+                        )}
+                      </td>
+                      <td className="px-4 py-3 font-bold uppercase">{name}</td>
+                      <td className="px-4 py-3 font-mono">{phone}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col">
+                          <span className="font-mono font-bold">{enrollment.transaction_id || "—"}</span>
+                          <span className={`text-[10px] uppercase font-black tracking-widest ${
+                            enrollment.payment_status === 'verified' ? 'text-success' : 
+                            enrollment.payment_status === 'submitted' ? 'text-yellow-500' : 
+                            'text-muted-foreground'
+                          }`}>
+                            {enrollment.payment_status}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{new Date(enrollment.created_at).toLocaleDateString()}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-black uppercase tracking-widest border rounded-sm ${
+                          enrollment.status === 'approved' ? 'bg-success/10 text-success border-success/30' :
+                          enrollment.status === 'rejected' ? 'bg-destructive/10 text-destructive border-destructive/30' :
+                          'bg-yellow-500/10 text-yellow-500 border-yellow-500/30'
+                        }`}>
+                          {enrollment.status === 'pending' && enrollment.payment_status === 'submitted' && <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />}
+                          {enrollment.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right space-x-2">
+                        {enrollment.status === 'pending' && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="h-8 border-success text-success hover:bg-success hover:text-black uppercase font-black text-[10px]"
+                              onClick={() => handleApprove([phone])}
+                              disabled={actionLoading === phone || bulkLoading}
+                            >
+                              {actionLoading === phone ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3 mr-1" />} Approve
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="h-8 border-destructive text-destructive hover:bg-destructive hover:text-foreground uppercase font-black text-[10px]"
+                              onClick={() => handleReject(phone)}
+                              disabled={actionLoading === phone || bulkLoading}
+                            >
+                              <X className="w-3 h-3 mr-1" /> Reject
+                            </Button>
+                          </>
+                        )}
+                        {enrollment.status === 'rejected' && (
+                          <div className="text-[10px] text-muted-foreground max-w-[150px] truncate" title={enrollment.rejection_reason || "No reason"}>
+                            {enrollment.rejection_reason || "No reason"}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -180,3 +364,4 @@ export default function AdminEnrollmentsPage() {
     </div>
   );
 }
+

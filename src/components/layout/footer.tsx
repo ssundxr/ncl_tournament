@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { DeveloperCredit } from "./developer-credit";
 
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/admin")) return null;
   return (
-    <footer className="w-full bg-foreground border-t-8 border-primary mt-auto pb-16 md:pb-0 text-background">
+    <footer className="w-full bg-foreground border-t-8 border-primary mt-auto pb-16 md:pb-0 text-background print:hidden">
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-4">
@@ -18,9 +23,9 @@ export function Footer() {
             <h4 className="font-heading font-black text-xl mb-4 text-background uppercase tracking-widest">Competitions</h4>
             <ul className="space-y-3 text-sm font-bold">
               <li><Link href="/standings" className="text-background/60 hover:text-primary transition-colors">Current Season</Link></li>
-              <li><Link href="/bracket" className="text-background/60 hover:text-primary transition-colors">Knockout Stage</Link></li>
+              <li><Link href="/standings?tab=knockout" className="text-background/60 hover:text-primary transition-colors">Knockout Stage</Link></li>
               <li><Link href="/fixtures" className="text-background/60 hover:text-primary transition-colors">All Fixtures</Link></li>
-              <li><Link href="/results" className="text-background/60 hover:text-primary transition-colors">Match Results</Link></li>
+              <li><Link href="/fixtures?status=completed" className="text-background/60 hover:text-primary transition-colors">Match Results</Link></li>
             </ul>
           </div>
           

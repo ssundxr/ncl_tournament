@@ -6,9 +6,10 @@ import { Footer } from "@/components/layout/footer";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ToastProvider } from "@/components/ui/toast";
+import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
+// Removed force-dynamic/force-no-store — pages opt into dynamic rendering individually
 
 const barlow = Barlow({
   variable: "--font-sans",
@@ -54,13 +55,17 @@ export default function RootLayout({
     <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable} ${quanticoFont.variable}`} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased min-h-screen flex flex-col font-sans transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
-          <Header />
-          <main className="flex-1 pb-16 md:pb-0">
-            {children}
-          </main>
-          <Footer />
-          <MobileNav />
-          <InstallPrompt />
+          <ToastProvider>
+            <ConfirmDialogProvider>
+              <Header />
+              <main className="flex-1 pb-16 md:pb-0">
+                {children}
+              </main>
+              <Footer />
+              <MobileNav />
+              <InstallPrompt />
+            </ConfirmDialogProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

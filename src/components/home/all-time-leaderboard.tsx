@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 import * as htmlToImage from "html-to-image";
 
-export function AllTimeLeaderboard({ topPlayers }: { topPlayers: any[] }) {
+export function AllTimeLeaderboard({ topPlayers, hideHeader = false }: { topPlayers: any[], hideHeader?: boolean }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
@@ -38,16 +38,18 @@ export function AllTimeLeaderboard({ topPlayers }: { topPlayers: any[] }) {
       : topPlayers.slice(0, 3);
 
   return (
-    <section className="w-full px-4 md:px-12 lg:px-24 xl:px-32 mb-20">
-      <div className="flex items-center gap-3 border-b-2 border-border pb-4 mb-8">
-        <div className="w-1.5 h-6 bg-primary" />
-        <h2 className="text-2xl font-black uppercase tracking-tight font-heading text-foreground">
-          Global Top Competitors
-        </h2>
-        <span className="ml-auto text-xs font-black uppercase tracking-widest text-muted-foreground">
-          All Time
-        </span>
-      </div>
+    <section className={`w-full ${hideHeader ? '' : 'px-4 md:px-12 lg:px-24 xl:px-32 mb-20'}`}>
+      {!hideHeader && (
+        <div className="flex items-center gap-3 border-b-2 border-border pb-4 mb-8">
+          <div className="w-1.5 h-6 bg-primary" />
+          <h2 className="text-2xl font-black uppercase tracking-tight font-heading text-foreground">
+            Global Top Competitors
+          </h2>
+          <span className="ml-auto text-xs font-black uppercase tracking-widest text-muted-foreground">
+            All Time
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
         {display.map((player: any) => {
@@ -85,9 +87,9 @@ export function AllTimeLeaderboard({ topPlayers }: { topPlayers: any[] }) {
                   </h3>
                   <div className="flex items-center justify-between border-t-4 border-primary pt-3">
                     <div className="flex flex-col">
-                      <span className="text-foreground text-[10px] font-black uppercase tracking-widest mb-0.5">Total PTS</span>
+                      <span className="text-foreground text-[10px] font-black uppercase tracking-widest mb-0.5">Total Goals</span>
                       <span className="text-foreground text-3xl font-black tracking-tighter leading-none font-heading">
-                        {player.allTimePoints}
+                        {player.allTimeGoals}
                       </span>
                     </div>
                     <Button

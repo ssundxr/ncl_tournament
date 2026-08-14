@@ -6,6 +6,7 @@ export async function getSeasons() {
   const { data, error } = await supabase
     .from("seasons")
     .select("*, tournament:tournaments(*)")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
@@ -16,6 +17,7 @@ export async function getSeasonById(id: string) {
     .from("seasons")
     .select("*, tournament:tournaments(*)")
     .eq("id", id)
+    .is("deleted_at", null)
     .single();
   if (error) throw error;
   return data;
@@ -26,6 +28,7 @@ export async function getActiveSeason() {
     .from("seasons")
     .select("*, tournament:tournaments(*)")
     .eq("status", "active")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
@@ -58,6 +61,7 @@ export async function getFixturesWithScores(seasonId: string, statusFilter: 'com
     .from("fixtures")
     .select(`
       *,
+      matches(*),
       home_player:players!home_player_id(*),
       away_player:players!away_player_id(*)
     `)
@@ -70,20 +74,17 @@ export async function getFixturesWithScores(seasonId: string, statusFilter: 'com
     query = query.neq("status", "completed");
   }
 
-  const { data: fixturesData } = await query;
-  const { data: matchesData } = await supabase.from("matches").select("*");
-
+  const { data: fixturesData, error } = await query;
+  if (error) throw error;
   if (!fixturesData) return [];
 
-  const matchMap: Record<string, any> = {};
-  (matchesData ?? []).forEach((m) => { matchMap[m.fixture_id] = m; });
-
   return fixturesData.map((f: any) => {
-    const match = matchMap[f.id];
+    const rawMatch = Array.isArray(f.matches) ? f.matches[0] : f.matches;
     return {
       ...f,
-      home_score: match?.home_score ?? 0,
-      away_score: match?.away_score ?? 0,
+      home_score: rawMatch?.home_score ?? 0,
+      away_score: rawMatch?.away_score ?? 0,
+      matches: rawMatch ? [rawMatch] : []
     };
   });
 }
@@ -123,13 +124,8 @@ export async function getKnockouts(seasonId: string) {
     .order("created_at");
   if (error) throw error;
 
-  const { data: matchesData } = await supabase.from("matches").select("*");
-  const matchMap: Record<string, any> = {};
-  (matchesData ?? []).forEach((m) => { matchMap[m.fixture_id] = m; });
-
   return (fixturesData ?? []).map((f: any) => {
     const rawMatch = Array.isArray(f.matches) ? f.matches[0] : f.matches;
-    const match = rawMatch || matchMap[f.id];
     const homeP = f.home_player;
     const awayP = f.away_player;
     return {
@@ -138,9 +134,9 @@ export async function getKnockouts(seasonId: string) {
       away_player: awayP,
       home: homeP,
       away: awayP,
-      home_score: match?.home_score ?? 0,
-      away_score: match?.away_score ?? 0,
-      matches: match ? [match] : [],
+      home_score: rawMatch?.home_score ?? 0,
+      away_score: rawMatch?.away_score ?? 0,
+      matches: rawMatch ? [rawMatch] : [],
     };
   });
 }
@@ -253,14 +249,14 @@ export async function getMatchDetail(fixtureId: string) {
 
 // ─── Global Stats ─────────────────────────────────────────────────────────────
 
-export async function getAllTimeLeaderboard() {
+export async function getAllTimeLeaderboard(seasonId?: string, tournamentId?: string) {
   const { data: players } = await supabase.from("players").select("*");
   const { data: leaderboards } = await supabase
     .from("leaderboards")
-    .select("player_id, points, goals_for, season_id, season:seasons(name)");
+    .select("player_id, points, goals_for, season_id, season:seasons(name, tournament_id, deleted_at)");
   const { data: completedFixtures } = await supabase
     .from("fixtures")
-    .select("*, matches(*), season:seasons(name)")
+    .select("*, matches(*), season:seasons(name, tournament_id, deleted_at)")
     .eq("status", "completed");
   const { data: matchesData } = await supabase.from("matches").select("*");
 
@@ -272,7 +268,21 @@ export async function getAllTimeLeaderboard() {
   const seasonChampions: Record<string, { player_id: string; season_name: string }> = {};
   const seasonMaxPoints: Record<string, { player_id: string; points: number; season_name: string }> = {};
 
-  (leaderboards ?? []).forEach((l: any) => {
+  const filteredLeaderboards = (leaderboards ?? []).filter((l: any) => {
+    if (l.season?.deleted_at) return false;
+    if (seasonId && l.season_id !== seasonId) return false;
+    if (tournamentId && l.season?.tournament_id !== tournamentId) return false;
+    return true;
+  });
+
+  const filteredFixtures = (completedFixtures ?? []).filter((f: any) => {
+    if (f.season?.deleted_at) return false;
+    if (seasonId && f.season_id !== seasonId) return false;
+    if (tournamentId && f.season?.tournament_id !== tournamentId) return false;
+    return true;
+  });
+
+  filteredLeaderboards.forEach((l: any) => {
     if (l.player_id) {
       pointsMap[l.player_id] = (pointsMap[l.player_id] || 0) + (l.points || 0);
       goalsMap[l.player_id] = (goalsMap[l.player_id] || 0) + (l.goals_for || 0);
@@ -289,7 +299,7 @@ export async function getAllTimeLeaderboard() {
     }
   });
 
-  (completedFixtures ?? []).forEach((f: any) => {
+  filteredFixtures.forEach((f: any) => {
     const rawMatch = Array.isArray(f.matches) ? f.matches[0] : f.matches;
     const match = rawMatch || matchMap[f.id];
     if (!match) return;
@@ -344,29 +354,35 @@ export async function getAllTimeLeaderboard() {
       allTimeGoals: goalsMap[p.id] || 0,
       toppedSeasons: topsMap[p.id] || [],
     }))
-    .filter((p: any) => p.allTimePoints > 0)
-    .sort((a: any, b: any) => b.allTimePoints - a.allTimePoints || b.allTimeGoals - a.allTimeGoals);
+    .filter((p: any) => p.allTimeGoals > 0 || p.allTimePoints > 0)
+    .sort((a: any, b: any) => b.allTimeGoals - a.allTimeGoals || b.allTimePoints - a.allTimePoints);
 }
 
 export async function getQuickStats() {
   const [
-    { count: totalMatches },
     { count: totalPlayers },
-    { data: goalsData },
+    { count: totalSeasons },
+    { data: activeFixtures },
   ] = await Promise.all([
-    supabase.from("matches").select("*", { count: "exact", head: true }),
     supabase.from("players").select("*", { count: "exact", head: true }),
-    supabase.from("matches").select("home_score, away_score"),
+    supabase.from("seasons").select("*", { count: "exact", head: true }).is("deleted_at", null),
+    supabase.from("fixtures").select("id, matches(*), season:seasons!inner(id, deleted_at)").eq("status", "completed"),
   ]);
 
-  const totalGoals = (goalsData ?? []).reduce(
-    (sum: number, m: any) => sum + (m.home_score || 0) + (m.away_score || 0),
-    0
-  );
+  const validFixtures = (activeFixtures ?? []).filter((f: any) => !f.season?.deleted_at);
+
+  let totalGoals = 0;
+  validFixtures.forEach((f: any) => {
+    const rawMatch = Array.isArray(f.matches) ? f.matches[0] : f.matches;
+    if (rawMatch) {
+      totalGoals += (rawMatch.home_score || 0) + (rawMatch.away_score || 0);
+    }
+  });
 
   return {
-    totalMatches: totalMatches ?? 0,
+    totalMatches: validFixtures.length,
     totalPlayers: totalPlayers ?? 0,
+    totalSeasons: totalSeasons ?? 0,
     totalGoals,
   };
 }

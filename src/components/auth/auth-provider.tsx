@@ -18,8 +18,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const allowedEmails = ["ashwinfejl357@gmail.com", "shyamsundxr@gmail.com"];
-        if (firebaseUser.email && !allowedEmails.includes(firebaseUser.email)) {
+        const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',') || [];
+        const allowedEmails = adminEmails.map(e => e.trim().toLowerCase());
+        
+        if (firebaseUser.email && !allowedEmails.includes(firebaseUser.email.toLowerCase())) {
           // Instantly lock them out in UI state without waiting for network signout
           setUser(null);
           setLoading(false);

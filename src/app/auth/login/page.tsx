@@ -20,12 +20,13 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       
       const allowedEmails = ["ashwinfejl357@gmail.com", "shyamsundxr@gmail.com"];
-      if (result.user.email && !allowedEmails.includes(result.user.email)) {
-        await auth.signOut();
-        throw new Error("Access Denied: Portal is under management control only.");
+      if (result.user.email && allowedEmails.includes(result.user.email)) {
+        // Admins go to the admin dashboard
+        router.push("/admin");
+      } else {
+        // Everyone else goes to the player portal
+        router.push("/portal");
       }
-      
-      router.push("/admin");
     } catch (err: any) {
       console.error("Login failed:", err);
       setError(err.message || "Failed to log in.");
@@ -41,10 +42,10 @@ export default function LoginPage() {
         </div>
         
         <h1 className="text-3xl font-black font-heading text-white uppercase tracking-tight mb-2">
-          Admin Portal
+          NCL Login
         </h1>
-        <p className="text-muted-foreground text-center mb-8">
-          Sign in to access the NCL tournament management dashboard.
+        <p className="text-muted-foreground text-center mb-8 font-medium">
+          Sign in to access your Player Portal or Admin Dashboard.
         </p>
 
         {error && (

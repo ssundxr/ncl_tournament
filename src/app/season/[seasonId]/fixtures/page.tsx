@@ -22,6 +22,37 @@ export default function SeasonFixturesPage({
   const [loading, setLoading] = useState(true);
   const [sharingFixtures, setSharingFixtures] = useState(false);
   const fixturesRef = useRef<HTMLDivElement>(null);
+  
+  // Panning State
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [startY, setStartY] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setStartY(e.pageY - scrollRef.current.offsetTop);
+    setScrollLeft(scrollRef.current.scrollLeft);
+    setScrollTop(scrollRef.current.scrollTop);
+  };
+
+  const onMouseLeave = () => setIsDragging(false);
+  const onMouseUp = () => setIsDragging(false);
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const y = e.pageY - scrollRef.current.offsetTop;
+    const walkX = (x - startX) * 1.5; // scroll-fast multiplier
+    const walkY = (y - startY) * 1.5;
+    scrollRef.current.scrollLeft = scrollLeft - walkX;
+    scrollRef.current.scrollTop = scrollTop - walkY;
+  };
 
   useEffect(() => {
     if (!seasonId) return;
@@ -55,8 +86,9 @@ export default function SeasonFixturesPage({
   };
 
   const groupFixtures = fixtures.filter((f) => f.stage === "group");
-  const semis = knockouts.filter((k) => k.stage === "semi_final");
+  const r16 = knockouts.filter((k) => k.stage === "round_of_16");
   const quarters = knockouts.filter((k) => k.stage === "quarter_final");
+  const semis = knockouts.filter((k) => k.stage === "semi_final");
   const finals = knockouts.filter((k) => k.stage === "final");
 
   return (
@@ -94,23 +126,37 @@ export default function SeasonFixturesPage({
       ) : (
         <div ref={fixturesRef} className="flex flex-col gap-12">
           {/* Knockout Bracket */}
-          {(quarters.length > 0 || semis.length > 0 || finals.length > 0) && (
+          {(r16.length > 0 || quarters.length > 0 || semis.length > 0 || finals.length > 0) && (
             <div>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-1.5 h-6 bg-yellow-500" />
                 <h2 className="text-2xl font-black uppercase tracking-tight font-heading">Knockout Stage</h2>
+                <span className="text-xs font-bold text-muted-foreground uppercase ml-2 bg-muted px-2 py-1 rounded">(Drag to pan)</span>
               </div>
-              <div className="bg-card border-2 border-border p-8 overflow-x-auto">
+              <div 
+                ref={scrollRef}
+                onMouseDown={onMouseDown}
+                onMouseLeave={onMouseLeave}
+                onMouseUp={onMouseUp}
+                onMouseMove={onMouseMove}
+                className={`bg-card border-2 border-border p-8 overflow-auto max-h-[800px] ${isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'} custom-scrollbar`}
+              >
                 <div className="flex items-center justify-center gap-16 min-w-max mx-auto py-4">
+                  {r16.length > 0 && (
+                    <div className="flex flex-col gap-4 w-[300px]">
+                      <p className="text-xs font-black uppercase text-primary tracking-widest text-center mb-2">Round of 16</p>
+                      {r16.map((m) => <MatchBox key={m.id} fixture={m} />)}
+                    </div>
+                  )}
                   {quarters.length > 0 && (
                     <div className="flex flex-col gap-8 w-[300px]">
-                      <p className="text-xs font-black uppercase text-primary tracking-widest text-center">Quarter-Finals</p>
+                      <p className="text-xs font-black uppercase text-primary tracking-widest text-center mb-2">Quarter-Finals</p>
                       {quarters.map((m) => <MatchBox key={m.id} fixture={m} />)}
                     </div>
                   )}
                   {semis.length > 0 && (
                     <div className="flex flex-col gap-16 w-[300px]">
-                      <p className="text-xs font-black uppercase text-primary tracking-widest text-center">Semi-Finals</p>
+                      <p className="text-xs font-black uppercase text-primary tracking-widest text-center mb-2">Semi-Finals</p>
                       {semis.map((m) => <MatchBox key={m.id} fixture={m} />)}
                     </div>
                   )}

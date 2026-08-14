@@ -91,7 +91,7 @@ export default function NewSeasonPage() {
             </div>
           </div>
           <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={loading || !formData.tournament_id} className="bg-primary text-white font-bold uppercase">
+            <Button type="submit" disabled={loading || !formData.tournament_id} className="bg-primary text-foreground font-bold uppercase">
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Save Season
             </Button>
           </div>
