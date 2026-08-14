@@ -116,13 +116,26 @@ export async function getKnockouts(seasonId: string) {
   const { data, error } = await supabase
     .from("fixtures")
     .select(
-      "*, matches(*), home:players!home_player_id(*), away:players!away_player_id(*)"
+      "*, matches(*), home_player:players!home_player_id(*), away_player:players!away_player_id(*)"
     )
     .eq("season_id", seasonId)
     .in("stage", ["quarter_final", "semi_final", "final"])
     .order("created_at");
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map((f: any) => {
+    const match = f.matches?.[0];
+    const homeP = f.home_player;
+    const awayP = f.away_player;
+    return {
+      ...f,
+      home_player: homeP,
+      away_player: awayP,
+      home: homeP,
+      away: awayP,
+      home_score: match?.home_score ?? 0,
+      away_score: match?.away_score ?? 0,
+    };
+  });
 }
 
 // ─── Players ─────────────────────────────────────────────────────────────────
@@ -238,9 +251,14 @@ export async function getAllTimeLeaderboard() {
   const { data: leaderboards } = await supabase
     .from("leaderboards")
     .select("player_id, points, goals_for, season_id, season:seasons(name)");
+  const { data: completedFixtures } = await supabase
+    .from("fixtures")
+    .select("*, matches(*), season:seasons(name)")
+    .eq("status", "completed");
 
   const pointsMap: Record<string, number> = {};
   const goalsMap: Record<string, number> = {};
+  const seasonChampions: Record<string, { player_id: string; season_name: string }> = {};
   const seasonMaxPoints: Record<string, { player_id: string; points: number; season_name: string }> = {};
 
   (leaderboards ?? []).forEach((l: any) => {
@@ -250,20 +268,61 @@ export async function getAllTimeLeaderboard() {
     }
     if (
       !seasonMaxPoints[l.season_id] ||
-      l.points > seasonMaxPoints[l.season_id].points
+      (l.points || 0) > seasonMaxPoints[l.season_id].points
     ) {
       seasonMaxPoints[l.season_id] = {
         player_id: l.player_id,
-        points: l.points,
+        points: l.points || 0,
         season_name: l.season?.name || "Season",
       };
     }
   });
 
+  (completedFixtures ?? []).forEach((f: any) => {
+    const match = f.matches?.[0];
+    if (!match) return;
+
+    const hs = match.home_score ?? 0;
+    const as = match.away_score ?? 0;
+
+    if (f.stage && f.stage !== "group") {
+      if (f.home_player_id) {
+        goalsMap[f.home_player_id] = (goalsMap[f.home_player_id] || 0) + hs;
+        if (hs > as) pointsMap[f.home_player_id] = (pointsMap[f.home_player_id] || 0) + 3;
+        else if (hs === as) pointsMap[f.home_player_id] = (pointsMap[f.home_player_id] || 0) + 1;
+      }
+      if (f.away_player_id) {
+        goalsMap[f.away_player_id] = (goalsMap[f.away_player_id] || 0) + as;
+        if (as > hs) pointsMap[f.away_player_id] = (pointsMap[f.away_player_id] || 0) + 3;
+        else if (hs === as) pointsMap[f.away_player_id] = (pointsMap[f.away_player_id] || 0) + 1;
+      }
+    }
+
+    if (f.stage === "final") {
+      const winnerId = hs > as ? f.home_player_id : as > hs ? f.away_player_id : null;
+      if (winnerId) {
+        seasonChampions[f.season_id] = {
+          player_id: winnerId,
+          season_name: f.season?.name || "Season",
+        };
+      }
+    }
+  });
+
   const topsMap: Record<string, string[]> = {};
-  Object.values(seasonMaxPoints).forEach((top) => {
-    if (!topsMap[top.player_id]) topsMap[top.player_id] = [];
-    topsMap[top.player_id].push(top.season_name);
+  const allSeasonIds = new Set([
+    ...Object.keys(seasonMaxPoints),
+    ...Object.keys(seasonChampions),
+  ]);
+
+  allSeasonIds.forEach((sId) => {
+    const top = seasonChampions[sId] || seasonMaxPoints[sId];
+    if (top?.player_id) {
+      if (!topsMap[top.player_id]) topsMap[top.player_id] = [];
+      if (!topsMap[top.player_id].includes(top.season_name)) {
+        topsMap[top.player_id].push(top.season_name);
+      }
+    }
   });
 
   return (players ?? [])
@@ -274,7 +333,7 @@ export async function getAllTimeLeaderboard() {
       toppedSeasons: topsMap[p.id] || [],
     }))
     .filter((p: any) => p.allTimePoints > 0)
-    .sort((a: any, b: any) => b.allTimePoints - a.allTimePoints);
+    .sort((a: any, b: any) => b.allTimePoints - a.allTimePoints || b.allTimeGoals - a.allTimeGoals);
 }
 
 export async function getQuickStats() {

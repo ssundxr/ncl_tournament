@@ -24,6 +24,7 @@ export default function SeasonOverviewPage({
   const [leaderboards, setLeaderboards] = useState<any[]>([]);
   const [upcomingFixtures, setUpcomingFixtures] = useState<any[]>([]);
   const [recentResults, setRecentResults] = useState<any[]>([]);
+  const [completedFixtures, setCompletedFixtures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function SeasonOverviewPage({
         setLeaderboards(l);
         setUpcomingFixtures(upcoming.slice(0, 3));
         setRecentResults(results.slice(0, 3));
+        setCompletedFixtures(results);
       })
       .finally(() => setLoading(false));
   }, [seasonId]);
@@ -64,11 +66,39 @@ export default function SeasonOverviewPage({
     );
   }
 
-  const totalPlayed = leaderboards.reduce((s, l) => s + (l.played || 0), 0) / 2;
-  const totalGoals = leaderboards.reduce((s, l) => s + (l.goals_for || 0), 0);
-  const topScorer = leaderboards.length > 0
-    ? leaderboards.reduce((top, l) => (l.goals_for > (top?.goals_for ?? -1) ? l : top), null)
-    : null;
+  const totalPlayed = completedFixtures.length > 0
+    ? completedFixtures.length
+    : leaderboards.reduce((s, l) => s + (l.played || 0), 0) / 2;
+
+  const totalGoals = completedFixtures.length > 0
+    ? completedFixtures.reduce((sum, f) => sum + (f.home_score || 0) + (f.away_score || 0), 0)
+    : leaderboards.reduce((s, l) => s + (l.goals_for || 0), 0);
+
+  let topScorer: any = null;
+  if (completedFixtures.length > 0) {
+    const playerGoalsMap: Record<string, { player: any; goals: number }> = {};
+    completedFixtures.forEach((f: any) => {
+      if (f.home_player_id && f.home_player) {
+        if (!playerGoalsMap[f.home_player_id]) {
+          playerGoalsMap[f.home_player_id] = { player: f.home_player, goals: 0 };
+        }
+        playerGoalsMap[f.home_player_id].goals += f.home_score || 0;
+      }
+      if (f.away_player_id && f.away_player) {
+        if (!playerGoalsMap[f.away_player_id]) {
+          playerGoalsMap[f.away_player_id] = { player: f.away_player, goals: 0 };
+        }
+        playerGoalsMap[f.away_player_id].goals += f.away_score || 0;
+      }
+    });
+    const sorted = Object.values(playerGoalsMap).sort((a, b) => b.goals - a.goals);
+    if (sorted.length > 0) {
+      topScorer = { player: sorted[0].player, goals_for: sorted[0].goals };
+    }
+  }
+  if (!topScorer && leaderboards.length > 0) {
+    topScorer = leaderboards.reduce((top, l) => (l.goals_for > (top?.goals_for ?? -1) ? l : top), null);
+  }
 
   const getGroupStandings = (groupId: string): StandingsRow[] =>
     leaderboards

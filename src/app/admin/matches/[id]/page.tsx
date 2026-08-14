@@ -264,6 +264,11 @@ export default function MatchControlPage({ params }: { params: Promise<{ id: str
             });
           }
         }
+      } else if (fixture.stage === 'final') {
+        await supabase
+          .from('seasons')
+          .update({ status: 'completed' })
+          .eq('id', fixture.season_id);
       }
 
       alert("Result saved and standings updated successfully!");
