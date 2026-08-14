@@ -113,7 +113,7 @@ export async function getLeaderboards(seasonId: string) {
 }
 
 export async function getKnockouts(seasonId: string) {
-  const { data, error } = await supabase
+  const { data: fixturesData, error } = await supabase
     .from("fixtures")
     .select(
       "*, matches(*), home_player:players!home_player_id(*), away_player:players!away_player_id(*)"
@@ -122,8 +122,14 @@ export async function getKnockouts(seasonId: string) {
     .in("stage", ["quarter_final", "semi_final", "final"])
     .order("created_at");
   if (error) throw error;
-  return (data ?? []).map((f: any) => {
-    const match = f.matches?.[0];
+
+  const { data: matchesData } = await supabase.from("matches").select("*");
+  const matchMap: Record<string, any> = {};
+  (matchesData ?? []).forEach((m) => { matchMap[m.fixture_id] = m; });
+
+  return (fixturesData ?? []).map((f: any) => {
+    const rawMatch = Array.isArray(f.matches) ? f.matches[0] : f.matches;
+    const match = rawMatch || matchMap[f.id];
     const homeP = f.home_player;
     const awayP = f.away_player;
     return {
@@ -134,6 +140,7 @@ export async function getKnockouts(seasonId: string) {
       away: awayP,
       home_score: match?.home_score ?? 0,
       away_score: match?.away_score ?? 0,
+      matches: match ? [match] : [],
     };
   });
 }
@@ -255,6 +262,10 @@ export async function getAllTimeLeaderboard() {
     .from("fixtures")
     .select("*, matches(*), season:seasons(name)")
     .eq("status", "completed");
+  const { data: matchesData } = await supabase.from("matches").select("*");
+
+  const matchMap: Record<string, any> = {};
+  (matchesData ?? []).forEach((m) => { matchMap[m.fixture_id] = m; });
 
   const pointsMap: Record<string, number> = {};
   const goalsMap: Record<string, number> = {};
@@ -279,7 +290,8 @@ export async function getAllTimeLeaderboard() {
   });
 
   (completedFixtures ?? []).forEach((f: any) => {
-    const match = f.matches?.[0];
+    const rawMatch = Array.isArray(f.matches) ? f.matches[0] : f.matches;
+    const match = rawMatch || matchMap[f.id];
     if (!match) return;
 
     const hs = match.home_score ?? 0;

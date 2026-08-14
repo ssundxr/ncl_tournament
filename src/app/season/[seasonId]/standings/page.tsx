@@ -54,7 +54,11 @@ export default function SeasonStandingsPage({
   const finals = knockouts.filter((k) => k.stage === "final");
 
   const renderKnockoutCard = (match: any, label: string, accentClass: string) => {
-    const m = match.matches?.[0];
+    const rawMatch = Array.isArray(match.matches) ? match.matches[0] : match.matches;
+    const homeScore = match.home_score ?? rawMatch?.home_score ?? "—";
+    const awayScore = match.away_score ?? rawMatch?.away_score ?? "—";
+    const homeName = match.home?.name || match.home_player?.name || "TBD";
+    const awayName = match.away?.name || match.away_player?.name || "TBD";
     return (
       <div key={match.id} className={`bg-card border-2 ${accentClass} rounded-none overflow-hidden relative`}>
         <div className="absolute top-0 left-0 h-full w-1.5 bg-primary" />
@@ -63,12 +67,12 @@ export default function SeasonStandingsPage({
             {label} • <span className="text-muted-foreground">{match.status}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="font-bold text-lg text-foreground">{match.home?.name || "TBD"}</span>
-            <span className="font-black text-2xl text-primary">{m?.home_score ?? "—"}</span>
+            <span className="font-bold text-lg text-foreground">{homeName}</span>
+            <span className="font-black text-2xl text-primary">{homeScore}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="font-bold text-lg text-foreground">{match.away?.name || "TBD"}</span>
-            <span className="font-black text-2xl text-primary">{m?.away_score ?? "—"}</span>
+            <span className="font-bold text-lg text-foreground">{awayName}</span>
+            <span className="font-black text-2xl text-primary">{awayScore}</span>
           </div>
         </div>
       </div>

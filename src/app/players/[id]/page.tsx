@@ -165,11 +165,11 @@ export default function PlayerProfilePage() {
                 <p className="text-muted-foreground font-bold uppercase tracking-wider text-sm text-center py-12">No matches played yet.</p>
               ) : (
                 recentFixtures.map((fixture: any) => {
-                  const m = fixture.matches?.[0];
+                  const m = Array.isArray(fixture.matches) ? fixture.matches[0] : fixture.matches;
                   const fixtureWithScore = {
                     ...fixture,
-                    home_score: m?.home_score ?? 0,
-                    away_score: m?.away_score ?? 0,
+                    home_score: fixture.home_score ?? m?.home_score ?? 0,
+                    away_score: fixture.away_score ?? m?.away_score ?? 0,
                   };
                   return <MatchCard key={fixture.id} fixture={fixtureWithScore} />;
                 })
