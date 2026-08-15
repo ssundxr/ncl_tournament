@@ -43,7 +43,7 @@ export default function SeasonControlPanel({ params }: { params: Promise<{ id: s
       // 2. Fetch Enrollments (only approved)
       const { data: eData } = await supabase
         .from("season_enrollments")
-        .select("player:players(*)")
+        .select("player:players!season_enrollments_player_id_fkey(*)")
         .eq("season_id", seasonId)
         .eq("status", "approved");
       
