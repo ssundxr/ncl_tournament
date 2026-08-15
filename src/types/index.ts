@@ -60,6 +60,7 @@ export type RegistrationData = {
 };
 
 export type Enrollment = {
+  id: string;
   season_id: string;
   player_id: string | null;
   status: EnrollmentStatus;

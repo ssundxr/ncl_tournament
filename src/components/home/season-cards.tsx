@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Countdown } from "@/components/ui/countdown";
 
+import { useGlobalAuth } from "@/components/auth/global-auth-provider";
+
 const STATUS_CONFIG: Record<
   string,
   { label: string; icon: React.ComponentType<any>; gradient: string; accent: string; border: string }
@@ -38,6 +40,7 @@ const STATUS_CONFIG: Record<
 
 export function SeasonCards({ seasons }: { seasons: any[] }) {
   const router = useRouter();
+  const { user, loading: authLoading } = useGlobalAuth();
   const [timerSeason, setTimerSeason] = useState<any>(null);
 
   if (seasons.length === 0) return null;
@@ -46,7 +49,12 @@ export function SeasonCards({ seasons }: { seasons: any[] }) {
     e.stopPropagation(); // prevent card click
     
     if (season.status === "active") {
-      router.push(`/season/${season.id}/enroll`);
+      if (authLoading) return;
+      if (!user) {
+        router.push(`/auth/login?redirect=/season/${season.id}/enroll`);
+      } else {
+        router.push(`/season/${season.id}/enroll`);
+      }
     } else if (season.status === "upcoming" && season.registration_start) {
       setTimerSeason(season);
     }

@@ -8,6 +8,7 @@ import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
+import { GlobalAuthProvider } from "@/components/auth/global-auth-provider";
 
 // Removed force-dynamic/force-no-store — pages opt into dynamic rendering individually
 
@@ -55,19 +56,22 @@ export default function RootLayout({
     <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} ${bebasNeue.variable} ${quanticoFont.variable}`} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased min-h-screen flex flex-col font-sans transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
-          <ToastProvider>
-            <ConfirmDialogProvider>
-              <Header />
-              <main className="flex-1 pb-16 md:pb-0">
-                {children}
-              </main>
-              <Footer />
-              <MobileNav />
-              <InstallPrompt />
-            </ConfirmDialogProvider>
-          </ToastProvider>
+          <GlobalAuthProvider>
+            <ToastProvider>
+              <ConfirmDialogProvider>
+                <Header />
+                <main className="flex-1 pb-16 md:pb-0">
+                  {children}
+                </main>
+                <Footer />
+                <MobileNav />
+                <InstallPrompt />
+              </ConfirmDialogProvider>
+            </ToastProvider>
+          </GlobalAuthProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+

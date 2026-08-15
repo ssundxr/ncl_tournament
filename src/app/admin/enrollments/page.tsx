@@ -25,7 +25,7 @@ export default function AdminEnrollmentsPage() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedPhones, setSelectedPhones] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     getSeasons().then((data) => {
@@ -40,21 +40,25 @@ export default function AdminEnrollmentsPage() {
     if (!selectedSeason) return;
     setLoading(true);
     
-    const { data, error } = await supabase
-      .from("season_enrollments")
-      .select("*, player:players(*)")
-      .eq("season_id", selectedSeason)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setEnrollments(data as Enrollment[]);
+    try {
+      const res = await fetch(`/api/admin/enrollment/list?season_id=${selectedSeason}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setEnrollments(data.data as Enrollment[]);
+      } else {
+        setEnrollments([]);
+      }
+    } catch (err) {
+      console.error("Failed to load enrollments", err);
+      setEnrollments([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     loadEnrollments();
-    setSelectedPhones(new Set());
+    setSelectedIds(new Set());
   }, [selectedSeason]);
 
   const filteredEnrollments = useMemo(() => {
@@ -77,37 +81,37 @@ export default function AdminEnrollmentsPage() {
     });
   }, [enrollments, search, statusFilter]);
 
-  const toggleSelection = (phone: string) => {
-    const next = new Set(selectedPhones);
-    if (next.has(phone)) next.delete(phone);
-    else next.add(phone);
-    setSelectedPhones(next);
+  const toggleSelection = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
   };
 
   const toggleAll = () => {
-    if (selectedPhones.size === filteredEnrollments.length) {
-      setSelectedPhones(new Set());
+    if (selectedIds.size === filteredEnrollments.filter(e => e.status === 'pending').length && selectedIds.size > 0) {
+      setSelectedIds(new Set());
     } else {
-      const pendingPhones = filteredEnrollments
-        .filter(e => e.status === 'pending' && e.phone)
-        .map(e => e.phone!);
-      setSelectedPhones(new Set(pendingPhones));
+      const pendingIds = filteredEnrollments
+        .filter(e => e.status === 'pending' && e.id)
+        .map(e => e.id);
+      setSelectedIds(new Set(pendingIds));
     }
   };
 
-  const handleApprove = async (phones: string[]) => {
-    if (phones.length === 0) return;
+  const handleApprove = async (ids: string[]) => {
+    if (ids.length === 0) return;
     
     const ok = await confirm({
       title: "Approve Enrollments",
-      description: `Are you sure you want to approve ${phones.length} enrollment(s)? This will create player records and finalize their registration.`,
+      description: `Are you sure you want to approve ${ids.length} enrollment(s)? This will verify payment and finalize their tournament registration.`,
     });
     
     if (!ok) return;
 
-    const isBulk = phones.length > 1;
+    const isBulk = ids.length > 1;
     if (isBulk) setBulkLoading(true);
-    else setActionLoading(phones[0]);
+    else setActionLoading(ids[0]);
 
     try {
       const res = await fetch("/api/admin/enrollment/approve", {
@@ -115,7 +119,7 @@ export default function AdminEnrollmentsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           season_id: selectedSeason,
-          enrollment_ids: phones,
+          enrollment_ids: ids,
         }),
       });
 
@@ -125,8 +129,8 @@ export default function AdminEnrollmentsPage() {
         throw new Error(data.error || "Failed to approve enrollments");
       }
 
-      toast({ variant: "success", title: "Approved", description: data.message });
-      setSelectedPhones(new Set());
+      toast({ variant: "success", title: "Approved", description: data.message || "Enrollment(s) approved successfully." });
+      setSelectedIds(new Set());
       loadEnrollments();
       
     } catch (err: any) {
@@ -137,18 +141,18 @@ export default function AdminEnrollmentsPage() {
     }
   };
 
-  const handleReject = async (phone: string) => {
+  const handleReject = async (id: string) => {
     const reason = prompt("Enter rejection reason (optional):");
     if (reason === null) return; // Cancelled
 
-    setActionLoading(phone);
+    setActionLoading(id);
     try {
       const res = await fetch("/api/admin/enrollment/reject", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           season_id: selectedSeason,
-          phone,
+          phone: id, // Pass enrollment ID directly
           reason
         }),
       });
@@ -238,11 +242,11 @@ export default function AdminEnrollmentsPage() {
           </select>
         </div>
         
-        {selectedPhones.size > 0 && (
+        {selectedIds.size > 0 && (
           <div className="flex items-center gap-3">
-            <span className="text-sm font-bold text-muted-foreground">{selectedPhones.size} selected</span>
+            <span className="text-sm font-bold text-muted-foreground">{selectedIds.size} selected</span>
             <Button 
-              onClick={() => handleApprove(Array.from(selectedPhones))}
+              onClick={() => handleApprove(Array.from(selectedIds))}
               disabled={bulkLoading}
               className="bg-success hover:bg-success/90 text-black font-bold uppercase tracking-wider"
             >
@@ -268,7 +272,7 @@ export default function AdminEnrollmentsPage() {
                   <th className="px-4 py-3 w-10">
                     <input 
                       type="checkbox" 
-                      checked={selectedPhones.size > 0 && selectedPhones.size === filteredEnrollments.filter(e => e.status === 'pending').length}
+                      checked={selectedIds.size > 0 && selectedIds.size === filteredEnrollments.filter(e => e.status === 'pending').length}
                       onChange={toggleAll}
                       className="rounded border-border"
                     />
@@ -283,23 +287,30 @@ export default function AdminEnrollmentsPage() {
               </thead>
               <tbody>
                 {filteredEnrollments.map((enrollment) => {
-                  const phone = enrollment.phone!;
-                  const isSelected = selectedPhones.has(phone);
+                  const id = enrollment.id;
+                  const phone = enrollment.phone || "—";
+                  const isSelected = selectedIds.has(id);
                   const name = enrollment.player?.name || enrollment.registration_data?.name || "Unknown";
+                  const team = enrollment.player?.favorite_team || enrollment.registration_data?.favorite_team;
                   
                   return (
-                    <tr key={phone} className={`border-b border-border last:border-0 transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-muted/50'}`}>
+                    <tr key={id} className={`border-b border-border last:border-0 transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-muted/50'}`}>
                       <td className="px-4 py-3">
                         {enrollment.status === 'pending' && (
                           <input 
                             type="checkbox" 
                             checked={isSelected}
-                            onChange={() => toggleSelection(phone)}
+                            onChange={() => toggleSelection(id)}
                             className="rounded border-border"
                           />
                         )}
                       </td>
-                      <td className="px-4 py-3 font-bold uppercase">{name}</td>
+                      <td className="px-4 py-3 font-bold uppercase">
+                        <div>
+                          <span>{name}</span>
+                          {team && <span className="block text-[10px] text-muted-foreground">{team}</span>}
+                        </div>
+                      </td>
                       <td className="px-4 py-3 font-mono">{phone}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col">
@@ -331,17 +342,17 @@ export default function AdminEnrollmentsPage() {
                               size="sm" 
                               variant="outline"
                               className="h-8 border-success text-success hover:bg-success hover:text-black uppercase font-black text-[10px]"
-                              onClick={() => handleApprove([phone])}
-                              disabled={actionLoading === phone || bulkLoading}
+                              onClick={() => handleApprove([id])}
+                              disabled={actionLoading === id || bulkLoading}
                             >
-                              {actionLoading === phone ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3 mr-1" />} Approve
+                              {actionLoading === id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3 mr-1" />} Approve
                             </Button>
                             <Button 
                               size="sm" 
                               variant="outline"
                               className="h-8 border-destructive text-destructive hover:bg-destructive hover:text-foreground uppercase font-black text-[10px]"
-                              onClick={() => handleReject(phone)}
-                              disabled={actionLoading === phone || bulkLoading}
+                              onClick={() => handleReject(id)}
+                              disabled={actionLoading === id || bulkLoading}
                             >
                               <X className="w-3 h-3 mr-1" /> Reject
                             </Button>

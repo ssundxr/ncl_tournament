@@ -23,14 +23,19 @@ export async function POST(request: NextRequest) {
     const { season_id, phone, reason } = parsed.data;
     const supabase = createAdminClient();
 
-    const { error } = await supabase
-      .from("season_enrollments")
-      .update({
-        status: "rejected",
-        rejection_reason: reason || null,
-      })
-      .eq("season_id", season_id)
-      .eq("phone", phone);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(phone);
+    let query = supabase.from("season_enrollments").update({
+      status: "rejected",
+      rejection_reason: reason || null,
+    });
+
+    if (isUuid) {
+      query = query.eq("id", phone);
+    } else {
+      query = query.eq("season_id", season_id).eq("phone", phone);
+    }
+
+    const { error } = await query;
 
     if (error) {
       return Response.json(

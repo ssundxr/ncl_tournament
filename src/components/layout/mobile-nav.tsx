@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, Trophy, Users } from "lucide-react";
+import { Home, Calendar, Trophy, Users, User } from "lucide-react";
+import { useGlobalAuth } from "@/components/auth/global-auth-provider";
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { user } = useGlobalAuth();
 
   if (pathname?.startsWith("/admin")) return null;
 
@@ -18,6 +20,7 @@ export function MobileNav() {
     { name: "Matches", href: "/fixtures", icon: Calendar },
     { name: "Standings", href: "/standings", icon: Trophy },
     { name: "Players", href: "/players", icon: Users },
+    { name: user ? "Portal" : "Login", href: user ? "/portal" : "/auth/login", icon: User },
   ];
 
   const seasonTabs = seasonId
@@ -62,3 +65,4 @@ export function MobileNav() {
     </div>
   );
 }
+

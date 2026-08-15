@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { useSeason } from "@/contexts/season-context";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Loader2, Trophy, Calendar, PlayCircle, Users, UserPlus, Target, Swords } from "lucide-react";
 import { cleanBranding } from "@/lib/utils/branding";
 import { getLeaderboards, getGroups, getFixturesWithScores } from "@/lib/supabase/queries";
@@ -11,6 +12,7 @@ import { MatchBox } from "@/components/match/match-box";
 import { motion } from "framer-motion";
 import { StandingsRow, Player } from "@/types";
 import { Button } from "@/components/ui/button";
+import { useGlobalAuth } from "@/components/auth/global-auth-provider";
 
 export default function SeasonOverviewPage({
   params,
@@ -19,6 +21,18 @@ export default function SeasonOverviewPage({
 }) {
   const { seasonId } = use(params);
   const { season, tournament, isLoading: seasonLoading } = useSeason();
+  const router = useRouter();
+  const { user, loading: authLoading } = useGlobalAuth();
+
+  const handleEnrollClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (authLoading) return;
+    if (!user) {
+      router.push(`/auth/login?redirect=/season/${seasonId}/enroll`);
+    } else {
+      router.push(`/season/${seasonId}/enroll`);
+    }
+  };
 
   const [groups, setGroups] = useState<any[]>([]);
   const [leaderboards, setLeaderboards] = useState<any[]>([]);
@@ -153,11 +167,12 @@ export default function SeasonOverviewPage({
             </Button>
           </Link>
           {(season.status === "active" || season.status === "upcoming") && (
-            <Link href={`/season/${seasonId}/enroll`}>
-              <Button className="rounded-none border-2 border-primary bg-primary text-white font-black uppercase tracking-widest">
-                <UserPlus className="w-4 h-4 mr-2" /> Enroll
-              </Button>
-            </Link>
+            <Button 
+              onClick={handleEnrollClick}
+              className="rounded-none border-2 border-primary bg-primary text-white font-black uppercase tracking-widest"
+            >
+              <UserPlus className="w-4 h-4 mr-2" /> Enroll
+            </Button>
           )}
         </div>
       </motion.div>

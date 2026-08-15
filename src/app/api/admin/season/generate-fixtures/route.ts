@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     // 2. Fetch approved players
     const { data: enrollments, error: enrollErr } = await supabase
       .from("season_enrollments")
-      .select("player:players(*)")
+      .select("player:players!season_enrollments_player_id_fkey(*)")
       .eq("season_id", season_id)
       .eq("status", "approved");
 

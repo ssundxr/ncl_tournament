@@ -22,15 +22,20 @@ import {
   X,
   Sparkles,
   ExternalLink,
-  Shield
+  Shield,
+  Camera,
+  Upload,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlayerTagCard } from "@/components/portal/player-tag-card";
+import { logActivity } from "@/lib/activity";
 
 export default function PortalDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(false);
+  const [tournamentFilter, setTournamentFilter] = useState<string>("all");
 
   // Profile Edit Modal State
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -38,10 +43,73 @@ export default function PortalDashboard() {
   const [editShortTag, setEditShortTag] = useState("IND");
   const [editTeam, setEditTeam] = useState("");
   const [editBio, setEditBio] = useState("");
+  const [editPhotoUrl, setEditPhotoUrl] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [editError, setEditError] = useState("");
 
   const router = useRouter();
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setEditError("Please select a valid image file (PNG, JPG, WEBP).");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setEditError("Image size must be under 5MB.");
+      return;
+    }
+
+    setUploadingPhoto(true);
+    setEditError("");
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 500;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.85);
+          setEditPhotoUrl(compressedBase64);
+        }
+        setUploadingPhoto(false);
+      };
+      img.onerror = () => {
+        setEditError("Failed to process selected image.");
+        setUploadingPhoto(false);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = () => {
+      setEditError("Failed to read image file.");
+      setUploadingPhoto(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const fetchDashboard = async () => {
     const user = auth.currentUser;
@@ -61,6 +129,7 @@ export default function PortalDashboard() {
           setEditShortTag(result.data.player.short_tag || "IND");
           setEditTeam(result.data.player.favorite_team || "");
           setEditBio(result.data.player.bio || "");
+          setEditPhotoUrl(result.data.player.photo_url || "");
         }
       }
     } catch (err) {
@@ -89,6 +158,7 @@ export default function PortalDashboard() {
   }, []);
 
   const handleEnroll = (seasonId: string) => {
+    logActivity("enroll_click", { season_id: seasonId }, data?.player?.id);
     router.push(`/season/${seasonId}/enroll`);
   };
 
@@ -124,6 +194,7 @@ export default function PortalDashboard() {
             short_tag: editShortTag,
             favorite_team: editTeam,
             bio: editBio,
+            photo_url: editPhotoUrl,
           },
         }),
       });
@@ -134,6 +205,7 @@ export default function PortalDashboard() {
       }
 
       setIsEditOpen(false);
+      logActivity("profile_update", { fields: ["name", "short_tag", "favorite_team", "bio", "photo_url"] }, data?.player?.id);
       fetchDashboard();
     } catch (err: any) {
       setEditError(err.message || "Failed to save changes");
@@ -156,6 +228,28 @@ export default function PortalDashboard() {
   const points = stats ? (stats.matches_won * 3) + (stats.matches_drawn || 0 * 1) : 0;
   const nclId = player.ncl_id || `NCL-${player.id.substring(0, 5).toUpperCase()}`;
 
+  const seasonsList = data.allSeasons || data.availableSeasons || [];
+  const appliedSeasonIds = (enrollments || []).map((e: any) => e.season_id);
+
+  const getSeasonEffectiveStatus = (s: any) => {
+    const now = new Date();
+    if (s.status === "completed") return "closed";
+    if (s.registration_end && new Date(s.registration_end) < now && s.status !== "active") return "closed";
+    if (s.registration_start && new Date(s.registration_start) > now) return "upcoming";
+    if (s.registration_status === "open" || s.status === "active") return "active";
+    if (s.registration_end && new Date(s.registration_end) >= now) return "active"; // Extended!
+    if (s.status === "upcoming") return "upcoming";
+    return "closed";
+  };
+
+  const filteredSeasons = seasonsList.filter((s: any) => {
+    const eff = getSeasonEffectiveStatus(s);
+    if (tournamentFilter === "active") return eff === "active";
+    if (tournamentFilter === "upcoming") return eff === "upcoming";
+    if (tournamentFilter === "closed") return eff === "closed";
+    return true;
+  });
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 max-w-6xl flex flex-col min-h-screen space-y-10">
       
@@ -171,88 +265,87 @@ export default function PortalDashboard() {
             {/* Unique NCL ID Badge with Copy Button */}
             <button
               onClick={handleCopyId}
-              className="bg-background border-2 border-foreground px-3 py-1 text-xs font-mono font-bold flex items-center gap-2 hover:bg-muted transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-background border-2 border-foreground hover:border-primary transition-all text-xs font-mono font-bold tracking-wider group shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
               title="Click to copy unique NCL ID"
             >
+              <span className="text-muted-foreground text-[10px]">ID:</span>
               <span className="text-primary font-black">{nclId}</span>
-              {copiedId ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
+              {copiedId ? (
+                <Check className="w-3.5 h-3.5 text-green-500 ml-1" />
+              ) : (
+                <Copy className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground ml-1" />
+              )}
             </button>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-black font-heading uppercase tracking-tighter text-foreground">
-            {player.name} <span className="text-primary font-mono text-2xl md:text-3xl">[{player.short_tag || "IND"}]</span>
+          <h1 className="text-3xl md:text-5xl font-black font-heading uppercase tracking-tight text-foreground">
+            {player.name}
           </h1>
-          <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">
-            {player.favorite_team || "Independent"} Competitor &bull; {nclId}
-          </p>
+
+          <div className="flex flex-wrap items-center gap-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            {player.favorite_team && (
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-primary" /> {player.favorite_team}
+              </span>
+            )}
+            {player.short_tag && (
+              <span className="px-2 py-0.5 bg-foreground text-background font-mono text-[10px] font-black">
+                TAG: {player.short_tag}
+              </span>
+            )}
+            {player.phone && (
+              <span>• Phone: {player.phone}</span>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 relative z-10">
+        <div className="flex items-center gap-3 relative z-10 w-full md:w-auto">
           <Button
             onClick={() => setIsEditOpen(true)}
             variant="outline"
-            className="border-2 border-foreground text-xs font-black uppercase tracking-widest skew-x-[-10deg] hover:bg-secondary hover:text-foreground transition-colors"
+            className="flex-1 md:flex-none border-2 border-foreground font-black uppercase tracking-widest text-xs h-11 rounded-none hover:bg-foreground hover:text-background transition-all"
           >
-            <span className="skew-x-[10deg] flex items-center gap-2">
-              <Edit3 className="w-4 h-4" /> Edit Profile
-            </span>
+            <Edit3 className="w-4 h-4 mr-2" /> Edit Profile
           </Button>
-          <Button 
+          <Button
             onClick={handleLogout}
-            variant="outline" 
-            className="border-2 border-foreground text-xs font-black uppercase tracking-widest skew-x-[-10deg] hover:bg-destructive hover:text-white hover:border-destructive transition-colors"
+            variant="outline"
+            className="border-2 border-foreground text-destructive hover:bg-destructive hover:text-white font-black uppercase tracking-widest text-xs h-11 rounded-none transition-all"
           >
-            <span className="skew-x-[10deg] flex items-center gap-2">
-              <LogOut className="w-4 h-4" /> Sign Out
-            </span>
+            <LogOut className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {/* Main Grid: Tag Card Exporter & Career Dashboard */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* Main Grid: Card & Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column: Official 4K Tag Card Exporter (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="bg-card border-4 border-foreground p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <div className="flex items-center justify-between border-b-2 border-border pb-4 mb-6">
-              <h2 className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" /> Official Tag Card
-              </h2>
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-muted px-2 py-0.5">
-                4K HD Ready
+        {/* Left Column: 4K HD Tag Card Preview */}
+        <div className="lg:col-span-5 flex flex-col items-center space-y-4">
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-primary" /> Official Pass
+              </span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                4K Export Ready
               </span>
             </div>
-
-            {/* Renderable 4K Player Tag Card */}
-            <PlayerTagCard player={player} stats={stats} rankNumber={1} />
-          </div>
-
-          {/* Quick Profile Link Box */}
-          <div className="bg-background border-2 border-border p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-foreground">Public Player Page</p>
-              <p className="text-[10px] text-muted-foreground font-mono mt-0.5">/players/{player.ncl_id || player.slug}</p>
-            </div>
-            <Button
-              onClick={() => router.push(`/players/${player.ncl_id || player.slug}`)}
-              size="sm"
-              variant="outline"
-              className="border-2 border-foreground text-xs font-black uppercase tracking-widest"
-            >
-              <ExternalLink className="w-3.5 h-3.5 mr-1" /> View Page
-            </Button>
+            
+            {/* Tag Card component */}
+            <PlayerTagCard player={player} stats={stats} />
           </div>
         </div>
 
-        {/* Right Column: Lifetime Stats, Applications & Tournaments (7 cols) */}
+        {/* Right Column: Career Overview & Tournaments Center */}
         <div className="lg:col-span-7 space-y-8">
           
-          {/* Career Performance Cards */}
-          <div className="bg-background border-4 border-foreground p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-            <h3 className="text-lg font-black uppercase tracking-widest border-l-4 border-primary pl-3 mb-6">
+          {/* Career Performance Strip */}
+          <div className="bg-card border-4 border-foreground p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+            <h3 className="text-lg font-black uppercase tracking-widest border-l-4 border-foreground pl-3 mb-6">
               Career Statistics
             </h3>
+            
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-4 bg-muted/40 border-2 border-border flex flex-col items-center justify-center text-center">
                 <Goal className="w-5 h-5 text-primary mb-2" />
@@ -260,7 +353,7 @@ export default function PortalDashboard() {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">Goals</span>
               </div>
               <div className="p-4 bg-muted/40 border-2 border-border flex flex-col items-center justify-center text-center">
-                <Trophy className="w-5 h-5 text-primary mb-2" />
+                <Trophy className="w-5 h-5 text-yellow-500 mb-2" />
                 <span className="text-3xl font-black font-mono">{stats?.matches_won || 0}</span>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">Wins</span>
               </div>
@@ -277,85 +370,155 @@ export default function PortalDashboard() {
             </div>
           </div>
 
-          {/* Active Applications */}
+          {/* Unified Tournaments & Registration Center */}
           <div className="bg-card border-4 border-foreground p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-            <h3 className="text-lg font-black uppercase tracking-widest border-l-4 border-foreground pl-3 mb-6">
-              My Applications
-            </h3>
-            
-            {enrollments.length === 0 ? (
-              <div className="text-center py-8 border-2 border-dashed border-border">
-                <ShieldAlert className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <h3 className="text-lg font-black uppercase tracking-widest border-l-4 border-primary pl-3 text-foreground">
+                Tournaments & Registrations
+              </h3>
+              
+              {/* Category Filter Pills */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  { id: "all", label: "All" },
+                  { id: "active", label: "Active" },
+                  { id: "upcoming", label: "Upcoming" },
+                  { id: "closed", label: "Closed" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setTournamentFilter(tab.id)}
+                    className={`px-3 py-1 text-xs font-black uppercase tracking-widest border transition-all ${
+                      tournamentFilter === tab.id
+                        ? "bg-foreground text-background border-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        : "bg-background text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {filteredSeasons.length === 0 ? (
+              <div className="text-center py-10 border-2 border-dashed border-border">
+                <Trophy className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  No active season applications found.
+                  No tournaments found for this filter.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {enrollments.map((app: any) => (
-                  <div key={app.season_id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-2 border-border bg-background gap-4">
-                    <div>
-                      <h4 className="font-black text-base uppercase">{app.seasons?.name}</h4>
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
-                        {app.seasons?.tournament?.name}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      {app.status === "approved" && (
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-green-500/10 text-green-500 border border-green-500/30 text-xs font-black uppercase tracking-widest">
-                          <CheckCircle2 className="w-4 h-4" /> Approved
-                        </div>
-                      )}
-                      {app.status === "pending" && (
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-black uppercase tracking-widest">
-                          <Clock className="w-4 h-4" /> Pending Approval
-                        </div>
-                      )}
-                      {app.status === "rejected" && (
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-500 border border-red-500/30 text-xs font-black uppercase tracking-widest">
-                          <ShieldAlert className="w-4 h-4" /> Rejected
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                {filteredSeasons.map((season: any) => {
+                  const isApplied = appliedSeasonIds.includes(season.id);
+                  const enrollment = (enrollments || []).find((e: any) => e.season_id === season.id);
+                  const effStatus = getSeasonEffectiveStatus(season);
+                  const isLiveActive = effStatus === "active";
+                  const isUpcoming = effStatus === "upcoming";
+                  const isClosed = effStatus === "closed";
 
-          {/* Available Tournaments */}
-          <div className="bg-primary/5 border-4 border-primary p-6 relative overflow-hidden shadow-[6px_6px_0px_0px_var(--theme-primary)]">
-            <h3 className="text-lg font-black uppercase tracking-widest border-l-4 border-primary pl-3 mb-6 text-foreground relative z-10">
-              Open Tournaments
-            </h3>
-
-            {availableSeasons.length === 0 ? (
-              <div className="text-center py-8 relative z-10">
-                <Trophy className="w-10 h-10 text-primary/40 mx-auto mb-3" />
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  No open tournament registrations at the moment.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4 relative z-10">
-                {availableSeasons.map((season: any) => (
-                  <div key={season.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all gap-4">
-                    <div>
-                      <h4 className="font-black text-lg uppercase tracking-tight">{season.name}</h4>
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
-                        {season.tournament?.name}
-                      </p>
-                    </div>
-                    
-                    <Button
-                      onClick={() => handleEnroll(season.id)}
-                      className="w-full sm:w-auto bg-primary text-white font-black uppercase tracking-widest text-xs py-4 px-6 border-2 border-foreground rounded-none skew-x-[-10deg] hover:bg-primary/90 transition-all"
+                  return (
+                    <div
+                      key={season.id}
+                      className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 bg-background border-2 border-border hover:border-foreground transition-all gap-4 shadow-sm"
                     >
-                      <span className="skew-x-[10deg]">Enter Tournament</span>
-                    </Button>
-                  </div>
-                ))}
+                      <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {isLiveActive && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 text-[10px] font-black uppercase tracking-widest">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Live / Open
+                            </span>
+                          )}
+                          {isUpcoming && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-blue-500/10 text-blue-500 border border-blue-500/30 text-[10px] font-black uppercase tracking-widest">
+                              <Clock className="w-3 h-3" />
+                              Upcoming
+                            </span>
+                          )}
+                          {isClosed && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-muted text-muted-foreground border border-border text-[10px] font-black uppercase tracking-widest">
+                              Closed
+                            </span>
+                          )}
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            {season.tournament?.name}
+                          </span>
+                        </div>
+
+                        <h4 className="font-black text-xl uppercase tracking-tight text-foreground">
+                          {season.name}
+                        </h4>
+
+                        {/* Timing & Dates */}
+                        {isLiveActive && season.registration_end && (
+                          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-emerald-500" />
+                            <span>Registration closes: {new Date(season.registration_end).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                          </div>
+                        )}
+                        {isUpcoming && season.registration_start && (
+                          <div className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+                            <Clock className="w-3.5 h-3.5 text-blue-500" />
+                            <span>Opens on {new Date(season.registration_start).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                          </div>
+                        )}
+                        {season.start_date && (
+                          <p className="text-[11px] font-bold text-muted-foreground">
+                            Season Dates: {new Date(season.start_date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                            {season.end_date && ` — ${new Date(season.end_date).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}`}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Action / Application Status */}
+                      <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                        {isApplied ? (
+                          <div className="flex items-center gap-2">
+                            {enrollment?.status === "approved" && (
+                              <span className="px-3.5 py-1.5 bg-green-500/10 text-green-500 border border-green-500/30 text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
+                                <CheckCircle2 className="w-4 h-4" /> Enrolled
+                              </span>
+                            )}
+                            {enrollment?.status === "pending" && (
+                              <span className="px-3.5 py-1.5 bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
+                                <Clock className="w-4 h-4" /> Pending Approval
+                              </span>
+                            )}
+                            {enrollment?.status === "rejected" && (
+                              <span className="px-3.5 py-1.5 bg-red-500/10 text-red-500 border border-red-500/30 text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
+                                <ShieldAlert className="w-4 h-4" /> Rejected
+                              </span>
+                            )}
+                          </div>
+                        ) : isLiveActive ? (
+                          <Button
+                            onClick={() => handleEnroll(season.id)}
+                            className="w-full md:w-auto bg-primary text-white font-black uppercase tracking-widest text-xs py-4 px-6 border-2 border-foreground rounded-none skew-x-[-10deg] hover:bg-primary/90 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                          >
+                            <span className="skew-x-[10deg]">Apply / Enroll Now</span>
+                          </Button>
+                        ) : isUpcoming ? (
+                          <Button
+                            onClick={() => router.push(`/season/${season.id}`)}
+                            variant="outline"
+                            className="w-full md:w-auto border-2 border-foreground font-black uppercase tracking-widest text-xs py-4 px-6 rounded-none hover:bg-foreground hover:text-background"
+                          >
+                            View Details
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => router.push(`/season/${season.id}/standings`)}
+                            variant="outline"
+                            className="w-full md:w-auto border-2 border-border font-black uppercase tracking-widest text-xs py-4 px-6 rounded-none text-muted-foreground hover:border-foreground"
+                          >
+                            Standings
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -414,6 +577,53 @@ export default function PortalDashboard() {
             )}
 
             <form onSubmit={handleSaveProfile} className="space-y-5">
+              {/* Photo Upload Section */}
+              <div className="flex items-center gap-4 p-4 bg-muted/40 border-2 border-border">
+                <div className="relative w-16 h-16 bg-background border-2 border-foreground overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  {editPhotoUrl ? (
+                    <img src={editPhotoUrl} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="font-heading font-black text-2xl text-muted-foreground uppercase">
+                      {editName ? editName.substring(0, 2) : "NCL"}
+                    </span>
+                  )}
+                  {uploadingPhoto && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 text-white animate-spin" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-1.5">
+                  <label className="text-xs font-black uppercase tracking-widest text-foreground block">
+                    Profile Photo
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-foreground text-background hover:bg-primary hover:text-white transition-colors text-xs font-bold uppercase tracking-wider border border-foreground">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{editPhotoUrl ? "Change Photo" : "Upload Photo"}</span>
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/webp"
+                        onChange={handlePhotoUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    {editPhotoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setEditPhotoUrl("")}
+                        className="p-1.5 text-muted-foreground hover:text-destructive transition-colors border border-border"
+                        title="Remove Photo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-medium">PNG, JPG, WEBP (Max 5MB)</p>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-xs font-black uppercase tracking-widest text-foreground">Player Name</label>
                 <input

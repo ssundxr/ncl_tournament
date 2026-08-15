@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
       const slug = profileData.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString(36);
 
-      const { data: newPlayer, error: createError } = await supabase
+      let { data: newPlayer, error: createError } = await supabase
         .from("players")
         .insert({
           user_id: uid,
@@ -89,6 +89,25 @@ export async function POST(request: NextRequest) {
         })
         .select("*")
         .single();
+
+      if (createError && (createError.message?.toLowerCase().includes("short_tag") || createError.message?.toLowerCase().includes("ncl_id"))) {
+        console.warn("[Profile API] short_tag/ncl_id not found in schema cache on create. Retrying with basic fields...");
+        const retry = await supabase
+          .from("players")
+          .insert({
+            user_id: uid,
+            name: profileData.name,
+            slug,
+            favorite_team: profileData.favorite_team,
+            bio: profileData.bio || "",
+            photo_url: profileData.photo_url || null,
+            overall_rating: 70,
+          })
+          .select("*")
+          .single();
+        newPlayer = retry.data;
+        createError = retry.error;
+      }
 
       if (createError) {
         return Response.json({ success: false, error: createError.message }, { status: 500 });
@@ -109,12 +128,26 @@ export async function POST(request: NextRequest) {
       if (profileData.bio !== undefined) updates.bio = profileData.bio;
       if (profileData.photo_url !== undefined) updates.photo_url = profileData.photo_url;
 
-      const { data: updatedPlayer, error: updateError } = await supabase
+      let { data: updatedPlayer, error: updateError } = await supabase
         .from("players")
         .update(updates)
         .eq("user_id", uid)
         .select("*")
         .single();
+
+      // Graceful fallback if short_tag or ncl_id column is not yet in Supabase schema cache
+      if (updateError && updateError.message?.toLowerCase().includes("short_tag")) {
+        console.warn("[Profile API] short_tag column not found in schema cache. Retrying without short_tag...");
+        delete updates.short_tag;
+        const retry = await supabase
+          .from("players")
+          .update(updates)
+          .eq("user_id", uid)
+          .select("*")
+          .single();
+        updatedPlayer = retry.data;
+        updateError = retry.error;
+      }
 
       if (updateError) {
         return Response.json({ success: false, error: updateError.message }, { status: 500 });

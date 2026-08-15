@@ -1,17 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Shield, Loader2 } from "lucide-react";
 import { isAdminEmail } from "@/lib/admin";
 
-export default function LoginPage() {
+function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams?.get("redirect");
 
   const handleGoogleLogin = async () => {
     try {
@@ -23,6 +25,9 @@ export default function LoginPage() {
       if (result.user.email && isAdminEmail(result.user.email)) {
         // Admins go to the admin dashboard
         router.push("/admin");
+      } else if (redirectUrl) {
+        // Redirect to requested enrollment page or portal
+        router.push(redirectUrl);
       } else {
         // Everyone else goes to the player portal
         router.push("/portal");
@@ -75,5 +80,19 @@ export default function LoginPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

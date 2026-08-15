@@ -27,56 +27,79 @@ export async function POST(request: NextRequest) {
     const { season_id, enrollment_ids } = parsed.data;
     const supabase = createAdminClient();
 
-    // enrollment_ids are phone numbers for our schema (composite key is season_id + phone)
-    const results: { phone: string; playerName: string; playerId: string }[] = [];
+    // enrollment_ids can be enrollment UUIDs or phone numbers
+    const results: { identifier: string; playerName: string; playerId: string }[] = [];
     const errors: string[] = [];
 
-    for (const phone of enrollment_ids) {
+    for (const idOrPhone of enrollment_ids) {
       try {
-        // 1. Fetch enrollment
-        const { data: enrollment, error: fetchErr } = await supabase
-          .from("season_enrollments")
-          .select("*")
-          .eq("season_id", season_id)
-          .eq("phone", phone)
-          .single();
+        // 1. Fetch enrollment by UUID id OR by phone + season_id
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrPhone);
+        let query = supabase.from("season_enrollments").select("*, player:players!season_enrollments_player_id_fkey(*)");
+        
+        if (isUuid) {
+          query = query.eq("id", idOrPhone);
+        } else {
+          query = query.eq("season_id", season_id).eq("phone", idOrPhone);
+        }
+
+        const { data: enrollment, error: fetchErr } = await query.maybeSingle();
 
         if (fetchErr || !enrollment) {
-          errors.push(`Enrollment for ${phone} not found`);
+          errors.push(`Enrollment for ${idOrPhone} not found`);
           continue;
         }
 
         if (enrollment.status === "approved") {
-          errors.push(`${phone} is already approved`);
+          errors.push(`${enrollment.player?.name || enrollment.phone || idOrPhone} is already approved`);
           continue;
         }
 
-        const regData = enrollment.registration_data as {
-          name: string;
-          favorite_team: string;
+        const regData = (enrollment.registration_data || {}) as {
+          name?: string;
+          favorite_team?: string;
           bio?: string;
           photo_url?: string;
-        } | null;
+        };
 
-        if (!regData?.name) {
-          errors.push(`${phone} has no registration data`);
+        // Case A: Player record is ALREADY linked (e.g. from Portal Registration)
+        if (enrollment.player_id) {
+          const { error: updateErr } = await supabase
+            .from("season_enrollments")
+            .update({
+              status: "approved",
+              payment_status: "verified",
+              payment_verified_at: new Date().toISOString(),
+            })
+            .eq("id", enrollment.id);
+
+          if (updateErr) {
+            errors.push(`Failed to approve ${enrollment.id}: ${updateErr.message}`);
+            continue;
+          }
+
+          results.push({
+            identifier: idOrPhone,
+            playerName: enrollment.player?.name || regData.name || "Player",
+            playerId: enrollment.player_id,
+          });
           continue;
         }
 
-        // 2. Generate unique slug
+        // Case B: Player record needs to be created (Legacy enrollment)
+        const playerName = regData.name || "NCL Player";
         const { data: slugResult } = await supabase.rpc("generate_unique_slug", {
-          p_name: regData.name,
+          p_name: playerName,
         });
 
-        const slug = slugResult || regData.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
+        const slug = slugResult || playerName.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
 
-        // 3. Create player
         const { data: newPlayer, error: playerErr } = await supabase
           .from("players")
           .insert({
-            name: regData.name,
+            name: playerName,
             slug,
-            favorite_team: regData.favorite_team,
+            favorite_team: regData.favorite_team || "Independent",
             bio: regData.bio || "",
             photo_url: regData.photo_url || "",
             overall_rating: 70,
@@ -85,11 +108,10 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (playerErr) {
-          errors.push(`Failed to create player for ${phone}: ${playerErr.message}`);
+          errors.push(`Failed to create player for ${idOrPhone}: ${playerErr.message}`);
           continue;
         }
 
-        // 4. Link player and approve
         const { error: updateErr } = await supabase
           .from("season_enrollments")
           .update({
@@ -98,22 +120,21 @@ export async function POST(request: NextRequest) {
             payment_status: "verified",
             payment_verified_at: new Date().toISOString(),
           })
-          .eq("season_id", season_id)
-          .eq("phone", phone);
+          .eq("id", enrollment.id);
 
         if (updateErr) {
-          errors.push(`Failed to update enrollment for ${phone}: ${updateErr.message}`);
+          errors.push(`Failed to update enrollment for ${idOrPhone}: ${updateErr.message}`);
           continue;
         }
 
         results.push({
-          phone,
+          identifier: idOrPhone,
           playerName: newPlayer.name,
           playerId: newPlayer.id,
         });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Unknown error";
-        errors.push(`Error processing ${phone}: ${msg}`);
+        errors.push(`Error processing ${idOrPhone}: ${msg}`);
       }
     }
 

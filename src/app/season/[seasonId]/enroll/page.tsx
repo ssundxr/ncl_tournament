@@ -86,20 +86,28 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.phone || formData.phone.trim().length < 6) {
+      toast({ variant: "error", title: "Mobile Number Required", description: "Please enter your valid WhatsApp / Mobile number." });
+      return;
+    }
+
     try {
       const user = auth.currentUser;
       if (!user) throw new Error("Not authenticated");
 
       setSaving(true);
       
-      // Use the new portal enroll API directly
+      // Use the portal enroll API directly
       const res = await fetch("/api/portal/enroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           uid: user.uid,
           season_id: seasonId,
-          phone: formData.phone // Pass phone in case needed
+          phone: formData.phone.trim(),
+          name: formData.name.trim() || user.displayName || "Player",
+          favorite_team: formData.favorite_team.trim() || "Independent",
+          photo_url: formData.photo_url || user.photoURL || null,
         }),
       });
 
@@ -288,20 +296,50 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
             </div>
 
             <div className="space-y-4">
-              {[
-                { label: "Player Name", name: "name", type: "text" },
-                { label: "Favorite Team", name: "favorite_team", type: "text" },
-                { label: "Mobile Number", name: "phone", type: "tel" },
-              ].map((field) => (
-                <div key={field.name}>
-                  <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">
-                    {field.label}
-                  </label>
-                  <div className="w-full bg-muted/50 border-2 border-border px-4 py-3 text-foreground font-bold tracking-tight rounded-md">
-                    {(formData as any)[field.name]}
-                  </div>
-                </div>
-              ))}
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">
+                  Player Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Player Name"
+                  className="w-full bg-background border-2 border-border px-4 py-3 text-foreground font-bold tracking-tight rounded-none focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">
+                  Favorite Team
+                </label>
+                <input
+                  type="text"
+                  name="favorite_team"
+                  value={formData.favorite_team}
+                  onChange={handleChange}
+                  required
+                  placeholder="Favorite Team"
+                  className="w-full bg-background border-2 border-border px-4 py-3 text-foreground font-bold tracking-tight rounded-none focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-foreground mb-1">
+                  WhatsApp / Mobile Number *
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter 10-digit WhatsApp number (e.g. 9876543210)"
+                  className="w-full bg-background border-2 border-primary/50 focus:border-primary px-4 py-3 text-foreground font-bold tracking-tight rounded-none focus:outline-none"
+                />
+              </div>
             </div>
 
             <div className="pt-6 border-t-2 border-border mt-8">

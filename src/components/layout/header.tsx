@@ -1,19 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Menu, User } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, User, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useGlobalAuth } from "@/components/auth/global-auth-provider";
+import { auth } from "@/lib/firebase/client";
+import { isAdminEmail } from "@/lib/admin";
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading: authLoading } = useGlobalAuth();
   const [hasLive, setHasLive] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Hooks must be called in exact order before any early returns
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Real-time subscription to check if any match is currently live
   useEffect(() => {
@@ -52,6 +68,14 @@ export function Header() {
     { name: "PLAYERS", href: "/players" },
   ];
 
+  const handleLogout = async () => {
+    setDropdownOpen(false);
+    await auth.signOut();
+    router.push("/");
+  };
+
+  const isAdmin = user?.email ? isAdminEmail(user.email) : false;
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background border-b-4 border-foreground transition-all duration-300 print:hidden">
       <div className="container mx-auto flex h-16 items-center px-4 md:px-6">
@@ -77,6 +101,17 @@ export function Header() {
                     {link.name}
                   </Link>
                 ))}
+                {user && (
+                  <>
+                    <div className="border-t-2 border-border my-2" />
+                    <Link
+                      href="/portal"
+                      className="text-primary hover:text-primary/80 transition-colors font-black text-xl uppercase tracking-widest py-2"
+                    >
+                      MY PORTAL
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </SheetContent>
@@ -124,18 +159,76 @@ export function Header() {
           )}
           <ThemeToggle />
 
-          <Link href="/auth/login">
-            <Button
-              className="ml-2 font-black uppercase tracking-widest text-xs px-4 bg-foreground text-background hover:bg-primary hover:text-white rounded-none border-2 border-foreground hover:border-primary skew-x-[-10deg] transition-all"
-            >
-              <span className="skew-x-[10deg] flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Player Login
-              </span>
-            </Button>
-          </Link>
+          {/* Auth-aware user area */}
+          {!authLoading && user ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="ml-2 flex items-center gap-2 px-3 py-1.5 bg-foreground text-background hover:bg-primary hover:text-white rounded-none border-2 border-foreground hover:border-primary skew-x-[-10deg] transition-all"
+              >
+                <span className="skew-x-[10deg] flex items-center gap-2">
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="" className="w-6 h-6 rounded-full border border-background/30" />
+                  ) : (
+                    <User className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline text-xs font-black uppercase tracking-widest max-w-[100px] truncate">
+                    {user.displayName?.split(" ")[0] || "Player"}
+                  </span>
+                  <ChevronDown className={`h-3 w-3 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                </span>
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-52 bg-card border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border">
+                    <p className="text-xs font-black uppercase tracking-widest text-foreground truncate">
+                      {user.displayName || "Player"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                      {user.email}
+                    </p>
+                  </div>
+                  <Link
+                    href="/portal"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-foreground hover:bg-primary hover:text-white transition-colors"
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5" /> My Portal
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-foreground hover:bg-primary hover:text-white transition-colors"
+                    >
+                      <User className="w-3.5 h-3.5" /> Admin Panel
+                    </Link>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive hover:text-white transition-colors w-full text-left border-t border-border"
+                  >
+                    <LogOut className="w-3.5 h-3.5" /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : !authLoading ? (
+            <Link href="/auth/login">
+              <Button
+                className="ml-2 font-black uppercase tracking-widest text-xs px-4 bg-foreground text-background hover:bg-primary hover:text-white rounded-none border-2 border-foreground hover:border-primary skew-x-[-10deg] transition-all"
+              >
+                <span className="skew-x-[10deg] flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Player Login
+                </span>
+              </Button>
+            </Link>
+          ) : null}
         </div>
       </div>
     </header>
   );
 }
+

@@ -43,10 +43,9 @@ export async function POST(request: NextRequest) {
       .from("season_enrollments")
       .select(`
         *,
-        seasons (
-          name,
-          registration_status,
-          tournament: tournaments ( name )
+        seasons:seasons(
+          *,
+          tournament:tournaments(*)
         )
       `)
       .eq("player_id", player.id)
@@ -74,22 +73,23 @@ export async function POST(request: NextRequest) {
       matches_won: matchesWon,
     };
 
-    // 4. Fetch Open Seasons (Available Tournaments)
+    // 4. Fetch All Seasons for Tournament Center (Active, Upcoming with timings, Closed)
     const appliedSeasonIds = (enrollments || []).map((e: any) => e.season_id);
     
-    let openSeasonsQuery = supabase
+    const { data: allSeasons, error: seasonsErr } = await supabase
       .from("seasons")
-      .select(`
-        *,
-        tournament: tournaments ( name )
-      `)
-      .eq("registration_status", "open")
-      .is("deleted_at", null);
+      .select("*, tournament:tournaments(*)")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
 
-    const { data: allOpenSeasons } = await openSeasonsQuery;
-    
-    const availableSeasons = (allOpenSeasons || []).filter(
-      (s: any) => !appliedSeasonIds.includes(s.id)
+    if (seasonsErr) {
+      console.error("[Dashboard] Seasons query error:", seasonsErr.message);
+    }
+
+    const seasonsList = allSeasons || [];
+
+    const availableSeasons = seasonsList.filter(
+      (s: any) => !appliedSeasonIds.includes(s.id) && (s.status === "active" || s.registration_status === "open") && s.registration_status !== "closed"
     );
 
     return Response.json({
@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
         stats: mergedStats,
         enrollments: enrollments || [],
         availableSeasons,
+        allSeasons: seasonsList,
       },
     });
   } catch (error: any) {

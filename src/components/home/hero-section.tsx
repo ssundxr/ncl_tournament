@@ -8,8 +8,23 @@ import { cleanBranding } from "@/lib/utils/branding";
 import { useState, useEffect } from "react";
 import { Countdown } from "@/components/ui/countdown";
 
+import { useGlobalAuth } from "@/components/auth/global-auth-provider";
+import { useRouter } from "next/navigation";
+
 export function HeroSection({ seasons }: { seasons: any[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const router = useRouter();
+  const { user, loading: authLoading } = useGlobalAuth();
+
+  const handleEnrollBtnClick = (e: React.MouseEvent, seasonId: string) => {
+    e.preventDefault();
+    if (authLoading) return; // Don't act while auth is initializing
+    if (!user) {
+      router.push(`/auth/login?redirect=/season/${seasonId}/enroll`);
+    } else {
+      router.push(`/season/${seasonId}/enroll`);
+    }
+  };
 
   useEffect(() => {
     if (seasons.length <= 1) return;
@@ -90,11 +105,13 @@ export function HeroSection({ seasons }: { seasons: any[] }) {
                   </Button>
                 </Link>
                 {currentSeason.status === "active" && (
-                  <Link href={`/season/${currentSeason.id}/enroll`}>
-                    <Button size="lg" className="rounded-none px-8 h-14 bg-primary text-white border-2 border-primary brutal-shadow-hover font-black uppercase tracking-widest transition-all">
-                      <User className="mr-2 h-6 w-6" /> Enroll Now
-                    </Button>
-                  </Link>
+                  <Button 
+                    onClick={(e) => handleEnrollBtnClick(e, currentSeason.id)}
+                    size="lg" 
+                    className="rounded-none px-8 h-14 bg-primary text-white border-2 border-primary brutal-shadow-hover font-black uppercase tracking-widest transition-all"
+                  >
+                    <User className="mr-2 h-6 w-6" /> Enroll Now
+                  </Button>
                 )}
                 <Link href={`/season/${currentSeason.id}/standings`}>
                   <Button size="lg" variant="outline" className="rounded-none px-8 h-14 font-black uppercase tracking-widest bg-white border-2 border-foreground brutal-shadow-hover text-foreground transition-all">
