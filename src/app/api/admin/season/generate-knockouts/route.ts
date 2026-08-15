@@ -15,10 +15,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient();
 
-    // 1. Fetch all fixtures for this season to determine the current stage
+    // 1. Fetch all fixtures for this season to determine the current stage, including match scores
     const { data: fixtures, error: fixErr } = await supabase
       .from("fixtures")
-      .select("*")
+      .select("*, matches(*)")
       .eq("season_id", season_id);
 
     if (fixErr) throw fixErr;
@@ -197,8 +197,11 @@ async function advanceKnockoutRound(supabase: any, season_id: string, previousFi
     if (!f1 || !f2) break; // should not happen in a valid power-of-2 bracket
     
     // Determine winners (we assume they are completed, so scores exist)
-    const f1Winner = (f1.home_score || 0) > (f1.away_score || 0) ? f1.home_player_id : f1.away_player_id;
-    const f2Winner = (f2.home_score || 0) > (f2.away_score || 0) ? f2.home_player_id : f2.away_player_id;
+    const match1 = Array.isArray(f1.matches) ? f1.matches[0] : f1.matches;
+    const match2 = Array.isArray(f2.matches) ? f2.matches[0] : f2.matches;
+    
+    const f1Winner = (match1?.home_score || 0) > (match1?.away_score || 0) ? f1.home_player_id : f1.away_player_id;
+    const f2Winner = (match2?.home_score || 0) > (match2?.away_score || 0) ? f2.home_player_id : f2.away_player_id;
     
     fixturesToInsert.push({
       season_id,
