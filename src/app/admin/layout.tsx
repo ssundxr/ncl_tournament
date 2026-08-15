@@ -17,6 +17,7 @@ import {
 import { auth } from "@/lib/firebase/client";
 import { signOut } from "firebase/auth";
 import { Button } from "@/components/ui/button";
+import { isAdminEmail } from "@/lib/admin";
 
 function AdminSidebar() {
   const pathname = usePathname();
@@ -99,8 +100,10 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/auth/login");
+    if (!loading) {
+      if (!user || !isAdminEmail(user.email)) {
+        router.push("/auth/login");
+      }
     }
   }, [user, loading, router]);
 
@@ -112,7 +115,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return null;
+  if (!user || !isAdminEmail(user.email)) return null;
 
   return (
     <div className="min-h-screen bg-background flex">

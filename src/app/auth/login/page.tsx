@@ -6,6 +6,7 @@ import { auth } from "@/lib/firebase/client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Shield, Loader2 } from "lucide-react";
+import { isAdminEmail } from "@/lib/admin";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -19,8 +20,7 @@ export default function LoginPage() {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
-      const allowedEmails = ["ashwinfejl357@gmail.com", "shyamsundxr@gmail.com"];
-      if (result.user.email && allowedEmails.includes(result.user.email)) {
+      if (result.user.email && isAdminEmail(result.user.email)) {
         // Admins go to the admin dashboard
         router.push("/admin");
       } else {

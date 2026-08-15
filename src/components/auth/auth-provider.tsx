@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 
+import { isAdminEmail } from "@/lib/admin";
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -18,10 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',') || [];
-        const allowedEmails = adminEmails.map(e => e.trim().toLowerCase());
-        
-        if (firebaseUser.email && !allowedEmails.includes(firebaseUser.email.toLowerCase())) {
+        if (firebaseUser.email && !isAdminEmail(firebaseUser.email)) {
           // Instantly lock them out in UI state without waiting for network signout
           setUser(null);
           setLoading(false);
