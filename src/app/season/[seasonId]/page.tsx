@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { StandingsRow, Player } from "@/types";
 import { Button } from "@/components/ui/button";
 import { useGlobalAuth } from "@/components/auth/global-auth-provider";
+import { supabase } from "@/lib/supabase/client";
 
 export default function SeasonOverviewPage({
   params,
@@ -39,25 +40,53 @@ export default function SeasonOverviewPage({
   const [upcomingFixtures, setUpcomingFixtures] = useState<any[]>([]);
   const [recentResults, setRecentResults] = useState<any[]>([]);
   const [completedFixtures, setCompletedFixtures] = useState<any[]>([]);
+  const [enrolledCount, setEnrolledCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadData = () => {
     if (!seasonId) return;
-    setLoading(true);
     Promise.all([
       getGroups(seasonId),
       getLeaderboards(seasonId),
       getFixturesWithScores(seasonId, 'upcoming'),
       getFixturesWithScores(seasonId, 'completed'),
+      fetch(`/api/season/players?season_id=${seasonId}`).then(r => r.json()).catch(() => ({ count: 0 }))
     ])
-      .then(([g, l, upcoming, results]) => {
+      .then(([g, l, upcoming, results, playersRes]) => {
         setGroups(g);
         setLeaderboards(l);
         setUpcomingFixtures(upcoming.slice(0, 3));
         setRecentResults(results.slice(0, 3));
         setCompletedFixtures(results);
+        if (playersRes?.success && typeof playersRes.count === 'number') {
+          setEnrolledCount(playersRes.count);
+        }
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (!seasonId) return;
+    setLoading(true);
+    loadData();
+
+    // Realtime channel for live updates on enrollments, fixtures, and standings
+    const channel = supabase
+      .channel(`season-overview-${seasonId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'season_enrollments', filter: `season_id=eq.${seasonId}` }, () => {
+        loadData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fixtures', filter: `season_id=eq.${seasonId}` }, () => {
+        loadData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leaderboards', filter: `season_id=eq.${seasonId}` }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [seasonId]);
 
   if (seasonLoading) {
@@ -166,6 +195,11 @@ export default function SeasonOverviewPage({
               <Trophy className="w-4 h-4 mr-2" /> Standings
             </Button>
           </Link>
+          <Link href={`/season/${seasonId}/players`}>
+            <Button variant="outline" className="rounded-none border-2 border-foreground font-black uppercase tracking-widest">
+              <Users className="w-4 h-4 mr-2" /> Players ({enrolledCount || leaderboards.length})
+            </Button>
+          </Link>
           {(season.status === "active" || season.status === "upcoming") && (
             <Button 
               onClick={handleEnrollClick}
@@ -187,7 +221,12 @@ export default function SeasonOverviewPage({
           {[
             { label: "Matches Played", value: Math.floor(totalPlayed), icon: Swords },
             { label: "Total Goals", value: totalGoals, icon: Target },
-            { label: "Players", value: leaderboards.length, icon: Users },
+            { 
+              label: "Competitors", 
+              value: enrolledCount > 0 ? enrolledCount : leaderboards.length, 
+              icon: Users,
+              href: `/season/${seasonId}/players`
+            },
             {
               label: "Top Scorer",
               value: topScorer?.player?.name?.split(" ").slice(-1)[0] ?? "—",
@@ -195,19 +234,28 @@ export default function SeasonOverviewPage({
             },
           ].map((stat) => {
             const Icon = stat.icon;
-            return (
+            const content = (
               <div
                 key={stat.label}
-                className="bg-card border-2 border-border p-5 flex flex-col gap-2"
+                className="bg-card border-2 border-border p-5 flex flex-col gap-2 hover:border-primary/70 transition-colors"
               >
                 <Icon className="w-5 h-5 text-primary" />
                 <p className="text-3xl font-black font-heading text-foreground tracking-tight">
                   {stat.value}
                 </p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  {stat.label}
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center justify-between">
+                  <span>{stat.label}</span>
+                  {stat.href && <span className="text-primary text-[9px] font-bold">VIEW &rarr;</span>}
                 </p>
               </div>
+            );
+
+            return stat.href ? (
+              <Link key={stat.label} href={stat.href} className="block">
+                {content}
+              </Link>
+            ) : (
+              <div key={stat.label}>{content}</div>
             );
           })}
         </motion.div>

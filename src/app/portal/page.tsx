@@ -553,6 +553,39 @@ export default function PortalDashboard() {
             </div>
           </div>
         </div>
+        <div className="mt-6 pt-5 border-t-2 border-border flex flex-wrap gap-3">
+          <a href="/contact" className="inline-flex items-center gap-2 px-5 py-2.5 bg-foreground text-background font-black uppercase tracking-widest text-xs hover:bg-primary transition-colors border-2 border-foreground">
+            <ExternalLink className="w-4 h-4" /> View All Organizers & Contact
+          </a>
+          <a href="https://chat.whatsapp.com/CYqbdmsPaEpGyfKiRheit0" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-black uppercase tracking-widest text-xs hover:bg-emerald-500 transition-colors border-2 border-emerald-700">
+            <MessageCircle className="w-4 h-4" /> Join WhatsApp Community
+          </a>
+        </div>
+      </div>
+
+      {/* Quick Links Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Tournament Rules", desc: "Match regulations & fair play", href: "/rules", icon: Shield, color: "text-primary", border: "border-primary/30", bg: "bg-primary/5" },
+          { label: "Match Center", desc: "Fixtures, results & schedules", href: "/fixtures", icon: Gamepad2, color: "text-blue-500", border: "border-blue-500/30", bg: "bg-blue-500/5" },
+          { label: "Standings", desc: "Leaderboard & season points", href: "/standings", icon: Trophy, color: "text-yellow-500", border: "border-yellow-500/30", bg: "bg-yellow-500/5" },
+          { label: "All Players", desc: "Browse the player directory", href: "/players", icon: Sparkles, color: "text-emerald-500", border: "border-emerald-500/30", bg: "bg-emerald-500/5" },
+        ].map((link) => {
+          const Icon = link.icon;
+          return (
+            <a
+              key={link.label}
+              href={link.href}
+              className={`p-5 ${link.bg} border-2 ${link.border} hover:border-foreground transition-all group flex flex-col gap-3`}
+            >
+              <Icon className={`w-6 h-6 ${link.color}`} />
+              <div>
+                <h4 className="font-black uppercase tracking-widest text-xs text-foreground group-hover:text-primary transition-colors">{link.label}</h4>
+                <p className="text-[10px] font-medium text-muted-foreground mt-0.5">{link.desc}</p>
+              </div>
+            </a>
+          );
+        })}
       </div>
 
       {/* Edit Profile Modal */}

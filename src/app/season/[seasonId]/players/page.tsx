@@ -2,7 +2,6 @@
 
 import { use, useEffect, useState } from "react";
 import { useSeason } from "@/contexts/season-context";
-import { getSeasonPlayers } from "@/lib/supabase/queries";
 import { PlayerCard } from "@/components/player/player-card";
 import { Loader2 } from "lucide-react";
 import { Player } from "@/types";
@@ -22,8 +21,19 @@ export default function SeasonPlayersPage({
   useEffect(() => {
     if (!seasonId) return;
     setLoading(true);
-    getSeasonPlayers(seasonId)
-      .then((data) => setPlayers(data as Player[]))
+    fetch(`/api/season/players?season_id=${seasonId}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setPlayers(json.data as Player[]);
+        } else {
+          setPlayers([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load season players:", err);
+        setPlayers([]);
+      })
       .finally(() => setLoading(false));
   }, [seasonId]);
 

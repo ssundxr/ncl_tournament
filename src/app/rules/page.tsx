@@ -146,7 +146,46 @@ function RulesContent() {
                 </div>
 
                 <button
-                  onClick={() => window.print()}
+                  onClick={() => {
+                    // Build standalone HTML with only rules content
+                    const allRules = displayRuleCategories.map(cat => {
+                      const items = cat.items.map((item: any, idx: number) => 
+                        `<div style="margin-bottom:16px;padding:16px;border:1px solid #e5e7eb;border-radius:6px;">
+                          <div style="display:flex;align-items:flex-start;gap:12px;">
+                            <span style="width:28px;height:28px;background:#e8e8e8;border:2px solid #dc2626;color:#dc2626;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:4px;">${idx + 1}</span>
+                            <div>
+                              <h4 style="font-weight:900;font-size:15px;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px 0;color:#111;">${item.title}</h4>
+                              <p style="font-size:13px;color:#555;line-height:1.6;margin:0;">${item.content}</p>
+                            </div>
+                          </div>
+                        </div>`
+                      ).join('');
+                      return `<div style="margin-bottom:32px;">
+                        <h2 style="font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#111;border-bottom:3px solid #dc2626;padding-bottom:8px;margin-bottom:16px;">${cat.category}</h2>
+                        ${items}
+                      </div>`;
+                    }).join('');
+
+                    const html = `<!DOCTYPE html><html><head><title>NCL Tournament Rules</title>
+                      <style>@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style>
+                    </head><body style="font-family:'Segoe UI',Arial,sans-serif;max-width:800px;margin:0 auto;padding:40px 32px;color:#111;">
+                      <div style="text-align:center;margin-bottom:32px;border-bottom:4px solid #dc2626;padding-bottom:20px;">
+                        <h1 style="font-size:28px;font-weight:900;text-transform:uppercase;letter-spacing:4px;margin:0 0 6px 0;color:#dc2626;">NCL Tournament Rules</h1>
+                        <p style="font-size:12px;color:#666;text-transform:uppercase;letter-spacing:2px;font-weight:700;">Official Match Regulations, Guidelines & Fair Play Code</p>
+                      </div>
+                      ${allRules}
+                      <div style="text-align:center;margin-top:40px;padding-top:16px;border-top:2px solid #e5e7eb;">
+                        <p style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:1px;">Generated from ncl.sundxr.dev • ${new Date().toLocaleDateString('en-IN', { dateStyle: 'long' })}</p>
+                      </div>
+                    </body></html>`;
+
+                    const printWindow = window.open('', '_blank');
+                    if (printWindow) {
+                      printWindow.document.write(html);
+                      printWindow.document.close();
+                      setTimeout(() => printWindow.print(), 300);
+                    }
+                  }}
                   className="hidden md:flex items-center gap-2 bg-foreground text-background font-black uppercase tracking-widest text-xs px-4 py-2 hover:bg-primary transition-colors border-2 border-foreground skew-x-[-10deg] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-none"
                 >
                   <span className="skew-x-[10deg] flex items-center gap-2">

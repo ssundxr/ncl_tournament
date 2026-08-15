@@ -10,7 +10,6 @@ import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { Countdown } from "@/components/ui/countdown";
 import { useToast } from "@/components/ui/toast";
-import { paymentSubmissionSchema } from "@/lib/validations";
 import { supabase } from "@/lib/supabase/client";
 import { auth } from "@/lib/firebase/client";
 import { onAuthStateChanged } from "firebase/auth";
@@ -90,14 +89,34 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
       toast({ variant: "error", title: "Mobile Number Required", description: "Please enter your valid WhatsApp / Mobile number." });
       return;
     }
+    if (!formData.name || formData.name.trim().length < 2) {
+      toast({ variant: "error", title: "Name Required", description: "Please enter your player name." });
+      return;
+    }
+
+    // Step 1 is local validation only — no API call yet
+    setStep(2);
+    toast({ variant: "info", title: "Details Confirmed", description: "Please complete payment to finish enrollment." });
+  };
+
+  const handleStep2Submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate UTR is provided
+    if (!formData.transaction_id || formData.transaction_id.trim().length < 6) {
+      setFormErrors({ transaction_id: "Transaction ID (UTR) must be at least 6 characters" });
+      toast({ variant: "error", title: "UTR Required", description: "Please enter the UPI Transaction ID (UTR) from your payment receipt." });
+      return;
+    }
 
     try {
       const user = auth.currentUser;
       if (!user) throw new Error("Not authenticated");
 
+      setFormErrors({});
       setSaving(true);
-      
-      // Use the portal enroll API directly
+
+      // Submit EVERYTHING (details + UTR) in one call
       const res = await fetch("/api/portal/enroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,6 +124,7 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
           uid: user.uid,
           season_id: seasonId,
           phone: formData.phone.trim(),
+          transaction_id: formData.transaction_id.trim(),
           name: formData.name.trim() || user.displayName || "Player",
           favorite_team: formData.favorite_team.trim() || "Independent",
           photo_url: formData.photo_url || user.photoURL || null,
@@ -118,56 +138,8 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
       }
 
       setEnrollmentId(data.data?.enrollmentId || null);
-      setStep(2);
-      toast({ variant: "success", title: "Details Confirmed", description: "Please complete payment to finish enrollment." });
-      
-    } catch (err: any) {
-      toast({ variant: "error", title: "Error", description: err.message || "An unexpected error occurred." });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleStep2Submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const payload = {
-        enrollment_season_id: seasonId,
-        enrollment_phone: formData.phone,
-        transaction_id: formData.transaction_id
-      };
-      
-      const parsed = paymentSubmissionSchema.safeParse(payload);
-      if (!parsed.success) {
-        const errors: Record<string, string> = {};
-        const issues = parsed.error?.issues || [];
-        issues.forEach((e: any) => {
-          if (e.path && e.path[0]) errors[e.path[0].toString()] = e.message;
-        });
-        setFormErrors(errors);
-        const firstErrorMessage = issues[0]?.message || "Please enter a valid Transaction ID (UTR).";
-        toast({ variant: "error", title: "Validation Error", description: firstErrorMessage });
-        return;
-      }
-
-      setFormErrors({});
-      setSaving(true);
-
-      const res = await fetch("/api/enrollment/submit-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
-      });
-
-      const data = await res.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || "Payment submission failed");
-      }
-
       setStep(3);
-      toast({ variant: "success", title: "Success", description: "Payment submitted for verification!" });
+      toast({ variant: "success", title: "Success", description: "Registration submitted with payment details!" });
       
     } catch (err: any) {
       toast({ variant: "error", title: "Error", description: err.message || "An unexpected error occurred." });

@@ -7,6 +7,7 @@ const portalEnrollSchema = z.object({
   uid: z.string().min(1),
   season_id: z.string().uuid(),
   phone: z.string().min(6, "Phone number is required"),
+  transaction_id: z.string().min(6, "Transaction ID (UTR) is required — minimum 6 characters"),
   name: z.string().optional(),
   favorite_team: z.string().optional(),
   photo_url: z.string().optional(),
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { uid, season_id, phone, name, favorite_team, photo_url } = parsed.data;
+    const { uid, season_id, phone, transaction_id, name, favorite_team, photo_url } = parsed.data;
     const supabase = createAdminClient();
 
     // 1. Verify or Auto-Create Player Profile
@@ -130,15 +131,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. Create strict enrollment mapped to player_id directly
+    // 3. Create strict enrollment mapped to player_id directly (with UTR)
     const { data: inserted, error: enrollErr } = await supabase
       .from("season_enrollments")
       .insert({
         season_id,
         player_id: player.id,
         phone,
+        transaction_id,
         status: "pending",
-        payment_status: "pending",
+        payment_status: "submitted",
         registration_data: {
           name: player.name,
           favorite_team: player.favorite_team,
