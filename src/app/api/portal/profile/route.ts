@@ -67,6 +67,38 @@ export async function POST(request: NextRequest) {
         return Response.json({ success: false, error: "Profile already exists" }, { status: 400 });
       }
 
+      // --- AUTO-LINK LOGIC FOR LEGACY PLAYERS ---
+      // Check if a player with this name already exists from Season 1 without a login
+      const { data: legacyPlayer } = await supabase
+        .from("players")
+        .select("*")
+        .ilike("name", profileData.name)
+        .is("user_id", null)
+        .single();
+
+      if (legacyPlayer) {
+        console.log(`[Profile API] Auto-linking UID ${uid} to legacy player ${legacyPlayer.name}`);
+        
+        const updates: any = { user_id: uid };
+        if (profileData.favorite_team) updates.favorite_team = profileData.favorite_team;
+        if (profileData.short_tag) updates.short_tag = profileData.short_tag.trim().toUpperCase();
+        if (profileData.bio) updates.bio = profileData.bio;
+        
+        const { data: updatedLegacyPlayer, error: updateLegacyError } = await supabase
+          .from("players")
+          .update(updates)
+          .eq("id", legacyPlayer.id)
+          .select("*")
+          .single();
+
+        if (updateLegacyError) {
+          return Response.json({ success: false, error: updateLegacyError.message }, { status: 500 });
+        }
+
+        return Response.json({ success: true, data: ensurePlayerNclId(updatedLegacyPlayer) });
+      }
+      // ------------------------------------------
+
       const nclId = generateNclId();
       const shortTag = profileData.short_tag
         ? profileData.short_tag.trim().toUpperCase()
