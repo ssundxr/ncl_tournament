@@ -146,7 +146,8 @@ function EnrollContent({ seasonId }: { seasonId: string }) {
           if (e.path && e.path[0]) errors[e.path[0].toString()] = e.message;
         });
         setFormErrors(errors);
-        toast({ variant: "error", title: "Validation Error", description: "Please check the payment details." });
+        const firstErrorMessage = issues[0]?.message || "Please enter a valid Transaction ID (UTR).";
+        toast({ variant: "error", title: "Validation Error", description: firstErrorMessage });
         return;
       }
 

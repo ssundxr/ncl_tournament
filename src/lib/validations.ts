@@ -30,11 +30,11 @@ export type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 export const paymentSubmissionSchema = z.object({
   enrollment_season_id: z.string().uuid("Invalid season ID"),
-  enrollment_phone: z.string().regex(/^[6-9]\d{9}$/, "Invalid phone number"),
+  enrollment_phone: z.string().min(6, "Valid mobile number is required"),
   transaction_id: z
     .string()
-    .min(8, "Transaction ID must be at least 8 characters")
-    .max(30, "Transaction ID must be at most 30 characters")
+    .min(6, "Transaction ID (UTR) must be at least 6 characters")
+    .max(50, "Transaction ID is too long")
     .trim(),
 });
 
