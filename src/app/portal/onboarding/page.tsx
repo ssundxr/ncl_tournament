@@ -7,17 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Gamepad2 } from "lucide-react";
 
 export default function OnboardingPage() {
+  const [mode, setMode] = useState<"create" | "claim">("create");
+  
+  // Create state
   const [name, setName] = useState("");
   const [shortTag, setShortTag] = useState("IND");
   const [phone, setPhone] = useState("");
   const [team, setTeam] = useState("");
   const [bio, setBio] = useState("");
+  
+  // Claim state
+  const [claimToken, setClaimToken] = useState("");
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !team) {
       setError("Name, Phone, and Favorite Team are required.");
@@ -52,7 +59,45 @@ export default function OnboardingPage() {
         throw new Error(data.error || "Failed to create profile");
       }
 
-      // Success, redirect to portal dashboard
+      router.push("/portal");
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "An unexpected error occurred.");
+      setLoading(false);
+    }
+  };
+
+  const handleClaimSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!claimToken) {
+      setError("Temporary ID is required.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("Not authenticated");
+
+      const res = await fetch("/api/portal/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: user.uid,
+          action: "claim",
+          profileData: {
+            claim_token: claimToken,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to claim profile");
+      }
+
       router.push("/portal");
     } catch (err: any) {
       console.error(err);
@@ -68,13 +113,34 @@ export default function OnboardingPage() {
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -translate-y-16 translate-x-16 blur-2xl"></div>
         
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-16 h-16 bg-primary flex items-center justify-center border-2 border-foreground skew-x-[-10deg]">
-            <Gamepad2 className="w-8 h-8 text-white skew-x-[10deg]" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-primary flex items-center justify-center border-2 border-foreground skew-x-[-10deg] flex-shrink-0">
+              <Gamepad2 className="w-8 h-8 text-white skew-x-[10deg]" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black font-heading uppercase tracking-tighter">
+                {mode === "create" ? "Claim Your Tag" : "Welcome Back"}
+              </h1>
+              <p className="text-muted-foreground font-medium uppercase tracking-widest text-xs mt-1">
+                {mode === "create" ? "Player Profile Setup" : "Map Your Season 1 Profile"}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-black font-heading uppercase tracking-tighter">Claim Your Tag</h1>
-            <p className="text-muted-foreground font-medium uppercase tracking-widest text-xs mt-1">Player Profile Setup</p>
+          
+          <div className="flex flex-col gap-2 shrink-0 border-2 border-foreground p-1 bg-muted/30">
+            <button 
+              onClick={() => { setMode("create"); setError(""); }}
+              className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${mode === "create" ? "bg-foreground text-background" : "hover:bg-muted"}`}
+            >
+              New Player
+            </button>
+            <button 
+              onClick={() => { setMode("claim"); setError(""); }}
+              className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${mode === "claim" ? "bg-foreground text-background" : "hover:bg-muted"}`}
+            >
+              Played Season 1?
+            </button>
           </div>
         </div>
 
@@ -84,78 +150,106 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-foreground">In-Game Name *</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Faker"
-                className="w-full bg-background border-2 border-border p-3 font-medium focus:outline-none focus:border-primary transition-colors"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-foreground">Short Tag (3-4 Letters) *</label>
-              <input
-                type="text"
-                required
-                maxLength={5}
-                placeholder="e.g. CMD, IND, RMD"
-                className="w-full bg-background border-2 border-border p-3 font-mono font-bold uppercase focus:outline-none focus:border-primary transition-colors text-primary"
-                value={shortTag}
-                onChange={(e) => setShortTag(e.target.value.toUpperCase())}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-foreground">WhatsApp Number *</label>
-              <input
-                type="tel"
-                required
-                placeholder="+91..."
-                className="w-full bg-background border-2 border-border p-3 font-medium focus:outline-none focus:border-primary transition-colors"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
+        {mode === "create" ? (
+          <form onSubmit={handleCreateSubmit} className="space-y-6 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-foreground">In-Game Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Faker"
+                  className="w-full bg-background border-2 border-border p-3 font-medium focus:outline-none focus:border-primary transition-colors"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-foreground">Short Tag (3-4 Letters) *</label>
+                <input
+                  type="text"
+                  required
+                  maxLength={5}
+                  placeholder="e.g. CMD, IND, RMD"
+                  className="w-full bg-background border-2 border-border p-3 font-mono font-bold uppercase focus:outline-none focus:border-primary transition-colors text-primary"
+                  value={shortTag}
+                  onChange={(e) => setShortTag(e.target.value.toUpperCase())}
+                />
+              </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-foreground">WhatsApp Number *</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="+91..."
+                  className="w-full bg-background border-2 border-border p-3 font-medium focus:outline-none focus:border-primary transition-colors"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-foreground">Favorite Team *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Manchester United, Real Madrid"
+                  className="w-full bg-background border-2 border-border p-3 font-medium focus:outline-none focus:border-primary transition-colors"
+                  value={team}
+                  onChange={(e) => setTeam(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-foreground">Favorite Team *</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Manchester United, Real Madrid"
-                className="w-full bg-background border-2 border-border p-3 font-medium focus:outline-none focus:border-primary transition-colors"
-                value={team}
-                onChange={(e) => setTeam(e.target.value)}
+              <label className="text-xs font-black uppercase tracking-widest text-foreground">Bio (Optional)</label>
+              <textarea
+                placeholder="Tell us about your playstyle..."
+                className="w-full bg-background border-2 border-border p-3 font-medium focus:outline-none focus:border-primary transition-colors h-24 resize-none"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
               />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-foreground">Bio (Optional)</label>
-            <textarea
-              placeholder="Tell us about your playstyle..."
-              className="w-full bg-background border-2 border-border p-3 font-medium focus:outline-none focus:border-primary transition-colors h-24 resize-none"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-            />
-          </div>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full py-6 text-lg font-black uppercase tracking-widest bg-primary hover:bg-primary/90 text-white border-2 border-foreground rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Create Profile"}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleClaimSubmit} className="space-y-6 relative z-10">
+            <div className="bg-muted/30 border-2 border-border p-6 text-center space-y-4">
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-relaxed">
+                Enter the Temporary ID provided by the admin to securely map your Season 1 profile to this Google Account.
+              </p>
+              <div className="max-w-xs mx-auto">
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. A7B9Q2"
+                  className="w-full bg-background border-2 border-primary p-4 text-center font-mono text-2xl font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/30"
+                  value={claimToken}
+                  onChange={(e) => setClaimToken(e.target.value.toUpperCase())}
+                />
+              </div>
+            </div>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full py-6 text-lg font-black uppercase tracking-widest bg-primary hover:bg-primary/90 text-white border-2 border-foreground rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
-          >
-            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Create Profile"}
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full py-6 text-lg font-black uppercase tracking-widest bg-foreground hover:bg-foreground/90 text-background border-2 border-foreground rounded-none shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(220,38,38,1)] transition-all"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Link Profile"}
+            </Button>
+          </form>
+        )}
       </div>
     </div>
   );

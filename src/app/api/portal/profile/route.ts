@@ -5,7 +5,7 @@ import { generateNclId, generateDefaultShortTag, ensurePlayerNclId } from "@/lib
 
 const profileSchema = z.object({
   uid: z.string().min(1),
-  action: z.enum(["get", "create", "update"]),
+  action: z.enum(["get", "create", "update", "claim"]),
   profileData: z
     .object({
       name: z.string().optional(),
@@ -14,6 +14,7 @@ const profileSchema = z.object({
       short_tag: z.string().optional(),
       bio: z.string().optional(),
       photo_url: z.string().optional(),
+      claim_token: z.string().optional(),
     })
     .optional(),
 });
@@ -50,6 +51,52 @@ export async function POST(request: NextRequest) {
 
       const player = ensurePlayerNclId(rawPlayer);
       return Response.json({ success: true, data: player });
+    }
+
+    if (action === "claim") {
+      if (!profileData || !profileData.claim_token) {
+        return Response.json({ success: false, error: "Claim token is required" }, { status: 400 });
+      }
+
+      const token = profileData.claim_token.trim().toUpperCase();
+
+      // Find the player with this claim token where user_id is null
+      const { data: legacyPlayer, error: claimSearchError } = await supabase
+        .from("players")
+        .select("*")
+        .eq("claim_token", token)
+        .is("user_id", null)
+        .single();
+
+      if (claimSearchError || !legacyPlayer) {
+        return Response.json({ success: false, error: "Invalid or already mapped Temporary ID." }, { status: 400 });
+      }
+
+      // Check if this UID is already mapped to someone else
+      const { data: existingUser } = await supabase
+        .from("players")
+        .select("id")
+        .eq("user_id", uid)
+        .single();
+
+      if (existingUser) {
+        return Response.json({ success: false, error: "Your Google account is already mapped to another profile." }, { status: 400 });
+      }
+
+      console.log(`[Profile API] Claim successful! Linking UID ${uid} to legacy player ${legacyPlayer.name}`);
+      
+      const { data: updatedLegacyPlayer, error: updateLegacyError } = await supabase
+        .from("players")
+        .update({ user_id: uid, claim_token: null })
+        .eq("id", legacyPlayer.id)
+        .select("*")
+        .single();
+
+      if (updateLegacyError) {
+        return Response.json({ success: false, error: updateLegacyError.message }, { status: 500 });
+      }
+
+      return Response.json({ success: true, data: ensurePlayerNclId(updatedLegacyPlayer) });
     }
 
     if (action === "create") {
