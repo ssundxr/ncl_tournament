@@ -120,9 +120,9 @@ function PlayersContent() {
 
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-muted border-2 border-border flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {player.avatar_url ? (
+                      {player.photo_url ? (
                         <img
-                          src={player.avatar_url}
+                          src={player.photo_url}
                           alt={player.name}
                           className="w-full h-full object-cover"
                         />
