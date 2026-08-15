@@ -73,9 +73,12 @@ export default function AdminCMSPage() {
         const { data: oData } = await supabase.from("organizers").select("*").order("sort_order");
         if (oData) setOrganizers(oData);
 
-        // Load Rules
-        const { data: rData } = await supabase.from("tournament_rules").select("*");
-        if (rData) setRules(rData);
+        // Load Rules via API
+        const rulesRes = await fetch("/api/rules?tournament_id=all&season_id=all");
+        const rulesResult = await rulesRes.json();
+        if (rulesResult.success && rulesResult.data) {
+          setRules(rulesResult.data);
+        }
       } catch (err) {
         console.error("Error loading CMS:", err);
       } finally {

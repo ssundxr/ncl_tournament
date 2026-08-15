@@ -31,19 +31,17 @@ function RulesContent() {
   }, []);
 
   useEffect(() => {
-    async function fetchRulesForSeason() {
+    async function fetchRules() {
       setRulesLoading(true);
       try {
-        let query = supabase.from("tournament_rules").select("*");
-        if (selectedSeason !== "all") {
-          query = query.or(`season_id.eq.${selectedSeason},season_id.is.null`);
-        }
-        const { data, error } = await query;
-        if (!error && data && data.length > 0) {
+        const res = await fetch(`/api/rules?tournament_id=${selectedTournament}&season_id=${selectedSeason}`);
+        const result = await res.json();
+
+        if (result.success && result.data && result.data.length > 0) {
           // Group DB rules by category
           const categoryMap: Record<string, any[]> = {};
-          data.forEach((r) => {
-            const cat = r.category.toUpperCase();
+          result.data.forEach((r: any) => {
+            const cat = (r.category || "GENERAL").toUpperCase();
             if (!categoryMap[cat]) categoryMap[cat] = [];
             categoryMap[cat].push({ title: r.title, content: r.content });
           });
@@ -54,20 +52,26 @@ function RulesContent() {
           }));
 
           setDisplayRuleCategories(formatted);
-          if (formatted.length > 0) setOpenCategory(formatted[0].category);
+          if (formatted.length > 0) {
+            setOpenCategory((prev) => {
+              const stillExists = formatted.some((f) => f.category === prev);
+              return stillExists ? prev : formatted[0].category;
+            });
+          }
         } else {
           setDisplayRuleCategories([]);
           setOpenCategory("");
         }
       } catch (err) {
         console.error("Error fetching rules:", err);
+        setDisplayRuleCategories([]);
       } finally {
         setRulesLoading(false);
       }
     }
 
-    fetchRulesForSeason();
-  }, [selectedSeason]);
+    fetchRules();
+  }, [selectedTournament, selectedSeason]);
 
   if (loading) {
     return (
