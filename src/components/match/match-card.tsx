@@ -11,6 +11,9 @@ import { ShareMatchResult } from "@/components/share/ShareMatchResult";
 import { ShareUpcomingMatch } from "@/components/share/ShareUpcomingMatch";
 import { exportAsImage } from "@/lib/exportImage";
 
+import { generateMatchCode } from "@/lib/match-code";
+import { ensurePlayerNclId } from "@/lib/ncl-id";
+
 interface MatchCardProps {
   fixture: Fixture;
 }
@@ -24,10 +27,17 @@ export function MatchCard({ fixture }: MatchCardProps) {
   const shareUpcomingRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  const homeName = fixture.home_player?.name || "TBD";
-  const awayName = fixture.away_player?.name || "TBD";
-  const homePhoto = fixture.home_player?.photo_url || undefined;
-  const awayPhoto = fixture.away_player?.photo_url || undefined;
+  const homePlayer = fixture.home_player ? ensurePlayerNclId(fixture.home_player) : null;
+  const awayPlayer = fixture.away_player ? ensurePlayerNclId(fixture.away_player) : null;
+
+  const homeName = homePlayer?.name || "TBD";
+  const awayName = awayPlayer?.name || "TBD";
+  const homeTag = homePlayer?.short_tag || "IND";
+  const awayTag = awayPlayer?.short_tag || "IND";
+  const homePhoto = homePlayer?.photo_url || undefined;
+  const awayPhoto = awayPlayer?.photo_url || undefined;
+
+  const matchCode = generateMatchCode(fixture);
 
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigating to match page
@@ -75,19 +85,24 @@ export function MatchCard({ fixture }: MatchCardProps) {
           <CardContent className="p-4 md:p-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               
-              {/* Status and Time (Mobile) */}
+              {/* Status, Match Code & Matchday (Mobile) */}
               <div className="flex w-full md:hidden items-center justify-between mb-2 border-b-2 border-border pb-2">
-                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
-                  Matchday {fixture.matchday}
+                <span className="font-mono text-[10px] font-black uppercase text-primary tracking-widest bg-primary/10 px-2 py-0.5 border border-primary/30">
+                  {matchCode}
                 </span>
                 <StatusBadge status={fixture.status} />
               </div>
 
               {/* Home Player */}
-              <div className="flex flex-1 items-center justify-end gap-4 w-full md:w-auto">
-                <span className="font-heading font-black text-base md:text-xl text-right uppercase tracking-wider truncate">
-                  {homeName}
-                </span>
+              <div className="flex flex-1 items-center justify-end gap-3 w-full md:w-auto">
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-black uppercase tracking-widest bg-foreground text-background px-1.5 py-0.2 rounded-xs">
+                    {homeTag}
+                  </span>
+                  <span className="font-heading font-black text-base md:text-xl text-right uppercase tracking-wider truncate mt-0.5">
+                    {homeName}
+                  </span>
+                </div>
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-none bg-secondary border border-border flex items-center justify-center shrink-0 skew-x-[-10deg] overflow-hidden">
                    {homePhoto ? (
                       <img src={homePhoto} alt="" className="w-full h-full object-cover skew-x-[10deg]" />
@@ -97,8 +112,11 @@ export function MatchCard({ fixture }: MatchCardProps) {
                 </div>
               </div>
 
-              {/* Score / Time Center */}
-              <div className="flex flex-col items-center justify-center min-w-[100px] md:min-w-[140px] px-4">
+              {/* Score / Time & Match Code Center */}
+              <div className="flex flex-col items-center justify-center min-w-[120px] md:min-w-[160px] px-4">
+                <span className="hidden md:inline-block font-mono text-[10px] font-black uppercase text-primary tracking-widest bg-primary/10 px-2 py-0.5 border border-primary/30 mb-2">
+                  {matchCode}
+                </span>
                 {(isCompleted || isLive) ? (
                   <div className="flex items-center gap-4 font-heading font-black text-3xl md:text-5xl">
                     <span className={fixture.home_score! > fixture.away_score! ? "text-primary" : ""}>{fixture.home_score}</span>
@@ -118,7 +136,7 @@ export function MatchCard({ fixture }: MatchCardProps) {
               </div>
 
               {/* Away Player */}
-              <div className="flex flex-1 items-center justify-start gap-4 w-full md:w-auto flex-row-reverse md:flex-row">
+              <div className="flex flex-1 items-center justify-start gap-3 w-full md:w-auto flex-row-reverse md:flex-row">
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-none bg-secondary border border-border flex items-center justify-center shrink-0 skew-x-[-10deg] overflow-hidden">
                    {awayPhoto ? (
                       <img src={awayPhoto} alt="" className="w-full h-full object-cover skew-x-[10deg]" />
@@ -126,9 +144,14 @@ export function MatchCard({ fixture }: MatchCardProps) {
                       <Shield className="w-6 h-6 text-primary skew-x-[10deg]" />
                    )}
                 </div>
-                <span className="font-heading font-black text-base md:text-xl text-left uppercase tracking-wider truncate">
-                  {awayName}
-                </span>
+                <div className="flex flex-col items-start">
+                  <span className="text-[10px] font-black uppercase tracking-widest bg-foreground text-background px-1.5 py-0.2 rounded-xs">
+                    {awayTag}
+                  </span>
+                  <span className="font-heading font-black text-base md:text-xl text-left uppercase tracking-wider truncate mt-0.5">
+                    {awayName}
+                  </span>
+                </div>
               </div>
               
               {/* Share Button Overlay */}

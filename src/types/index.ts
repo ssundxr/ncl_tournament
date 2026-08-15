@@ -2,6 +2,8 @@
 
 export type Player = {
   id: string;
+  ncl_id?: string | null;
+  short_tag?: string | null;
   name: string;
   slug: string;
   photo_url: string | null;
@@ -15,6 +17,8 @@ export type Tournament = {
   id: string;
   name: string;
   slug: string;
+  number?: number | null;
+  tag?: string | null;
   logo_url: string | null;
   description: string | null;
   status: "draft" | "active" | "completed";
@@ -49,6 +53,7 @@ export type PaymentMethod = "upi" | "razorpay" | "cashfree" | "manual";
 export type RegistrationData = {
   name: string;
   favorite_team: string;
+  short_tag?: string;
   phone: string;
   bio?: string;
   photo_url?: string;
@@ -81,6 +86,7 @@ export type Fixture = {
   group_id?: string | null;
   round?: string | null;
   matchday: number;
+  match_code?: string | null;
   home_player_id?: string | null;
   away_player_id?: string | null;
   scheduled_at?: string | null;

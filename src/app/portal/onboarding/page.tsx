@@ -8,6 +8,7 @@ import { Loader2, Gamepad2 } from "lucide-react";
 
 export default function OnboardingPage() {
   const [name, setName] = useState("");
+  const [shortTag, setShortTag] = useState("IND");
   const [phone, setPhone] = useState("");
   const [team, setTeam] = useState("");
   const [bio, setBio] = useState("");
@@ -40,6 +41,7 @@ export default function OnboardingPage() {
             name,
             phone,
             favorite_team: team,
+            short_tag: shortTag,
             bio,
           },
         }),
@@ -85,7 +87,7 @@ export default function OnboardingPage() {
         <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-foreground">In-Game Name / Tag *</label>
+              <label className="text-xs font-black uppercase tracking-widest text-foreground">In-Game Name *</label>
               <input
                 type="text"
                 required
@@ -97,6 +99,21 @@ export default function OnboardingPage() {
             </div>
             
             <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-foreground">Short Tag (3-4 Letters) *</label>
+              <input
+                type="text"
+                required
+                maxLength={5}
+                placeholder="e.g. CMD, IND, RMD"
+                className="w-full bg-background border-2 border-border p-3 font-mono font-bold uppercase focus:outline-none focus:border-primary transition-colors text-primary"
+                value={shortTag}
+                onChange={(e) => setShortTag(e.target.value.toUpperCase())}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
               <label className="text-xs font-black uppercase tracking-widest text-foreground">WhatsApp Number *</label>
               <input
                 type="tel"
@@ -107,18 +124,18 @@ export default function OnboardingPage() {
                 onChange={(e) => setPhone(e.target.value)}
               />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-foreground">Favorite Team *</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Manchester United, Real Madrid"
-              className="w-full bg-background border-2 border-border p-3 font-medium focus:outline-none focus:border-primary transition-colors"
-              value={team}
-              onChange={(e) => setTeam(e.target.value)}
-            />
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-foreground">Favorite Team *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Manchester United, Real Madrid"
+                className="w-full bg-background border-2 border-border p-3 font-medium focus:outline-none focus:border-primary transition-colors"
+                value={team}
+                onChange={(e) => setTeam(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

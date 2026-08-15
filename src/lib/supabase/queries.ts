@@ -189,12 +189,21 @@ export async function getPlayerById(id: string) {
   return data;
 }
 
-export async function getPlayerStatsBySlug(slug: string) {
-  const { data: player, error: playerErr } = await supabase
-    .from("players")
-    .select("*")
-    .eq("slug", slug)
-    .single();
+export async function getPlayerStatsBySlug(slugOrId: string) {
+  // Support searching by ncl_id (e.g. NCL-7A829), uuid id, or slug
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
+  const isNclId = /^NCL-/i.test(slugOrId);
+
+  let query = supabase.from("players").select("*");
+  if (isNclId) {
+    query = query.eq("ncl_id", slugOrId.toUpperCase());
+  } else if (isUuid) {
+    query = query.eq("id", slugOrId);
+  } else {
+    query = query.or(`slug.eq.${slugOrId},ncl_id.eq.${slugOrId.toUpperCase()}`);
+  }
+
+  const { data: player, error: playerErr } = await query.single();
   if (playerErr) throw playerErr;
 
   const { data: stats } = await supabase
