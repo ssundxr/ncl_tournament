@@ -49,6 +49,12 @@ export async function POST(request: NextRequest) {
       if (fixturesByStage.quarter_final.some(f => f.status !== 'completed')) {
         return Response.json({ success: false, error: "Quarter-finals are not completed yet." }, { status: 400 });
       }
+      
+      // TEMPORARY FOR SEASON 2: 6 players format
+      if (fixturesByStage.quarter_final.length === 2) {
+        return advanceSeason2SemiFinal(supabase, season_id, fixturesByStage.quarter_final);
+      }
+
       return advanceKnockoutRound(supabase, season_id, fixturesByStage.quarter_final, 'semi_final', 101);
     }
     else if (fixturesByStage.round_of_16.length > 0) {
@@ -69,8 +75,9 @@ export async function POST(request: NextRequest) {
     // 2. Fetch groups to get total count
     const { data: groups, error: gErr } = await supabase
       .from("groups")
-      .select("id")
-      .eq("season_id", season_id);
+      .select("id, name")
+      .eq("season_id", season_id)
+      .order("name");
 
     if (gErr || !groups || groups.length < 2) {
       return Response.json({ success: false, error: "Not enough groups to generate knockouts" }, { status: 400 });
@@ -117,6 +124,52 @@ export async function POST(request: NextRequest) {
     });
 
     // 4. Intelligent Seeding Algorithm
+
+    // ========================================================================
+    // TEMPORARY FOR SEASON 2 (6 players qualify: 3 from Group A, 3 from Group B)
+    // ========================================================================
+    if (groups.length === 2) {
+      const groupA_standings = groupStandings.get(groups[0].id) || [];
+      const groupB_standings = groupStandings.get(groups[1].id) || [];
+
+      if (groupA_standings.length < 3 || groupB_standings.length < 3) {
+        return Response.json({ success: false, error: "Not enough players in groups for Season 2 format." }, { status: 400 });
+      }
+
+      const A1 = groupA_standings[0].player_id;
+      const A2 = groupA_standings[1].player_id;
+      const A3 = groupA_standings[2].player_id;
+      
+      const B1 = groupB_standings[0].player_id;
+      const B2 = groupB_standings[1].player_id;
+      const B3 = groupB_standings[2].player_id;
+
+      const fixturesToInsert = [
+        {
+          season_id,
+          stage: "quarter_final",
+          home_player_id: A2,
+          away_player_id: B3,
+          matchday: 81,
+          status: "scheduled",
+        },
+        {
+          season_id,
+          stage: "quarter_final",
+          home_player_id: B2,
+          away_player_id: A3,
+          matchday: 82,
+          status: "scheduled",
+        }
+      ];
+
+      const { error: insertErr } = await supabase.from("fixtures").insert(fixturesToInsert);
+      if (insertErr) throw insertErr;
+
+      return Response.json({ success: true, message: "QUARTER FINAL generated successfully!" });
+    }
+    // ========================================================================
+
     // Collect 1st place from all groups, then 2nd place, etc.
     const globalAdvancementList: string[] = [];
     const maxGroupSize = Math.max(...Array.from(groupStandings.values()).map(arr => arr.length));
@@ -217,4 +270,74 @@ async function advanceKnockoutRound(supabase: any, season_id: string, previousFi
   if (insertErr) throw insertErr;
 
   return Response.json({ success: true, message: `${nextStage.replace('_', ' ').toUpperCase()} generated successfully!` });
+}
+
+// Temporary helper for Season 2 semi-finals (6 players)
+async function advanceSeason2SemiFinal(supabase: any, season_id: string, qfFixtures: any[]) {
+  const { data: groups, error: gErr } = await supabase
+    .from("groups")
+    .select("id, name")
+    .eq("season_id", season_id)
+    .order("name");
+    
+  if (gErr || !groups || groups.length < 2) {
+    return Response.json({ success: false, error: "Could not fetch groups for Season 2 Semi Finals." }, { status: 500 });
+  }
+
+  const { data: boards, error: lbErr } = await supabase
+    .from("leaderboards")
+    .select("player_id, group_id, points, goal_difference, goals_for")
+    .eq("season_id", season_id)
+    .order("points", { ascending: false })
+    .order("goal_difference", { ascending: false })
+    .order("goals_for", { ascending: false });
+
+  if (lbErr || !boards) {
+    return Response.json({ success: false, error: "Could not fetch leaderboards." }, { status: 500 });
+  }
+
+  const groupA = boards.filter((b: any) => b.group_id === groups[0].id);
+  const groupB = boards.filter((b: any) => b.group_id === groups[1].id);
+  
+  if (groupA.length < 1 || groupB.length < 1) {
+    return Response.json({ success: false, error: "Missing 1st place players." }, { status: 400 });
+  }
+  
+  const A1 = groupA[0].player_id;
+  const B1 = groupB[0].player_id;
+
+  qfFixtures.sort((a: any, b: any) => (a.matchday || 0) - (b.matchday || 0));
+  
+  const qf1 = qfFixtures[0];
+  const qf2 = qfFixtures[1];
+
+  const match1 = Array.isArray(qf1.matches) ? qf1.matches[0] : qf1.matches;
+  const match2 = Array.isArray(qf2.matches) ? qf2.matches[0] : qf2.matches;
+  
+  const qf1Winner = (match1?.home_score || 0) > (match1?.away_score || 0) ? qf1.home_player_id : qf1.away_player_id;
+  const qf2Winner = (match2?.home_score || 0) > (match2?.away_score || 0) ? qf2.home_player_id : qf2.away_player_id;
+
+  const fixturesToInsert = [
+    {
+      season_id,
+      stage: "semi_final",
+      home_player_id: A1,
+      away_player_id: qf2Winner,
+      matchday: 101,
+      status: "scheduled",
+    },
+    {
+      season_id,
+      stage: "semi_final",
+      home_player_id: B1,
+      away_player_id: qf1Winner,
+      matchday: 102,
+      status: "scheduled",
+    }
+  ];
+
+  const { error: insertErr } = await supabase.from("fixtures").insert(fixturesToInsert);
+  if (insertErr) throw insertErr;
+
+  return Response.json({ success: true, message: "SEMI FINAL generated successfully!" });
 }
